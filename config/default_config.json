@@ -1,0 +1,18 @@
+{
+    "collection_interval_minutes": 60,
+    "processing_interval_minutes": 120,
+    "data_retention_days": 30,
+    "monitoring": {
+        "min_data_points": 100,
+        "max_duplicate_ratio": 0.2,
+        "sentiment_threshold": 0.7
+    },
+    "sources": {
+        "x": true,
+        "news": true,
+        "mention": true,
+        "social_searcher": true,
+        "instagram": false,
+        "linkedin": false
+    }
+}

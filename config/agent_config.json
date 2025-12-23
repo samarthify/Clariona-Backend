@@ -1,0 +1,59 @@
+{
+    "collection_interval_minutes": 60,
+    "processing_interval_minutes": 120,
+    "data_retention_days": 30,
+    "sentiment_model": "default",
+    "analysis_level": "medium",
+    "sources": {
+        "twitter": true,
+        "news": true,
+        "blogs": false
+    },
+    "keywords": [
+        "important person"
+    ],
+    "adaptive_scheduling": true,
+    "auto_optimization": true,
+    "auto_scheduling": {
+        "enabled": true,
+        "cycle_interval_minutes": 30,
+        "continuous_mode": false,
+        "max_consecutive_cycles": 0,
+        "stop_after_first_cycle": false,
+        "enabled_user_ids": [
+            "6440da7fe6304b2f884ea8721cc9a9c0"
+        ]
+    },
+    "rate_limits": {
+        "twitter": 100,
+        "news": 50
+    },
+    "parallel_processing": {
+        "enabled": true,
+        "max_collector_workers": 8,
+        "max_sentiment_workers": 20,
+        "max_location_workers": 8,
+        "sentiment_batch_size": 150,
+        "location_batch_size": 300,
+        "collector_timeout_seconds": 1000,
+        "batch_timeout_seconds": 300,
+        "apify_timeout_seconds": 600,
+        "apify_wait_seconds": 600,
+        "lock_max_age_seconds": 300
+    },
+    "performance_notes": {
+        "instance_vcpus": 32,
+        "optimized_for": "railway_32vcpu",
+        "collector_workers_explanation": "I/O-bound API calls, can scale to 12 concurrent requests",
+        "sentiment_workers_explanation": "I/O-bound LLM API calls, 18 workers for high throughput",
+        "location_workers_explanation": "CPU-bound keyword matching, 10 workers balanced for CPU",
+        "batch_sizes_explanation": "Larger batches reduce overhead and improve throughput"
+    },
+    "openai_logging": {
+        "enabled": false,
+        "log_path": "logs/openai_calls.csv",
+        "max_chars": 10000,
+        "redact_prompts": false,
+        "log_to_console": false
+    }
+}

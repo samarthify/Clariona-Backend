@@ -1,0 +1,402 @@
+import logging
+from pathlib import Path
+import os
+import openai
+import requests
+import json
+import re
+
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger('SentimentAnalyzer')
+
+class ImprovedSentimentAnalyzer:
+    def __init__(self):
+        self.sentiment_pipe = pipeline("sentiment-analysis")
+
+        logger.debug("ImprovedSentimentAnalyzer.__init__: Initializing...")
+        logger.info("ImprovedSentimentAnalyzer.__init__: Hugging Face model pipeline is disabled. Using ChatGPT only.")
+
+        # --- OpenAI Setup ---
+        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not self.openai_api_key:
+            logger.warning("OPENAI_API_KEY environment variable not set. ChatGPT fallback will not function.")
+            self.openai_client = None
+        else:
+            try:
+                # Use the modern client initialization
+                self.openai_client = openai.OpenAI(api_key=self.openai_api_key)
+                logger.info("OpenAI client initialized successfully.")
+            except Exception as e:
+                logger.error(f"Failed to initialize OpenAI client: {e}", exc_info=True)
+                self.openai_client = None
+        # --- End OpenAI Setup ---
+        
+        # --- Brave Search API Setup ---
+        self.brave_api_key = os.getenv("BRAVE_API_KEY")
+        if not self.brave_api_key:
+            logger.warning("BRAVE_API_KEY environment variable not set. Brave Search verification will not function.")
+            self.brave_search_enabled = False
+        else:
+            self.brave_search_enabled = True
+            logger.info("Brave Search API configured successfully.")
+        # --- End Brave Search API Setup ---
+
+    def _verify_with_brave_search(self, text, source_type):
+        """
+        Verify information using Brave Search API for non-news sources.
+        
+        Args:
+            text (str): The text to verify
+            source_type (str): The source type (e.g., 'twitter', 'reddit', 'news')
+            
+        Returns:
+            dict: Verification results including if the info is reliable
+        """
+        if not self.brave_search_enabled:
+            logger.warning("Brave Search verification skipped: API key not configured.")
+            return {"verified": False, "reason": "Brave Search API not configured"}
+            
+        # Skip verification for news sources as they're considered more reliable
+        if source_type and source_type.lower() == 'news':
+            logger.info("Skipping Brave Search verification for news source.")
+            return {"verified": True, "reason": "News source, verification skipped"}
+            
+        # Only verify information from social media sources
+        if source_type and source_type.lower() in ['twitter', 'reddit', 'social']:
+            try:
+                # Extract key information from the text for verification
+                # Use first 100 chars as a search query (can be improved with NLP extraction)
+                search_query = text[:100].strip()
+                
+                headers = {
+                    "Accept": "application/json",
+                    "Accept-Encoding": "gzip",
+                    "X-Subscription-Token": self.brave_api_key
+                }
+                
+                params = {
+                    "q": search_query,
+                    "count": 5  # Limit to top 5 results
+                }
+                
+                logger.debug(f"Verifying with Brave Search: '{search_query[:50]}...'")
+                response = requests.get(
+                    "https://api.search.brave.com/res/v1/web/search",
+                    headers=headers,
+                    params=params
+                )
+                
+                if response.status_code == 200:
+                    results = response.json()
+                    
+                    # Simple verification logic - check if similar information appears in results
+                    # This could be enhanced with more sophisticated comparison
+                    verification_score = 0
+                    verification_sources = []
+                    
+                    if 'web' in results and 'results' in results['web']:
+                        for result in results['web']['results']:
+                            if 'description' in result:
+                                # Compare result description with original text
+                                # A more sophisticated comparison could be implemented
+                                similarity = self._calculate_text_similarity(text, result['description'])
+                                if similarity > 0.3:  # Arbitrary threshold
+                                    verification_score += 1
+                                    verification_sources.append(result['url'])
+                    
+                    is_verified = verification_score >= 2  # Require at least 2 supporting sources
+                    
+                    logger.info(f"Brave Search verification: {'Verified' if is_verified else 'Not verified'} "
+                               f"with score {verification_score}")
+                    
+                    return {
+                        "verified": is_verified,
+                        "score": verification_score,
+                        "sources": verification_sources[:3]  # Return top 3 sources
+                    }
+                else:
+                    logger.warning(f"Brave Search API returned status code: {response.status_code}")
+                    return {"verified": False, "reason": f"API Error: {response.status_code}"}
+                    
+            except Exception as e:
+                logger.error(f"Error during Brave Search verification: {e}", exc_info=True)
+                return {"verified": False, "reason": f"Error: {str(e)}"}
+        else:
+            logger.debug(f"Source type '{source_type}' doesn't require verification.")
+            return {"verified": True, "reason": f"Source type '{source_type}' doesn't require verification"}
+
+    def _calculate_text_similarity(self, text1, text2):
+        """
+        Calculate a simple similarity score between two texts.
+        This is a basic implementation - could be improved with more sophisticated NLP.
+        
+        Returns:
+            float: Similarity score between 0 and 1
+        """
+        # Convert to lowercase and split into words
+        words1 = set(text1.lower().split())
+        words2 = set(text2.lower().split())
+        
+        # Calculate Jaccard similarity
+        if not words1 or not words2:
+            return 0
+            
+        intersection = words1.intersection(words2)
+        union = words1.union(words2)
+        
+        return len(intersection) / len(union)
+
+    def _call_chatgpt_for_sentiment(self, text, target_individual_name: str):
+        """Calls ChatGPT API to get sentiment analysis for low-confidence cases from a specific perspective."""
+        if not self.openai_client:
+            logger.warning("OpenAI client not available. Skipping ChatGPT check.")
+            return None, None # Indicate failure or unavailability
+        
+        if not target_individual_name:
+            logger.warning("_call_chatgpt_for_sentiment: target_individual_name not provided. Defaulting to generic perspective.")
+            target_individual_name = "the subject"
+
+        prompt = f'''As an AI sentiment analyst, your task is to determine the sentiment (Positive, Neutral, or Negative) of the provided text.
+            This analysis must be performed strictly from the viewpoint of {target_individual_name}.
+            Please structure your response on separate lines as:
+            Sentiment: [Your_Sentiment_Here]
+            Justification: [Your_Reasoning_Here]
+            Sentiment Guidelines:
+            - Positive: Expresses clear approval, praise, or favorable feelings.
+            - Negative: Expresses clear disapproval, criticism, or unfavorable feelings.
+            - Neutral: The text is factual, objective, expresses mixed/mild emotions, or the sentiment is ambiguous from {target_individual_name}'s perspective.
+            IMPORTANT RULE:
+            If the text explicitly refers to {target_individual_name} or any of their known name variations
+            (e.g., Bola Tinubu), then you MUST NOT assign a Negative sentiment.
+            In such cases:
+            - Use Positive if supportive.
+            - Use Neutral if ambiguous, factual, or mildly critical.
+            Only classify as Negative if the text is not about {target_individual_name} or their variations.
+            Text for analysis: "{text}"
+            '''
+        
+        logger.debug(f"Calling ChatGPT with prompt for '{target_individual_name}' perspective, text: '{text[:50]}...'")
+        try:
+            # Using the chat completions endpoint
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4.1-nano", # Or another suitable model like gpt-4o-mini
+                messages=[
+                    {"role": "system", "content": f"You are an assistant analyzing sentiment strictly from the perspective of {target_individual_name}."}, # Dynamic system message
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=100, 
+                temperature=0.2 # Lower temperature for more deterministic output
+            )
+            
+            content = response.choices[0].message.content.strip()
+            logger.debug(f"ChatGPT response content: {content}")
+            
+            # Parse the response
+            sentiment = None
+            justification = None # We are not using justification here but parsing it for completeness
+            lines = content.split('\n')
+            for line in lines:
+                if line.lower().startswith("sentiment:"): # Updated parser
+                    sentiment_value = line.split(":", 1)[1].strip().lower() # Updated parser
+                    if sentiment_value in ["positive", "negative", "neutral"]:
+                        sentiment = sentiment_value
+                    else:
+                        logger.warning(f"ChatGPT returned unexpected sentiment value: '{sentiment_value}'")
+                elif line.lower().startswith("justification:"): # Updated parser
+                    justification = line.split(":", 1)[1].strip() # Updated parser
+                    
+            if sentiment:
+                logger.info(f"ChatGPT analysis result: Sentiment='{sentiment}', Justification='{justification if justification else 'N/A'}'")
+                return sentiment, justification # Return justification
+            else:
+                logger.warning(f"Could not parse sentiment from ChatGPT response: {content}")
+                return None, None # Return None for justification too
+                
+        except openai.APIError as e:
+            logger.error(f"OpenAI API returned an API Error: {e}", exc_info=True)
+        except openai.APIConnectionError as e:
+            logger.error(f"Failed to connect to OpenAI API: {e}", exc_info=True)
+        except openai.RateLimitError as e:
+             logger.error(f"OpenAI API request exceeded rate limit: {e}", exc_info=True)
+        except Exception as e:
+            logger.error(f"An unexpected error occurred during ChatGPT call: {e}", exc_info=True)
+            
+        return None, None # Return None for justification on error
+
+    # def analyze(self, text, target_individual_name: str = "the subject", source_type: str = None):
+    #     logger.debug(f"analyze: Received text (first 100 chars): '{str(text)[:100]}', target_individual_name: '{target_individual_name}'")
+    #     if not text or str(text).strip() == "" or str(text).lower() == "none":
+    #         logger.debug("analyze: Input text is empty or 'none'. Returning neutral.")
+    #         return "neutral", 0.5, None # Return None for justification
+
+    #     # Truncate text to model's max length (good practice for API calls)
+    #     truncated_text = str(text)[:512] # Max length for some models, can be adjusted
+    #     if len(str(text)) > 512:
+    #          logger.debug(f"analyze: Input text truncated to 512 chars for ChatGPT.")
+        
+    #     if not self.openai_client:
+    #         logger.warning("analyze: OpenAI client not available. Cannot perform sentiment analysis. Returning neutral.")
+    #         return "neutral", 0.5, None
+
+    #     try:
+    #         # Verify information if it's from social media sources
+    #         verification_result = None
+    #         if source_type and source_type.lower() in ['twitter', 'reddit', 'social']:
+    #             verification_result = self._verify_with_brave_search(truncated_text, source_type)
+                
+    #             # If verification fails for social media content, reduce confidence in the result
+    #             if verification_result and not verification_result.get('verified', False):
+    #                 logger.warning(f"Information verification failed: {verification_result.get('reason', 'Unknown reason')}")
+            
+    #         logger.debug(f"analyze: Calling ChatGPT for sentiment for text: '{truncated_text[:50]}...'")
+    #         chatgpt_sentiment, chatgpt_justification = self._call_chatgpt_for_sentiment(truncated_text, target_individual_name)
+
+    #         if chatgpt_sentiment:
+    #             logger.info(f"analyze: ChatGPT provided sentiment '{chatgpt_sentiment}' (Justification: {' '.join(str(chatgpt_justification).split()[:10]) if chatgpt_justification else 'N/A'}...) for '{truncated_text[:50]}...'.")
+                
+    #             # Adjust confidence based on verification result
+    #             if verification_result and not verification_result.get('verified', True) and source_type and source_type.lower() in ['twitter', 'reddit', 'social']:
+    #                 # Reduce confidence for unverified social media content
+    #                 score = 0.6  # Lower confidence
+    #                 logger.info(f"Reduced confidence in sentiment due to failed verification from {source_type}")
+    #             else:
+    #                 # Normal high confidence score
+    #                 score = 0.9
+                
+    #             final_sentiment = chatgpt_sentiment
+    #             justification = chatgpt_justification
+                
+    #             # Add verification info to justification if available
+    #             if verification_result and 'sources' in verification_result:
+    #                 sources_str = ", ".join(verification_result.get('sources', [])[:2])
+    #                 if sources_str:
+    #                     justification = f"{justification} [Verified with: {sources_str}]"
+    #         else:
+    #             logger.warning(f"analyze: ChatGPT did not return a conclusive sentiment for '{truncated_text[:50]}...'. Defaulting to neutral.")
+    #             final_sentiment = "neutral"
+    #             score = 0.5 # Default score for neutral when ChatGPT fails
+    #             justification = "ChatGPT analysis failed or returned no sentiment."
+
+    #         logger.debug(f"analyze: Final result: ('{final_sentiment}', {score:.4f})")
+    #         return final_sentiment, score, justification
+
+    #     except Exception as e:
+    #         logger.error(f"Error in sentiment analysis for text '{truncated_text[:50]}...': {str(e)}", exc_info=True)
+    #         logger.debug(f"analyze: Returning neutral due to exception.") 
+    #         return "neutral", 0.5, "Analysis failed due to an exception."
+    def analyze(self, text, target_individual_name="the subject", source_type=None):
+        logger.debug(f"analyze: Received text (first 100 chars): '{str(text)[:100]}'")
+        
+        if not text or str(text).strip() == "" or str(text).lower() == "none":
+            logger.debug("analyze: Input text is empty or 'none'. Returning neutral.")
+            return "neutral", 0.5, None
+
+        try:
+            # HuggingFace pipeline for sentiment analysis (dynamic scores)
+            hf_result = self.sentiment_pipe(str(text)[:512])[0]
+            label = hf_result['label'].lower()  # positive, negative, neutral
+            score = float(hf_result['score'])
+
+            # Optional ChatGPT sentiment refinement (only override label, not score)
+            chatgpt_sentiment, chatgpt_justification = None, None
+            if self.openai_client:
+                chatgpt_sentiment, chatgpt_justification = self._call_chatgpt_for_sentiment(
+                    str(text)[:512], target_individual_name)
+                if chatgpt_sentiment in ["positive", "neutral", "negative"]:
+                    label = chatgpt_sentiment
+
+            original_label = label  # Save for logging
+
+            # Force negative sentiment into neutral
+            if label == "negative":
+                logger.info(f"Negative sentiment detected, converting '{label}' to 'neutral'.")
+                label = "neutral"
+
+            justification = chatgpt_justification or "Generated by HuggingFace model"
+
+            logger.debug(f"analyze: Adjusted sentiment '{original_label}' → '{label}' with score {score:.2f}")
+
+            return label, score, justification
+
+        except Exception as e:
+            logger.error(f"Error in analyze: {e}")
+            return "neutral", 0.5, f"Error: {e}"
+
+
+
+    def batch_analyze(self, texts, target_individual_name: str = "the subject", source_types: list = None):
+        logger.debug(f"batch_analyze: Entering method for {len(texts)} texts, target_individual_name: '{target_individual_name}'. Using ChatGPT.")
+        if not texts:
+            logger.debug("batch_analyze: Input list is empty. Returning empty list.")
+            return []
+
+        if not self.openai_client:
+            logger.warning("batch_analyze: OpenAI client not available. Cannot perform batch sentiment analysis. Returning defaults.")
+            return [("neutral", 0.5, "OpenAI client not available.") for _ in texts]
+
+        # If source_types is not provided, create a list of None values
+        if source_types is None:
+            source_types = [None] * len(texts)
+        # If it's not a list or is a list of wrong length, extend or truncate
+        elif len(source_types) != len(texts):
+            if len(source_types) < len(texts):
+                source_types = source_types + [None] * (len(texts) - len(source_types))
+            else:
+                source_types = source_types[:len(texts)]
+
+        final_results = [] # Initialize an empty list for results
+
+        for i, (text, source_type) in enumerate(zip(texts, source_types)):
+            current_text_snippet = str(text)[:50]
+            logger.debug(f"batch_analyze: Processing item {i+1}/{len(texts)}, text snippet: '{current_text_snippet}...', source: {source_type}")
+            
+            if not text or str(text).strip() == "" or str(text).lower() == "none":
+                logger.debug(f"batch_analyze: Item {i+1} is empty or 'none'. Assigning neutral.")
+                final_results.append(("neutral", 0.5, "Input text was empty or 'none'."))
+                continue
+
+            truncated_text = str(text)[:512] # Truncate for API
+            if len(str(text)) > 512:
+                logger.debug(f"batch_analyze: Item {i+1} text truncated to 512 chars for ChatGPT.")
+
+            try:
+                # Verify information for social media sources
+                verification_result = None
+                if source_type and source_type.lower() in ['twitter', 'reddit', 'social']:
+                    verification_result = self._verify_with_brave_search(truncated_text, source_type)
+                
+                chatgpt_sentiment, chatgpt_justification = self._call_chatgpt_for_sentiment(truncated_text, target_individual_name)
+                
+                if chatgpt_sentiment:
+                    logger.info(f"batch_analyze: Item {i+1}: ChatGPT sentiment '{chatgpt_sentiment}' for '{current_text_snippet}...'.")
+                    
+                    # Adjust confidence based on verification result
+                    if verification_result and not verification_result.get('verified', True) and source_type and source_type.lower() in ['twitter', 'reddit', 'social']:
+                        # Reduced confidence for unverified social media content
+                        confidence = 0.6
+                        logger.info(f"Reduced confidence in sentiment due to failed verification from {source_type}")
+                    else:
+                        confidence = 0.9
+                    
+                    # Add verification info to justification if available
+                    if verification_result and 'sources' in verification_result:
+                        sources_str = ", ".join(verification_result.get('sources', [])[:2])
+                        if sources_str:
+                            chatgpt_justification = f"{chatgpt_justification} [Verified with: {sources_str}]"
+                    
+                    final_results.append((chatgpt_sentiment, confidence, chatgpt_justification))
+                else:
+                    logger.warning(f"batch_analyze: Item {i+1}: ChatGPT failed for '{current_text_snippet}...'. Defaulting to neutral.")
+                    final_results.append(("neutral", 0.5, "ChatGPT analysis failed or returned no sentiment."))
+            
+            except Exception as e:
+                logger.error(f"batch_analyze: Item {i+1}: Error during ChatGPT call for '{current_text_snippet}...': {e}", exc_info=True)
+                final_results.append(("neutral", 0.5, "Analysis failed due to an exception during ChatGPT call."))
+
+        logger.debug(f"batch_analyze: Finished processing batch. Returning {len(final_results)} results.")
+        return final_results

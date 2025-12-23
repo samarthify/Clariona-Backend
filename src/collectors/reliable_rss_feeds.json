@@ -1,0 +1,148 @@
+{
+  "rss_feeds": {
+    "nigerian_newspapers": {
+      "primary": [
+        "https://www.vanguardngr.com/feed/",
+        "https://www.premiumtimesng.com/feed/",
+        "https://thenationonlineng.net/feed/",
+        "https://guardian.ng/news/rss",
+        "https://businessday.ng/feed/",
+        "https://www.thisdaylive.com/index.php/feed/",
+        "https://dailypost.ng/feed/",
+        "https://informationng.com/feed/",
+        "https://ripplesnigeria.com/feed/",
+        "https://dailynigerian.com/feed/"
+      ],
+      "regional": [
+        "https://dailytrust.com/feed/",
+        "https://leadership.ng/feed/",
+        "https://sunnewsonline.com/feed/",
+        "https://blueprint.ng/feed/",
+        "https://newnigeriannewspaper.com/feed/",
+        "https://nigerianobservernews.com/feed/"
+      ],
+      "online_media": [
+        "https://saharareporters.com/rss",
+        "https://lindaikejisblog.com/feed/",
+        "https://bellanaija.com/feed/",
+        "https://pmnewsnigeria.com/feed/",
+        "https://hallmarknews.com/feed/",
+        "https://pointblanknews.com/pbn/feed/"
+      ]
+    },
+    "qatar_middle_east": {
+      "qatar": [
+        "https://www.gulf-times.com/rss/feed",
+        "https://www.thepeninsulaqatar.com/rss/feed",
+        "https://dohanews.co/feed/",
+        "https://www.qna.org.qa/en/rss",
+        "https://www.lusailnews.net/rss",
+        "https://alarab.qa/rss"
+      ],
+      "middle_east": [
+        "https://www.aljazeera.com/xml/rss/all.xml",
+        "https://english.alarabiya.net/feed/rss",
+        "https://arab.news/rss",
+        "https://gulfnews.com/rss/latest",
+        "https://www.khaleejtimes.com/rss-feed",
+        "https://www.thenationalnews.com/world/rss",
+        "https://english.aawsat.com/feed",
+        "https://www.middleeastmonitor.com/feed"
+      ]
+    },
+    "indian_newspapers": {
+      "english": [
+        "https://indianexpress.com/feed/",
+        "https://www.thehindu.com/feeder/default.rss",
+        "https://feeds.hindustantimes.com/",
+        "https://www.tribuneindia.com/rss/news/nation.xml",
+        "https://www.nationalheraldindia.com/stories.rss",
+        "https://health.economist.com/rss",
+        "https://www.business-standard.com/rss/home.rss",
+        "https://www.financialexpress.com/feed/"
+      ],
+      "regional": [
+        "https://www.deccanherald.com/rss.xml",
+        "https://www.newindianexpress.com/rss/",
+        "https://www.timesnownews.com/rss",
+        "https://www.indiatoday.in/rss/1206577"
+      ]
+    },
+    "international": {
+      "uk": [
+        "https://feeds.bbci.co.uk/news/world/africa/rss.xml",
+        "https://feeds.bbci.co.uk/news/world/rss.xml",
+        "https://www.theguardian.com/world/rss",
+        "https://www.telegraph.co.uk/rss.xml",
+        "https://www.independent.co.uk/news/world/rss",
+        "https://www.dailymail.co.uk/news/worldnews/index.rss"
+      ],
+      "us": [
+        "https://rss.cnn.com/rss/edition_africa.rss",
+        "https://rss.cnn.com/rss/edition_world.rss",
+        "https://feeds.npr.org/1001/rss.xml",
+        "https://www.latimes.com/world/rss2.0.xml",
+        "https://www.washingtontimes.com/rss/headlines/news/world",
+        "https://www.voanews.com/api/epiqq"
+      ],
+      "business": [
+        "https://feeds.bloomberg.com/markets/news.rss",
+        "https://feeds.bloomberg.com/politics/news.rss",
+        "https://feeds.bloomberg.com/technology/news.rss",
+        "https://feeds.reuters.com/Reuters/worldNews",
+        "https://feeds.afp.com/rss/afpenglishnews",
+        "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"
+      ],
+      "specialized": [
+        "https://rss.dw.com/xml/rss-de-all",
+        "https://www.economist.com/middle-east-and-africa/rss.xml",
+        "https://www.ft.com/world/mideast/rss",
+        "https://www.cnbc.com/id/100727362/device/rss/rss.html"
+      ]
+    },
+    "alternative_sources": {
+      "news_aggregators": [
+        "https://feeds.feedburner.com/AllAfricaNews",
+        "https://feeds.feedburner.com/AfricaNews",
+        "https://www.africanews.com/rss",
+        "https://feeds.feedburner.com/AllAfricaNews"
+      ],
+      "government": [
+        "https://www.state.gov/rss-feeds/",
+        "https://www.gov.uk/search/news-and-communications.atom",
+        "https://www.canada.ca/en/news/rss/news-releases.xml"
+      ]
+    }
+  },
+  "feed_validation": {
+    "timeout_seconds": 10,
+    "max_retries": 3,
+    "health_check_interval_hours": 24,
+    "min_health_score": 0.5,
+    "ssl_verification": false,
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+  },
+  "replacement_mapping": {
+    "https://abujainquirer.com/feed/": "https://www.premiumtimesng.com/feed/",
+    "https://aminiya.com/feed/": "https://dailytrust.com/feed/",
+    "https://orientdailyng.com/feed/": "https://sunnewsonline.com/feed/",
+    "https://nationalnetworkng.com/feed/": "https://blueprint.ng/feed/",
+    "https://thepioneerng.com/feed/": "https://newnigeriannewspaper.com/feed/",
+    "https://thescopeng.com/feed/": "https://nigerianobservernews.com/feed/",
+    "https://thelistenerng.com/feed/": "https://leadership.ng/feed/",
+    "https://qna.org.qa/en/RSS-Feeds": "https://www.qna.org.qa/en/rss",
+    "https://alwatannews.net/rss": "https://alarab.qa/rss",
+    "https://rss.punchng.com/v1/category/latest_news": "https://www.premiumtimesng.com/feed/"
+  }
+}
+
+
+
+
+
+
+
+
+
+
+

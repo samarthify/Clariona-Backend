@@ -1,0 +1,780 @@
+{
+  "targets": {
+    "tinubu": {
+      "name": "President Bola Tinubu",
+      "full_name": "Bola Ahmed Tinubu",
+      "country": "Nigeria",
+      "country_code": "ng",
+      "keywords": [
+        "bola tinubu",
+        "peter obi",
+        "peter gregory obi",
+        "tinubu",
+        "leader",
+        "dead",
+        "deadly",
+        "attack",
+        "bomb",
+        "kano",
+        "governor",
+        "nigeria",
+        "nigerian",
+        "president",
+        "apc",
+        "lagos",
+        "abuja",
+        "sokoto",
+        "katsina",
+        "kebbi",
+        "jigawa",
+        "zamfara",
+        "plateau",
+        "benue",
+        "niger",
+        "kwara",
+        "government",
+        "politics",
+        "policy",
+        "election",
+        "budget",
+        "economy",
+        "development",
+        "security",
+        "military",
+        "police",
+        "court",
+        "law",
+        "ministry",
+        "commission",
+        "agency",
+        "department",
+        "assembly",
+        "senate",
+        "house",
+        "campaign",
+        "vote",
+        "revenue",
+        "tax",
+        "infrastructure",
+        "protest",
+        "workers",
+        "minimum wage",
+        "cost of living"
+      ],
+      "competitor": {
+        "name": "Peter Obi",
+        "full_name": "Peter Gregory Obi",
+        "keywords": [
+          "peter obi",
+          "leader",
+          "peter gregory obi",
+          "obi",
+          "lp",
+          "labour party",
+          "peter gregory",
+          "gregory obi"
+        ],
+        "party": "Labour Party",
+        "position": "Presidential Candidate"
+      },
+      "sources": {
+        "news": {
+          "enabled": true,
+          "countries": [
+            "ng",
+            "us",
+            "gb",
+            "ae",
+            "qa",
+            "in"
+          ],
+          "allowed_sources": [
+            "cnn",
+            "bbc",
+            "al jazeera",
+            "voice of america",
+            "voa",
+            "deutsche welle",
+            "dw",
+            "reuters",
+            "afp",
+            "the guardian",
+            "new york times",
+            "bloomberg",
+            "punch",
+            "guardian nigeria",
+            "vanguard",
+            "the nation",
+            "thisday",
+            "nigerian tribune",
+            "business day",
+            "the sun",
+            "daily trust",
+            "leadership",
+            "blueprint",
+            "abuja inquirer",
+            "new nigerian",
+            "aminiya",
+            "leadership hausa",
+            "triumph",
+            "authority newspaper",
+            "orient daily",
+            "hallmark",
+            "the tide",
+            "national network",
+            "nigerian observer",
+            "the pioneer",
+            "daily trust ne bureau",
+            "the scope",
+            "the listener",
+            "premium times",
+            "sahara reporters",
+            "the cable",
+            "pulse.ng",
+            "legit.ng",
+            "naija news",
+            "linda ikeji blog",
+            "bellanaija",
+            "stears business"
+          ],
+          "excluded_sources": [
+            "fake news site",
+            "rumor mill",
+            "conspiracy blog",
+            "unverified source",
+            "satire site",
+            "parody news"
+          ],
+          "filters": {
+            "must_contain": [
+              "bola tinubu",
+              "leader",
+              "dead",
+              "deadly",
+              "attack",
+              "bomb",
+              "tinubu",
+              "kano",
+              "governor",
+              "nigeria",
+              "nigerian"
+            ],
+            "exclude": [
+              "fake",
+              "rumor",
+              "unverified"
+            ]
+          }
+        },
+        "twitter": {
+          "enabled": true,
+          "keywords": [
+            "bola tinubu",
+            "leader",
+            "dead",
+            "deadly",
+            "attack",
+            "bomb",
+            "peter obi",
+            "peter gregory obi",
+            "tinubu",
+            "kano",
+            "governor",
+            "nigeria",
+            "nigerian",
+            "president",
+            "sokoto",
+            "katsina",
+            "kebbi",
+            "jigawa",
+            "zamfara",
+            "plateau",
+            "benue",
+            "niger",
+            "kwara"
+          ],
+          "locations": [
+            "Nigeria",
+            "Lagos",
+            "Abuja",
+            "West Africa"
+          ]
+        },
+        "rss": {
+          "enabled": true,
+          "feeds": [
+            "https://punchng.com/feed/",
+            "https://guardian.ng/feed/",
+            "https://www.vanguardngr.com/feed/",
+            "https://thenationonlineng.net/feed/",
+            "https://thisdaylive.com/feed/",
+            "https://tribuneonlineng.com/feed/",
+            "https://businessday.ng/feed/",
+            "https://sunnewsonline.com/feed/",
+            "https://dailytrust.com/feed/",
+            "https://leadership.ng/feed/",
+            "https://blueprint.ng/feed/",
+            "https://abujainquirer.com/feed/",
+            "https://newnigeriannewspaper.com/feed/",
+            "https://aminiya.com/feed/",
+            "https://leadership.ng/hausa/feed/",
+            "https://triumphnewspapers.com/feed/",
+            "https://authorityngr.com/feed/",
+            "https://orientdailyng.com/feed/",
+            "https://hallmarknews.com/feed/",
+            "https://thetidenewsonline.com/feed/",
+            "https://nationalnetworkng.com/feed/",
+            "https://nigerianobservernews.com/feed/",
+            "https://thepioneerng.com/feed/",
+            "https://thescopeng.com/feed/",
+            "https://thelistenerng.com/feed/"
+          ]
+        },
+        "youtube": {
+          "enabled": true,
+          "channels": [
+            "nigeria"
+          ],
+          "keywords": [
+            "bola tinubu",
+            "leader",
+            "dead",
+            "deadly",
+            "attack",
+            "bomb",
+            "peter obi",
+            "peter gregory obi",
+            "tinubu",
+            "kano",
+            "governor",
+            "nigeria",
+            "nigerian",
+            "president",
+            "apc",
+            "lagos",
+            "abuja",
+            "sokoto",
+            "katsina",
+            "kebbi",
+            "jigawa",
+            "zamfara",
+            "plateau",
+            "benue",
+            "niger",
+            "kwara"
+          ],
+          "max_videos_per_channel": 20,
+          "search_keywords": true
+        },
+        "facebook": {
+          "enabled": true,
+          "keywords": [
+            "bola tinubu",
+            "leader",
+            "dead",
+            "deadly",
+            "attack",
+            "bomb",
+            "peter obi",
+            "peter gregory obi",
+            "tinubu",
+            "kano",
+            "governor",
+            "nigeria",
+            "nigerian",
+            "president",
+            "apc",
+            "lagos",
+            "abuja",
+            "sokoto",
+            "katsina",
+            "kebbi",
+            "jigawa",
+            "zamfara",
+            "plateau",
+            "benue",
+            "niger",
+            "kwara"
+          ],
+          "max_posts_per_source": 200,
+          "include_comments": true,
+          "include_reactions": true
+        },
+        "instagram": {
+          "enabled": true,
+          "keywords": [
+            "#nigeria",
+            "#tinubu",
+            "#peterobi",
+            "#politics",
+            "#apc",
+            "#labourparty",
+            "#pdp",
+            "#nigeriapolitics",
+            "#nigerianews",
+            "#obidient",
+            "#endsars",
+            "#lagos",
+            "#abuja",
+            "#election",
+            "#naija",
+            "nigeria",
+            "tinubu",
+            "peter obi",
+            "bola tinubu",
+            "nigerian politics"
+          ],
+          "max_results_per_query": 200,
+          "search_type": "hashtag",
+          "include_comments": true,
+          "include_likes": true
+        },
+        "tiktok": {
+          "enabled": true,
+          "keywords": [
+            "NigeriaPolitics",
+            "NigerianPolitics",
+            "NaijaPolitics",
+            "NigeriaElection",
+            "PresidentTinubu",
+            "Tinubu",
+            "PeterObi",
+            "Buhari",
+            "EndSARS",
+            "Politics",
+            "Nigeria",
+            "APC",
+            "PDP",
+            "NaijaNews",
+            "NigeriaNews",
+            "TrendingNaija"
+          ],
+          "max_results_per_query": 200,
+          "search_type": "hashtag",
+          "include_comments": true,
+          "include_shares": true,
+          "download_subtitles": true
+        },
+        "radio": {
+          "enabled": true,
+          "regions": {
+            "southwest": [
+              "Wazobia FM",
+              "Cool FM",
+              "Raypower FM",
+              "Nigeria Info",
+              "Fresh FM",
+              "Brila FM",
+              "Rhythm FM",
+              "FRCN Ibadan",
+              "Radio Lagos"
+            ],
+            "southeast": [
+              "Dream FM",
+              "Urban Radio",
+              "Flo FM",
+              "Blaze FM",
+              "ABS Radio",
+              "ESBS Radio",
+              "Orient FM"
+            ],
+            "north_central": [
+              "Radio Nigeria Abuja",
+              "Kapital FM",
+              "Raypower Abuja",
+              "Vision FM",
+              "WEFM"
+            ],
+            "north_west": [
+              "Freedom Radio",
+              "Arewa Radio",
+              "FRCN Kaduna",
+              "BBC Hausa",
+              "VOA Hausa",
+              "Raypower Kano/Kaduna"
+            ],
+            "north_east": [
+              "FRCN Yola",
+              "Dandal Kura",
+              "Gotel Radio",
+              "Peace FM Maiduguri"
+            ],
+            "south_south": [
+              "Wazobia FM Port Harcourt",
+              "Nigeria Info Port Harcourt",
+              "Cool FM Port Harcourt",
+              "Rhythm FM Port Harcourt",
+              "Raypower PH/Benin"
+            ]
+          },
+          "filters": {
+            "exclude": [
+              "music_only",
+              "advertisements",
+              "sports_only"
+            ]
+          }
+        },
+        "online_sources": {
+          "enabled": true,
+          "regions": {
+            "southwest": {
+              "name": "Southwest Nigeria",
+              "sources": {
+                "premium_times": {
+                  "name": "Premium Times",
+                  "urls": [
+                    "https://www.premiumtimesng.com/category/news/headlines",
+                    "https://www.premiumtimesng.com/category/news/top-news"
+                  ],
+                  "type": "news_website"
+                },
+                "the_cable": {
+                  "name": "TheCable",
+                  "urls": [
+                    "https://www.thecable.ng/"
+                  ],
+                  "type": "news_website"
+                },
+                "sahara_reporters": {
+                  "name": "Sahara Reporters",
+                  "urls": [
+                    "https://saharareporters.com/articles?f%5B0%5D=article_topics%3A12",
+                    "https://saharareporters.com/articles?f%5B0%5D=article_type%3A11"
+                  ],
+                  "type": "news_website"
+                },
+                "pulse_ng": {
+                  "name": "Pulse.ng",
+                  "urls": [
+                    "https://www.pulse.ng/news/politics"
+                  ],
+                  "type": "news_website"
+                },
+                "legit_ng": {
+                  "name": "Legit.ng",
+                  "urls": [
+                    "https://www.legit.ng/politics/",
+                    "https://www.legit.ng"
+                  ],
+                  "type": "news_website"
+                },
+                "naija_news": {
+                  "name": "Naija News",
+                  "urls": [
+                    "https://www.naijanews.com/news/"
+                  ],
+                  "type": "news_website"
+                },
+                "linda_ikeji": {
+                  "name": "Linda Ikeji Blog",
+                  "urls": [
+                    "https://www.lindaikejisblog.com/"
+                  ],
+                  "type": "blog"
+                },
+                "bella_naija": {
+                  "name": "BellaNaija",
+                  "urls": [
+                    "https://www.bellanaija.com/news/"
+                  ],
+                  "type": "blog"
+                },
+                "stears_business": {
+                  "name": "Stears Business",
+                  "urls": [
+                    "https://www.stears.co/"
+                  ],
+                  "type": "news_website"
+                }
+              }
+            },
+            "southeast": {
+              "name": "Southeast Nigeria",
+              "sources": {
+                "igbere_tv": {
+                  "name": "Igbere TV",
+                  "urls": [
+                    "https://igberetvnews.com/category/opinion/#forward"
+                  ],
+                  "type": "news_website"
+                },
+                "eastern_reporter": {
+                  "name": "Eastern Reporter",
+                  "urls": [
+                    "https://easternreporter.com/"
+                  ],
+                  "type": "news_website"
+                },
+                "ikenga_chronicles": {
+                  "name": "Ikenga Chronicles",
+                  "urls": [
+                    "https://ikengaonline.com/category/national/",
+                    "https://ikengaonline.com/category/other-states/"
+                  ],
+                  "type": "news_website"
+                }
+              }
+            },
+            "north_central": {
+              "name": "North Central Nigeria",
+              "sources": {
+                "daily_post": {
+                  "name": "Daily Post",
+                  "urls": [
+                    "https://dailypost.ng/"
+                  ],
+                  "type": "news_website"
+                },
+                "hum_angle": {
+                  "name": "HumAngle",
+                  "urls": [
+                    "https://humanglemedia.com/"
+                  ],
+                  "type": "news_website"
+                },
+                "pr_nigeria": {
+                  "name": "PRNigeria",
+                  "urls": [
+                    "https://prnigeria.com/"
+                  ],
+                  "type": "news_website"
+                },
+                "dataphyte": {
+                  "name": "Dataphyte",
+                  "urls": [
+                    "https://www.dataphyte.com/"
+                  ],
+                  "type": "news_website"
+                }
+              }
+            },
+            "north_west": {
+              "name": "North West Nigeria",
+              "sources": {
+                "daily_nigerian": {
+                  "name": "Daily Nigerian",
+                  "urls": [
+                    "https://dailynigerian.com/"
+                  ],
+                  "type": "news_website"
+                },
+                "desert_herald": {
+                  "name": "Desert Herald",
+                  "urls": [
+                    "https://desertherald.ng/category/news/"
+                  ],
+                  "type": "news_website"
+                },
+                "kano_focus": {
+                  "name": "Kano Focus",
+                  "urls": [
+                    "https://kanofocus.com/category/news/"
+                  ],
+                  "type": "news_website"
+                },
+                "sokoto_blog": {
+                  "name": "Sokoto Blog",
+                  "urls": [
+                    "https://sokotoblog.com/"
+                  ],
+                  "type": "blog"
+                },
+                "northern_comet": {
+                  "name": "Northern Comet",
+                  "urls": [
+                    "https://northerncomet.com/"
+                  ],
+                  "type": "news_website"
+                },
+                "nigeria_2027": {
+                  "name": "Nigeria 2027",
+                  "urls": [
+                    "https://nigeria2027.com/"
+                  ],
+                  "type": "blog"
+                },
+                "richkid_blog": {
+                  "name": "Richkid Blog",
+                  "urls": [
+                    "https://richkidblog.com/"
+                  ],
+                  "type": "blog"
+                },
+                "blogarewa": {
+                  "name": "Blogarewa",
+                  "urls": [
+                    "https://blogarewa.com/"
+                  ],
+                  "type": "blog"
+                },
+                "arewa_light": {
+                  "name": "Arewa Light",
+                  "urls": [
+                    "https://arewalight.com/"
+                  ],
+                  "type": "blog"
+                },
+                "trending_news": {
+                  "name": "Trending News",
+                  "urls": [
+                    "https://trendingnews.com/"
+                  ],
+                  "type": "news_website"
+                },
+                "kebbi_blog": {
+                  "name": "Kebbi Blog",
+                  "urls": [
+                    "https://kebbistate.gov.ng/our-blog"
+                  ],
+                  "type": "government_blog"
+                },
+                "lagos_gist": {
+                  "name": "Lagos Gist",
+                  "urls": [
+                    "https://lagosgist.com/"
+                  ],
+                  "type": "blog"
+                },
+                "arewa_display": {
+                  "name": "Arewa Display",
+                  "urls": [
+                    "https://arewadisplay.com/"
+                  ],
+                  "type": "blog"
+                },
+                "fusion_blog": {
+                  "name": "Fusion Blog",
+                  "urls": [
+                    "https://fusionblog.com/"
+                  ],
+                  "type": "blog"
+                },
+                "people_tratos": {
+                  "name": "People Tratos",
+                  "urls": [
+                    "https://peopletratos.com/"
+                  ],
+                  "type": "blog"
+                },
+                "kwara_blog": {
+                  "name": "Kwara Blog",
+                  "urls": [
+                    "https://blog.kwara.com/"
+                  ],
+                  "type": "government_blog"
+                }
+              }
+            },
+            "north_east": {
+              "name": "North East Nigeria",
+              "sources": {
+                "yerwa_express": {
+                  "name": "Yerwa Express",
+                  "urls": [
+                    "https://yerwaexpress.com/"
+                  ],
+                  "type": "news_website"
+                },
+                "north_east_news_wire": {
+                  "name": "North East News Wire",
+                  "urls": [
+                    "https://northeastnewswire.com/"
+                  ],
+                  "type": "news_website"
+                },
+                "hum_angle_ne": {
+                  "name": "HumAngle (North East)",
+                  "urls": [
+                    "https://humanglemedia.com/northeast/"
+                  ],
+                  "type": "news_website"
+                }
+              }
+            },
+            "south_south": {
+              "name": "South South Nigeria",
+              "sources": {
+                "niger_delta_today": {
+                  "name": "Niger Delta Today",
+                  "urls": [
+                    "https://www.nigerdeltatoday.com/national-news/"
+                  ],
+                  "type": "news_website"
+                },
+                "cross_river_watch": {
+                  "name": "CrossRiverWatch",
+                  "urls": [
+                    "https://crossriverwatch.com/"
+                  ],
+                  "type": "news_website"
+                }
+              }
+            },
+            "forums_aggregators": {
+              "name": "Forums and Aggregators",
+              "sources": {
+                "nigerian_bulletin": {
+                  "name": "Nigerian Bulletin",
+                  "urls": [
+                    "https://nigerianbulletin.com/news/"
+                  ],
+                  "type": "news_website"
+                }
+              }
+            }
+          },
+          "filters": {
+            "exclude": [
+              "advertisements",
+              "sponsored",
+              "promotional"
+            ]
+          }
+        }
+      },
+      "sentiment_rules": {
+        "positive_keywords": [
+          "reform",
+          "development",
+          "investment",
+          "growth",
+          "progress"
+        ],
+        "negative_keywords": [
+          "corruption",
+          "failure",
+          "protest",
+          "crisis"
+        ],
+        "neutral_keywords": [
+          "policy",
+          "announcement",
+          "meeting",
+          "visit"
+        ]
+      }
+    }
+  },
+  "default_sources": {
+    "news": false,
+    "twitter": true,
+    "facebook": false,
+    "rss": false,
+    "youtube": false,
+    "radio": false,
+    "reddit": false,
+    "instagram": false,
+    "tiktok": false,
+    "linkedin": false
+  },
+  "collection_settings": {
+    "interval_minutes": 60,
+    "max_articles_per_source": 100,
+    "duplicate_detection": true,
+    "language_filter": [
+      "en"
+    ],
+    "date_range_days": 7
+  }
+}

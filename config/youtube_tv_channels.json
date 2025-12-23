@@ -1,0 +1,230 @@
+{
+  "qatar": {
+    "Al Jazeera Arabic": {
+      "channel_id": "UCfiwzLy-8yKzIbsmZTzxDgw",
+      "language": "ar",
+      "type": "news",
+      "subscribers": "10M+",
+      "verified": true,
+      "description": "Al Jazeera Arabic is a Qatari state-owned Arabic-language news television network"
+    },
+    "Al Jazeera English": {
+      "channel_id": "UCNye-wNBqNL5ZzHSJj3l8Bg",
+      "language": "en",
+      "type": "news",
+      "subscribers": "5M+",
+      "verified": true,
+      "description": "Al Jazeera English is a Qatari state-owned English-language news television network"
+    },
+    "Al Jazeera Mubasher": {
+      "channel_id": "UCCv1Pd24oPErw5S7zJWltnQ",
+      "language": "ar",
+      "type": "news",
+      "subscribers": "1M+",
+      "verified": true,
+      "description": "Al Jazeera Mubasher is a live news channel broadcasting events as they happen"
+    },
+    "Al Jazeera Documentary": {
+      "channel_id": "UC0LSnqrwqtMwl2YwfUpO66g",
+      "language": "ar",
+      "type": "documentary",
+      "subscribers": "2M+",
+      "verified": true,
+      "description": "Al Jazeera Documentary Channel features documentaries and educational content"
+    },
+    "beIN SPORTS": {
+      "channel_id": "UCJUCcJUeh0Cz2xyKwkw5Q1w",
+      "language": "ar",
+      "type": "sports",
+      "subscribers": "5M+",
+      "verified": true,
+      "description": "beIN SPORTS is a Qatari sports network broadcasting major sporting events"
+    },
+    "Qatar TV (QTV)": {
+      "channel_id": "UC2EJXBsWR_5BTCy6R4kIO3A",
+      "language": "ar",
+      "type": "news",
+      "subscribers": "500K+",
+      "verified": true,
+      "description": "Qatar TV is the main national television network of Qatar"
+    },
+    "Al Rayyan TV": {
+      "channel_id": "UCK8LcweIXy4BGzTqjoj01DA",
+      "language": "ar",
+      "type": "news",
+      "subscribers": "100K+",
+      "verified": true,
+      "description": "Al Rayyan TV is a Qatari television channel"
+    }
+  },
+  "nigeria": {
+    "Channel TV": {
+      "channel_id": "UCEXGDNclvmg6RW0vipJYsTQ",
+      "language": "en",
+      "type": "news",
+      "subscribers": "1M+",
+      "verified": true,
+      "description": "Channel TV is one of Nigeria's leading television networks"
+    },
+    "AIT Live": {
+      "channel_id": "UCsUhTIo0bMTHs9RAroEMoQA",
+      "language": "en",
+      "type": "news",
+      "subscribers": "500K+",
+      "verified": true,
+      "description": "AIT Live is the live streaming channel of Africa Independent Television"
+    },
+    "NTA Networks": {
+      "channel_id": "UCLLWAXn5F415g2kNAcE_T1g",
+      "language": "en",
+      "type": "news",
+      "subscribers": "200K+",
+      "verified": true,
+      "description": "NTA Networks is the official Nigerian Television Authority channel"
+    },
+    "TVC News": {
+      "channel_id": "UCgp4A6I8LCWrhUzn-5SbKvA",
+      "language": "en",
+      "type": "news",
+      "subscribers": "300K+",
+      "verified": true,
+      "description": "TVC News is a Nigerian 24-hour news channel"
+    },
+    "Silver Bird TV": {
+      "channel_id": "UCNuPuew8lLVB3mMAm9_Qt9w",
+      "language": "en",
+      "type": "entertainment",
+      "subscribers": "100K+",
+      "verified": true,
+      "description": "Silver Bird TV is a Nigerian entertainment and news channel"
+    },
+    "Plus TV Africa": {
+      "channel_id": "UCkY5L8JYwx7BT0cOXYZX_dw",
+      "language": "en",
+      "type": "news",
+      "subscribers": "200K+",
+      "verified": true,
+      "description": "Plus TV Africa is a Nigerian news and current affairs channel"
+    },
+    "News Central": {
+      "channel_id": "UCPLKy4Ypb4mfblbjJI8Aljw",
+      "language": "en",
+      "type": "news",
+      "subscribers": "100K+",
+      "verified": true,
+      "description": "News Central is a Nigerian news channel"
+    },
+    "Flip TV": {
+      "channel_id": "UCPLKy4Ypb4mfblbjJI8Aljw",
+      "language": "en",
+      "type": "entertainment",
+      "verified": true,
+      "description": "Flip TV is a Nigerian entertainment channel"
+    },
+    "Trust TV": {
+      "channel_id": "UCTlqstA2Wrt4fimd_VWKr8g",
+      "language": "en",
+      "type": "news",
+      "subscribers": "100K+",
+      "verified": true,
+      "description": "Trust TV is a Nigerian news channel"
+    },
+    "Voice TV": {
+      "channel_id": "UC20Wx5hNQQLCh4qS4siNBtw",
+      "language": "en",
+      "type": "news",
+      "subscribers": "50K+",
+      "verified": true,
+      "description": "Voice TV is a Nigerian news and current affairs channel"
+    },
+    "Arise News": {
+      "channel_id": "UCyEJX-kSj0kOOCS7Qlq2G7g",
+      "language": "en",
+      "type": "news",
+      "subscribers": "200K+",
+      "verified": true,
+      "description": "Arise News is a Nigerian 24-hour news channel providing comprehensive coverage of local and international news"
+    },
+    "Sokoto TV": {
+      "channel_id": "UCPlaceholder_SokotoTV",
+      "language": "ha",
+      "type": "news",
+      "subscribers": "10K+",
+      "verified": false,
+      "description": "Sokoto State Television - state-owned television station in Sokoto"
+    },
+    "Katsina TV": {
+      "channel_id": "UCPlaceholder_KatsinaTV",
+      "language": "ha",
+      "type": "news",
+      "subscribers": "10K+",
+      "verified": false,
+      "description": "Katsina State Television - state-owned television station in Katsina"
+    },
+    "Kebbi TV": {
+      "channel_id": "UCPlaceholder_KebbiTV",
+      "language": "ha",
+      "type": "news",
+      "subscribers": "5K+",
+      "verified": false,
+      "description": "Kebbi State Television - state-owned television station in Kebbi"
+    },
+    "Jigawa TV": {
+      "channel_id": "UCPlaceholder_JigawaTV",
+      "language": "ha",
+      "type": "news",
+      "subscribers": "5K+",
+      "verified": false,
+      "description": "Jigawa State Television - state-owned television station in Jigawa"
+    },
+    "Zamfara TV": {
+      "channel_id": "UCPlaceholder_ZamfaraTV",
+      "language": "ha",
+      "type": "news",
+      "subscribers": "5K+",
+      "verified": false,
+      "description": "Zamfara State Television - state-owned television station in Zamfara"
+    },
+    "Plateau TV": {
+      "channel_id": "UCPlaceholder_PlateauTV",
+      "language": "en",
+      "type": "news",
+      "subscribers": "15K+",
+      "verified": false,
+      "description": "Plateau State Television - state-owned television station in Plateau"
+    },
+    "Benue TV": {
+      "channel_id": "UCPlaceholder_BenueTV",
+      "language": "en",
+      "type": "news",
+      "subscribers": "10K+",
+      "verified": false,
+      "description": "Benue State Television - state-owned television station in Benue"
+    },
+    "Niger TV": {
+      "channel_id": "UCPlaceholder_NigerTV",
+      "language": "en",
+      "type": "news",
+      "subscribers": "8K+",
+      "verified": false,
+      "description": "Niger State Television - state-owned television station in Niger"
+    },
+    "Kwara TV": {
+      "channel_id": "UCPlaceholder_KwaraTV",
+      "language": "en",
+      "type": "news",
+      "subscribers": "12K+",
+      "verified": false,
+      "description": "Kwara State Television - state-owned television station in Kwara"
+    }
+  },
+  "collection_settings": {
+    "max_videos_per_channel": 20,
+    "max_search_results_per_keyword": 10,
+    "rate_limit_delay": 0.1,
+    "channel_delay": 1.0,
+    "enabled_countries": ["qatar", "nigeria"],
+    "default_languages": ["en", "ar"],
+    "content_types": ["news", "documentary", "sports", "entertainment"]
+  }
+}

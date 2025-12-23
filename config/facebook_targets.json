@@ -1,0 +1,46 @@
+{
+  "nigeria_news": {
+    "sources": {
+      "facebook": {
+        "actor": "apify/facebook-posts-scraper",
+        "params": {
+          "startUrls": [
+            { "url": "https://www.facebook.com/Legitng", "label": "legitng" },
+            { "url": "https://www.facebook.com/Vanguardngr", "label": "vanguardngr" },
+            { "url": "https://www.facebook.com/PunchNGonline", "label": "punchng" },
+            { "url": "https://www.facebook.com/TheGuardianNigeria", "label": "guardian_ng" },
+            { "url": "https://www.facebook.com/dailytrust", "label": "dailytrust" },
+            { "url": "https://www.facebook.com/thisdayonline", "label": "thisday" },
+            { "url": "https://www.facebook.com/TheNationNg", "label": "nation_ng" },
+            { "url": "https://www.facebook.com/premiumtimesng", "label": "premiumtimes" },
+            { "url": "https://www.facebook.com/Nairametrics", "label": "nairametrics" },
+            { "url": "https://www.facebook.com/ChannelsTelevision", "label": "channelstv" }
+          ],
+          "resultsLimit": 200
+        }
+      }
+    }
+  },
+  "qatar_news": {
+    "sources": {
+      "facebook": {
+        "actor": "apify/facebook-posts-scraper",
+        "params": {
+          "startUrls": [
+            { "url": "https://www.facebook.com/AlJazeeraArabic", "label": "aljazeera_ar" },
+            { "url": "https://www.facebook.com/aljazeeraenglish", "label": "aljazeera_en" },
+            { "url": "https://www.facebook.com/aljazeeramubasher", "label": "aljazeera_mubasher" },
+            { "url": "https://www.facebook.com/AlRayyanTV", "label": "alrayyan_tv" },
+            { "url": "https://www.facebook.com/qatartribune", "label": "qatar_tribune" },
+            { "url": "https://www.facebook.com/qatarnewstribune", "label": "qatar_news_tribune" },
+            { "url": "https://www.facebook.com/ThePeninsulaQatar", "label": "peninsula_qatar" },
+            { "url": "https://www.facebook.com/AlWatanDoha", "label": "alwatan_doha" },
+            { "url": "https://www.facebook.com/alsharqnewspaper", "label": "alsharq" },
+            { "url": "https://www.facebook.com/QatarNewsAgency", "label": "qatar_news_agency" }
+          ],
+          "resultsLimit": 200
+        }
+      }
+    }
+  }
+}

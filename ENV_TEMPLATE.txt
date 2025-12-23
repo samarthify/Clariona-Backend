@@ -1,0 +1,32 @@
+# Copy this to .env and configure your values
+
+# Database Configuration
+DATABASE_URL=postgresql://user:password@host:5432/clariti
+
+# OpenAI API
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Email Configuration
+EMAIL_SERVER=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USERNAME=your_email@gmail.com
+EMAIL_PASSWORD=your_app_password
+EMAIL_SENDER=your_email@gmail.com
+
+# API Keys
+YOUTUBE_API_KEY=your_youtube_api_key
+
+# Application Configuration
+PYTHONPATH=.
+NODE_ENV=production
+SECRET_KEY=your_secret_key_here_change_in_production
+
+# Logging
+LOG_LEVEL=INFO
+
+# Backend URL (for cycle runner and internal calls)
+BACKEND_URL=http://localhost:8000
+
+# Cycle Runner Configuration (optional - can be set as env vars)
+# USER_ID=your-user-id-here
+# INTERVAL_MINUTES=30
