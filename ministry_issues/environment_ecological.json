@@ -1,0 +1,147 @@
+{
+  "ministry": "environment_ecological",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "waste-management-breakdown-abuja",
+      "label": "Waste Management Breakdown in Abuja",
+      "mention_count": 10,
+      "created_at": "2025-11-14T20:23:14.675203",
+      "last_updated": "2025-12-18T02:53:04.576724"
+    },
+    {
+      "slug": "climate-change-impact-on-nigerian-farmers",
+      "label": "Climate Change Impact on Nigerian Farmers",
+      "mention_count": 10,
+      "created_at": "2025-11-05T02:21:39.846974",
+      "last_updated": "2025-12-22T19:10:19.991372"
+    },
+    {
+      "slug": "carbon-market-framework",
+      "label": "Carbon Market Framework",
+      "mention_count": 4,
+      "created_at": "2025-11-03T03:24:33.644459",
+      "last_updated": "2025-11-03T04:17:56.810055"
+    },
+    {
+      "slug": "tree-cutting-warning",
+      "label": "Warning Against Indiscriminate Tree Cutting",
+      "mention_count": 4,
+      "created_at": "2025-11-14T20:57:06.235409",
+      "last_updated": "2025-12-18T02:52:21.130318"
+    },
+    {
+      "slug": "waste-management-fct",
+      "label": "New Waste Management in FCT",
+      "mention_count": 4,
+      "created_at": "2025-11-14T21:05:31.335119",
+      "last_updated": "2025-11-14T21:09:58.268731"
+    },
+    {
+      "slug": "santa-cruz-scientist",
+      "label": "Santa Cruz Bat Scientist Winifred Frick Featured In",
+      "mention_count": 3,
+      "created_at": "2025-11-03T01:11:30.661873",
+      "last_updated": "2025-11-03T01:14:12.196040"
+    },
+    {
+      "slug": "bat-predation-on-birds",
+      "label": "Bat Predation on Birds",
+      "mention_count": 3,
+      "created_at": "2025-11-03T01:11:59.952262",
+      "last_updated": "2025-11-03T01:13:49.946252"
+    },
+    {
+      "slug": "forest-clearance-for-wildlife",
+      "label": "Forest Clearance for Wildlife",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:13:45.512583",
+      "last_updated": "2025-11-14T21:05:27.354322"
+    },
+    {
+      "slug": "public-urination-enforcement",
+      "label": "Public Urination Enforcement",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:11:42.797088",
+      "last_updated": "2025-11-05T02:11:42.797088"
+    },
+    {
+      "slug": "single-use-plastics-enforcement",
+      "label": "Single-Use Plastics Enforcement",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:12:02.504139",
+      "last_updated": "2025-11-05T02:12:02.504139"
+    },
+    {
+      "slug": "wildlife-trafficking-conviction",
+      "label": "Wildlife Trafficking Conviction",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:06:12.588328",
+      "last_updated": "2025-11-14T20:06:12.588328"
+    },
+    {
+      "slug": "qatari-royals-houbara-bustards-hunting",
+      "label": "Qatari Royals Hunting Houbara Bustards",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:58:57.357629",
+      "last_updated": "2025-11-14T20:58:57.357629"
+    },
+    {
+      "slug": "bright-lights-rare-bats-sudden-lights",
+      "label": "Bright Lights, Rare Bats, and Sudden Lights",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:05:34.537461",
+      "last_updated": "2025-11-14T21:05:34.537461"
+    },
+    {
+      "slug": "boost-global-financing-nature-restoration",
+      "label": "Boost Global Financing for Nature Restoration",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:11:09.102732",
+      "last_updated": "2025-11-14T21:11:09.102732"
+    },
+    {
+      "slug": "assault-on-indigenous-peoples-and-resources",
+      "label": "Assault on Indigenous Peoples and Their Resources",
+      "mention_count": 1,
+      "created_at": "2025-12-03T16:07:54.899324",
+      "last_updated": "2025-12-03T16:07:54.899324"
+    },
+    {
+      "slug": "illegal-waste-dumping-lagos",
+      "label": "Illegal Waste Dumping in Lagos",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:03:18.187873",
+      "last_updated": "2025-12-16T14:03:18.187873"
+    },
+    {
+      "slug": "ecosystem-protection-nigeria",
+      "label": "Ecosystem Protection in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:06:15.000241",
+      "last_updated": "2025-12-16T14:06:15.000241"
+    },
+    {
+      "slug": "cop30-nigeria-low-carbon-development",
+      "label": "COP30 Nigeria Low-Carbon Development",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:24:56.971941",
+      "last_updated": "2025-12-16T14:24:56.971941"
+    },
+    {
+      "slug": "cop30-low-carbon-development",
+      "label": "COP30 / Nigeria Low-Carbon Development and Climate Negotiations",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:25:44.025054",
+      "last_updated": "2025-12-16T14:25:44.025054"
+    },
+    {
+      "slug": "climate-finance-equity",
+      "label": "Climate finance and equity — Nigeria's stance on Western funding",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:38:15.282165",
+      "last_updated": "2025-12-16T14:38:15.282165"
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "ministry": "water_resources",
+  "issue_count": 11,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "weather-forecast-predicts-heavy",
+      "label": "Weather Forecast Predicts Heavy Rainfall In Southern Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-11-04T15:38:21.272142",
+      "last_updated": "2025-11-04T15:38:21.272142"
+    },
+    {
+      "slug": "floods-impact-nigeria",
+      "label": "Floods Impact in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:16:15.767921",
+      "last_updated": "2025-11-05T02:16:15.767921"
+    },
+    {
+      "slug": "water-scarcity-exploitation",
+      "label": "Water Scarcity Exploitation by Borehole Operators",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:21:32.872402",
+      "last_updated": "2025-12-17T12:30:49.385605"
+    },
+    {
+      "slug": "rain-seeking-prayers",
+      "label": "Rain-Seeking Prayers in Saudi Arabia and Qatar",
+      "mention_count": 7,
+      "created_at": "2025-11-14T20:38:01.624181",
+      "last_updated": "2025-11-14T20:53:13.903100"
+    },
+    {
+      "slug": "investment-in-mega-dams",
+      "label": "Investment in Mega Dams and Infrastructure",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:47:14.042796",
+      "last_updated": "2025-11-14T20:49:08.964319"
+    },
+    {
+      "slug": "water-resources-management",
+      "label": "Water Resources Management in Nigeria",
+      "mention_count": 18,
+      "created_at": "2025-12-03T16:06:18.683626",
+      "last_updated": "2025-12-22T10:28:50.620005"
+    },
+    {
+      "slug": "public-service-gifts",
+      "label": "Public Service Gifts and Incentives",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:18:14.723841",
+      "last_updated": "2025-12-17T07:18:14.723841"
+    },
+    {
+      "slug": "water-access-for-poor-nigerians",
+      "label": "Water Access for Poor Nigerians",
+      "mention_count": 5,
+      "created_at": "2025-12-17T09:02:00.528075",
+      "last_updated": "2025-12-18T07:05:36.553889"
+    },
+    {
+      "slug": "open-defecation-nigeria",
+      "label": "Open Defecation Crisis in Nigeria (Sanitation)",
+      "mention_count": 2,
+      "created_at": "2025-12-17T13:43:18.535384",
+      "last_updated": "2025-12-22T09:48:33.765690"
+    },
+    {
+      "slug": "climate-change-and-sea-level-rise",
+      "label": "Climate Change and Sea-Level Rise",
+      "mention_count": 1,
+      "created_at": "2025-12-18T02:46:50.600332",
+      "last_updated": "2025-12-18T02:46:50.600332"
+    },
+    {
+      "slug": "congratulatory-messages-public-figures",
+      "label": "Congratulatory Messages to Public Figures and Honours",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:24:58.047502",
+      "last_updated": "2025-12-22T09:24:58.047502"
+    }
+  ]
+}

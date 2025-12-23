@@ -1,0 +1,147 @@
+{
+  "ministry": "defence",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "trump-threatens-military-action-nigeria",
+      "label": "Trump Threatens Military Action in Nigeria",
+      "mention_count": 246,
+      "created_at": "2025-11-03T03:24:00.105210",
+      "last_updated": "2025-12-22T09:58:35.134707"
+    },
+    {
+      "slug": "nigerian-military-resources",
+      "label": "Nigerian Military Resources",
+      "mention_count": 89,
+      "created_at": "2025-11-03T01:14:22.041472",
+      "last_updated": "2025-12-22T19:19:45.886364"
+    },
+    {
+      "slug": "tinubu-trump-meeting-anti-terrorism-agenda",
+      "label": "Tinubu-Trump Meeting on Shared Anti-Terrorism Agenda",
+      "mention_count": 42,
+      "created_at": "2025-11-03T03:24:54.425527",
+      "last_updated": "2025-12-22T09:58:45.590950"
+    },
+    {
+      "slug": "christian-persecution-trump-military-response",
+      "label": "Christian Persecution and Trump's Military Response",
+      "mention_count": 29,
+      "created_at": "2025-11-03T03:35:06.222033",
+      "last_updated": "2025-12-22T19:00:20.935012"
+    },
+    {
+      "slug": "qatar-defense-innovation-event",
+      "label": "Qatar Defense Innovation Event",
+      "mention_count": 26,
+      "created_at": "2025-11-05T02:16:41.138786",
+      "last_updated": "2025-11-14T20:51:40.098992"
+    },
+    {
+      "slug": "military-launches-operation-against",
+      "label": "Military Launches Operation Against Bandits",
+      "mention_count": 27,
+      "created_at": "2025-11-03T00:59:34.412623",
+      "last_updated": "2025-12-22T19:22:41.092986"
+    },
+    {
+      "slug": "us-help-respecting-nigeria-sovereignty",
+      "label": "US Help Respecting Nigeria's Sovereignty",
+      "mention_count": 22,
+      "created_at": "2025-11-03T03:30:43.983467",
+      "last_updated": "2025-11-14T21:16:34.293940"
+    },
+    {
+      "slug": "tinubu-service-chiefs-expectations",
+      "label": "Tinubu's Expectations for New Service Chiefs",
+      "mention_count": 21,
+      "created_at": "2025-11-03T03:38:20.527346",
+      "last_updated": "2025-11-14T21:14:54.271676"
+    },
+    {
+      "slug": "nigerian-president-economy-insecurity",
+      "label": "Nigerian President's Comments on Economy and Insecurity",
+      "mention_count": 20,
+      "created_at": "2025-11-03T01:13:40.091164",
+      "last_updated": "2025-12-22T18:54:06.521345"
+    },
+    {
+      "slug": "nigeria-insecurity-us-threat",
+      "label": "Nigeria Insecurity: US Threat",
+      "mention_count": 18,
+      "created_at": "2025-11-03T03:42:14.820026",
+      "last_updated": "2025-12-22T19:19:14.469405"
+    },
+    {
+      "slug": "wike-naval-officer-clash",
+      "label": "Wike Naval Officer Clash Over Abuja Land Dispute",
+      "mention_count": 14,
+      "created_at": "2025-11-14T21:06:13.013709",
+      "last_updated": "2025-11-14T21:25:37.788042"
+    },
+    {
+      "slug": "boko-haram-proscription",
+      "label": "Boko Haram Proscription in Nigeria",
+      "mention_count": 16,
+      "created_at": "2025-11-03T01:13:24.961229",
+      "last_updated": "2025-12-22T19:21:49.979935"
+    },
+    {
+      "slug": "tinubu-administration-support-terrorism",
+      "label": "Tinubu Administration Support for Terrorism",
+      "mention_count": 14,
+      "created_at": "2025-11-05T02:08:19.552288",
+      "last_updated": "2025-12-22T19:20:18.629296"
+    },
+    {
+      "slug": "purpose-driven-military",
+      "label": "Purpose-Driven Military",
+      "mention_count": 8,
+      "created_at": "2025-11-03T03:25:50.811782",
+      "last_updated": "2025-12-22T18:32:28.261985"
+    },
+    {
+      "slug": "tinubu-insecurity-concerns",
+      "label": "Tinubu's Concerns on Insecurity",
+      "mention_count": 13,
+      "created_at": "2025-11-05T02:27:17.229519",
+      "last_updated": "2025-12-22T19:21:06.857469"
+    },
+    {
+      "slug": "tinubu-claims-us-military-threat-game",
+      "label": "Tinubu Claims US Military Threat is a 'Game'",
+      "mention_count": 5,
+      "created_at": "2025-11-03T03:27:17.132615",
+      "last_updated": "2025-11-05T02:21:58.958547"
+    },
+    {
+      "slug": "us-department-of-war-nigeria-invasion",
+      "label": "US Department of War Planning Nigeria Invasion",
+      "mention_count": 5,
+      "created_at": "2025-11-03T03:33:40.542992",
+      "last_updated": "2025-11-05T02:22:29.265981"
+    },
+    {
+      "slug": "alleged-genocide-us-military-actions-nigeria",
+      "label": "Alleged Genocide and US Military Actions in Nigeria",
+      "mention_count": 5,
+      "created_at": "2025-11-03T03:46:02.414794",
+      "last_updated": "2025-11-14T21:08:55.243509"
+    },
+    {
+      "slug": "tinubu-administration-insecurity-commitment",
+      "label": "Tinubu's Administration Commitment to Ending Insecurity",
+      "mention_count": 4,
+      "created_at": "2025-11-03T04:11:49.884191",
+      "last_updated": "2025-11-14T21:12:07.750179"
+    },
+    {
+      "slug": "nigerian-armed-forces-flag",
+      "label": "Nigerian Armed Forces Flag Description",
+      "mention_count": 3,
+      "created_at": "2025-11-03T01:14:11.526473",
+      "last_updated": "2025-12-22T10:31:46.745800"
+    }
+  ]
+}

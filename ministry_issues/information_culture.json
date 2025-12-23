@@ -1,0 +1,147 @@
+{
+  "ministry": "information_culture",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "nigeria-political-media-discourse",
+      "label": "Nigeria political discourse and media commentary",
+      "mention_count": 133,
+      "created_at": "2025-12-22T09:26:18.550622",
+      "last_updated": "2025-12-22T19:18:58.838298"
+    },
+    {
+      "slug": "state-religious-relations",
+      "label": "State engagement with religious leaders (condolence visits / outreach)",
+      "mention_count": 9,
+      "created_at": "2025-12-22T09:27:46.664703",
+      "last_updated": "2025-12-22T10:29:20.026758"
+    },
+    {
+      "slug": "nigeria-media-awards-journalist-recognition",
+      "label": "Nigeria media awards and journalist recognition",
+      "mention_count": 3,
+      "created_at": "2025-12-22T10:09:29.561503",
+      "last_updated": "2025-12-22T10:29:04.595046"
+    },
+    {
+      "slug": "government-public-communication-strategy",
+      "label": "Government public communication strategy and citizen engagement",
+      "mention_count": 4,
+      "created_at": "2025-12-22T10:16:22.907014",
+      "last_updated": "2025-12-22T19:19:07.857889"
+    },
+    {
+      "slug": "africa-travel-social_media",
+      "label": "Africa Travel & Social Media Engagement",
+      "mention_count": 2,
+      "created_at": "2025-12-22T10:17:46.787321",
+      "last_updated": "2025-12-22T10:23:50.305487"
+    },
+    {
+      "slug": "deity-that-requires",
+      "label": "A Deity That Requires Human Blood, Pain And",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:25:02.584948",
+      "last_updated": "2025-12-22T09:25:02.584948"
+    },
+    {
+      "slug": "intelligence-agency-media-engagement",
+      "label": "Intelligence agency shifts from media clampdowns to constructive engagement",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:25:08.623817",
+      "last_updated": "2025-12-22T09:25:08.623817"
+    },
+    {
+      "slug": "political-media-discourse",
+      "label": "Nigeria political media discourse",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:13:46.467832",
+      "last_updated": "2025-12-22T10:13:46.467832"
+    },
+    {
+      "slug": "conservative-media-conflicts",
+      "label": "Conservative Media Conflicts and Influencer Disputes",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:14:52.198877",
+      "last_updated": "2025-12-22T10:14:52.198877"
+    },
+    {
+      "slug": "consumer-products-advertising",
+      "label": "Consumer Products Advertising",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:15:49.505210",
+      "last_updated": "2025-12-22T10:15:49.505210"
+    },
+    {
+      "slug": "news-media-social_media-promotion",
+      "label": "News & Media Social Media Promotion",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:18:20.016580",
+      "last_updated": "2025-12-22T10:18:20.016580"
+    },
+    {
+      "slug": "nigeria-memes-social-media",
+      "label": "Nigeria Memes and Viral Social Media Content",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:18:37.113388",
+      "last_updated": "2025-12-22T10:18:37.113388"
+    },
+    {
+      "slug": "lifestyle-luxury-nightlife",
+      "label": "Lifestyle, Luxury, Nightlife",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:19:53.769952",
+      "last_updated": "2025-12-22T10:19:53.769952"
+    },
+    {
+      "slug": "nigeria-social-media-viral-content",
+      "label": "Nigeria social media trends and virality",
+      "mention_count": 2,
+      "created_at": "2025-12-22T10:20:38.047397",
+      "last_updated": "2025-12-22T18:41:02.687949"
+    },
+    {
+      "slug": "african-achievements-media-promotion",
+      "label": "African achievements and media promotion on social platforms",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:20:58.136701",
+      "last_updated": "2025-12-22T10:20:58.136701"
+    },
+    {
+      "slug": "africa-social-media-trends",
+      "label": "Africa Social Media Trends & Viral Content",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:21:11.420690",
+      "last_updated": "2025-12-22T10:21:11.420690"
+    },
+    {
+      "slug": "alternative-independent-media-activism",
+      "label": "Alternative / Independent Media and Online Activism (Africa, Sudan)",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:21:50.251032",
+      "last_updated": "2025-12-22T10:21:50.251032"
+    },
+    {
+      "slug": "film-censorship-religious-offense",
+      "label": "Film Censorship and Religious Offense (Nigeria)",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:22:06.649864",
+      "last_updated": "2025-12-22T10:22:06.649864"
+    },
+    {
+      "slug": "culture-diversity-and-identity",
+      "label": "Culture Diversity and Identity",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:28:49.680153",
+      "last_updated": "2025-12-22T10:28:49.680153"
+    },
+    {
+      "slug": "nigeria-media-discourse",
+      "label": "Nigeria Media Discourse",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:28:51.365925",
+      "last_updated": "2025-12-22T10:28:51.365925"
+    }
+  ]
+}

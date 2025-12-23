@@ -1,0 +1,147 @@
+{
+  "ministry": "budget_economic_planning",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "government-spending-priorities",
+      "label": "Government Spending Priorities Criticism",
+      "mention_count": 86,
+      "created_at": "2025-11-03T01:08:37.210361",
+      "last_updated": "2025-12-22T19:21:56.233931"
+    },
+    {
+      "slug": "tinubu-economic-reforms-impact",
+      "label": "Tinubu's Economic Reforms Impact",
+      "mention_count": 51,
+      "created_at": "2025-11-03T03:43:34.426908",
+      "last_updated": "2025-12-22T19:22:41.531898"
+    },
+    {
+      "slug": "economic-statistics-reliability",
+      "label": "Reliability of Economic Statistics",
+      "mention_count": 19,
+      "created_at": "2025-11-05T02:16:11.530961",
+      "last_updated": "2025-12-22T18:40:54.362990"
+    },
+    {
+      "slug": "tinubu-presents-2025-budget",
+      "label": "Tinubu Presents 2025 Budget To National Assembly",
+      "mention_count": 16,
+      "created_at": "2025-11-03T00:59:42.906423",
+      "last_updated": "2025-12-22T18:54:36.217224"
+    },
+    {
+      "slug": "tinubu-reforms-nigeria-prosperity",
+      "label": "Tinubu's Reforms for Nigeria's Prosperity",
+      "mention_count": 14,
+      "created_at": "2025-11-03T03:26:05.636216",
+      "last_updated": "2025-12-22T10:14:41.315165"
+    },
+    {
+      "slug": "tinubu-policies-assessment",
+      "label": "Assessment of Tinubu's Policies",
+      "mention_count": 5,
+      "created_at": "2025-11-05T02:12:15.144587",
+      "last_updated": "2025-12-22T09:26:58.047360"
+    },
+    {
+      "slug": "election-2027-speculation",
+      "label": "Election 2027 Speculation",
+      "mention_count": 3,
+      "created_at": "2025-11-03T01:10:03.957608",
+      "last_updated": "2025-12-16T14:37:54.909985"
+    },
+    {
+      "slug": "tinubu-budgetary-allocation-nhyppadec",
+      "label": "Tinubu's Budgetary Allocation to N-HYPPADEC",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:07:13.541106",
+      "last_updated": "2025-11-14T21:05:59.365462"
+    },
+    {
+      "slug": "sanusi-criticizes-tinubu-administration",
+      "label": "Sanusi Criticizes Tinubu Administration",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:50:23.600354",
+      "last_updated": "2025-11-14T20:50:33.957958"
+    },
+    {
+      "slug": "senate-debates-2025-budget-proposals",
+      "label": "Senate Debates 2025 Budget Proposals",
+      "mention_count": 1,
+      "created_at": "2025-11-03T00:59:49.114716",
+      "last_updated": "2025-11-03T00:59:49.114716"
+    },
+    {
+      "slug": "ethnic-tribal-divide",
+      "label": "Ethnic Tribal Divide Concerns",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:12:17.669184",
+      "last_updated": "2025-12-22T18:59:47.704239"
+    },
+    {
+      "slug": "fdi-decline-president-travel",
+      "label": "FDI Decline and President's Travel Frequency",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:12:21.781689",
+      "last_updated": "2025-11-05T02:12:21.781689"
+    },
+    {
+      "slug": "reforms-impact-on-nigerians",
+      "label": "Reforms Impact on Nigerians",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:18:44.519342",
+      "last_updated": "2025-12-22T19:00:58.727277"
+    },
+    {
+      "slug": "tinubu-and-wike-resource-usage",
+      "label": "Tinubu and Wike Resource Usage Assessment",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:18:46.624956",
+      "last_updated": "2025-11-05T02:18:46.624956"
+    },
+    {
+      "slug": "2027-election-candidates-comparison",
+      "label": "2027 Election Candidates Comparison",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:19:32.619367",
+      "last_updated": "2025-11-05T02:19:32.619367"
+    },
+    {
+      "slug": "leadership-roles-in-economic-team",
+      "label": "Leadership Roles in Economic Team",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:20:17.813428",
+      "last_updated": "2025-11-05T02:20:17.813428"
+    },
+    {
+      "slug": "apc-economic-impact",
+      "label": "APC Economic Impact on Poverty",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:22:43.869860",
+      "last_updated": "2025-11-05T02:22:43.869860"
+    },
+    {
+      "slug": "tinubu-administration-economic-growth",
+      "label": "Tinubu Administration's Impact on Economic Growth",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:24:41.310723",
+      "last_updated": "2025-11-05T02:24:41.310723"
+    },
+    {
+      "slug": "tinubu-threats-budgetary-allocations",
+      "label": "Tinubu Facing Threats to Budgetary Allocations",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:26:02.982262",
+      "last_updated": "2025-11-05T02:26:02.982262"
+    },
+    {
+      "slug": "obi-led-nigeria-2025-prospects",
+      "label": "Obi-Led Nigeria 2025 Prospects",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:26:17.901150",
+      "last_updated": "2025-11-05T02:26:17.901150"
+    }
+  ]
+}

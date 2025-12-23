@@ -1,0 +1,147 @@
+{
+  "ministry": "science_technology",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "assist-nigeria-technology",
+      "label": "Assist Nigeria with Technology",
+      "mention_count": 44,
+      "created_at": "2025-11-03T03:46:23.935532",
+      "last_updated": "2025-12-22T19:18:50.409266"
+    },
+    {
+      "slug": "investing-in-future-technologies",
+      "label": "Investing in Future Technologies",
+      "mention_count": 6,
+      "created_at": "2025-11-14T20:49:44.730075",
+      "last_updated": "2025-12-18T05:44:13.556971"
+    },
+    {
+      "slug": "iran-explores-avenues",
+      "label": "Iran Explores Avenues To Foster Sci-Tech Ties With",
+      "mention_count": 2,
+      "created_at": "2025-11-03T03:36:34.400326",
+      "last_updated": "2025-11-03T04:40:51.511546"
+    },
+    {
+      "slug": "qatari-institute-innovation-research",
+      "label": "Qatari Institute for Innovation and Research",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:18:07.283160",
+      "last_updated": "2025-11-05T02:18:15.338077"
+    },
+    {
+      "slug": "tecno-ifa-showstoppers-2025",
+      "label": "TECNO Showcase at IFA ShowStoppers 2025",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:23:42.330249",
+      "last_updated": "2025-11-05T02:23:42.330249"
+    },
+    {
+      "slug": "qatari-royal-visits-robot-innovation",
+      "label": "Qatari Royal Visits Robot Innovation",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:25:56.762776",
+      "last_updated": "2025-11-05T02:25:56.762776"
+    },
+    {
+      "slug": "biotechnology-nigeria-food-health",
+      "label": "Biotechnology in Nigeria for Food and Health Security",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:24:03.725349",
+      "last_updated": "2025-11-14T20:24:03.725349"
+    },
+    {
+      "slug": "meteor-observation-luxurylaunches",
+      "label": "Meteor Observation on Luxurylaunches",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:49:21.812580",
+      "last_updated": "2025-11-14T20:49:21.812580"
+    },
+    {
+      "slug": "europe-animal-testing-partnership",
+      "label": "Europe's Shift Beyond Animal Testing Partnership",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:52:27.355986",
+      "last_updated": "2025-11-14T20:52:27.355986"
+    },
+    {
+      "slug": "data-scientist-profile",
+      "label": "Data Scientist Profile",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:54:19.678103",
+      "last_updated": "2025-11-14T20:54:19.678103"
+    },
+    {
+      "slug": "indie-game-roguelite-mix",
+      "label": "Indie Game Roguelite Mix",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:12:01.299801",
+      "last_updated": "2025-11-14T21:12:01.299801"
+    },
+    {
+      "slug": "bat-mimicking-robots-rescue-tech",
+      "label": "Bat-Mimicking Robots in Rescue Technology",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:25:11.232168",
+      "last_updated": "2025-11-14T21:25:11.232168"
+    },
+    {
+      "slug": "nighttime-predator-sensors-research",
+      "label": "Nighttime Predator Sensors Research",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:25:35.840040",
+      "last_updated": "2025-11-14T21:25:35.840040"
+    },
+    {
+      "slug": "microsoft-access-forms-customization",
+      "label": "Microsoft Access Forms Customization Guide",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:02:21.530969",
+      "last_updated": "2025-12-16T14:02:21.530969"
+    },
+    {
+      "slug": "nigeria-national-technology-advancement",
+      "label": "Nigeria's National Technology Advancement",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:35:52.893415",
+      "last_updated": "2025-12-16T14:35:52.893415"
+    },
+    {
+      "slug": "naseni-vision-100-products",
+      "label": "NASENI Product Expansion to 100 Products",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:37:14.811828",
+      "last_updated": "2025-12-16T14:37:14.811828"
+    },
+    {
+      "slug": "nigeria-indigenous-innovation-recognition",
+      "label": "Nigeria Indigenous Innovation Recognition",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:37:55.508551",
+      "last_updated": "2025-12-16T14:37:55.508551"
+    },
+    {
+      "slug": "qgi-pattern-detection-nigeria-sierra-leone-geopolitics",
+      "label": "QGI Pattern Detection in Geopolitics (Nigeria & Sierra Leone)",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:37:25.554336",
+      "last_updated": "2025-12-16T15:37:25.554336"
+    },
+    {
+      "slug": "space-technology-discussion-nigeria-high-profile-figures",
+      "label": "Space Technology Discussion in Nigeria Involving High-Profile Figures",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:17:49.531358",
+      "last_updated": "2025-12-17T07:17:49.531358"
+    },
+    {
+      "slug": "mars-astrobiology-habitability",
+      "label": "Mars Astrobiology & Potential Habitability",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:19:12.497593",
+      "last_updated": "2025-12-17T07:19:12.497593"
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "ministry": "education",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "president-bola-tinubu",
+      "label": "President Bola Tinubu Has Approved The Renaming Of",
+      "mention_count": 5,
+      "created_at": "2025-12-22T09:44:05.697483",
+      "last_updated": "2025-12-22T18:38:12.611039"
+    },
+    {
+      "slug": "tinubu-praises-zulum-investments",
+      "label": "President Tinubu Praises Governor Zulum's Investments in Borno (education, health, transport)",
+      "mention_count": 2,
+      "created_at": "2025-12-22T09:44:30.117400",
+      "last_updated": "2025-12-22T09:59:34.410163"
+    },
+    {
+      "slug": "education-us-nigerian-student-restrictions",
+      "label": "US-Nigerian Student Restrictions in Education",
+      "mention_count": 2,
+      "created_at": "2025-12-22T09:45:13.076110",
+      "last_updated": "2025-12-22T10:08:46.249287"
+    },
+    {
+      "slug": "education-ngo-claims-incorrect",
+      "label": "Education - Misleading or False Claims",
+      "mention_count": 2,
+      "created_at": "2025-12-22T09:46:38.356793",
+      "last_updated": "2025-12-22T10:30:04.242622"
+    },
+    {
+      "slug": "condolences-professor-abdulganiy-raji",
+      "label": "Condolences on the Passing of Professor AbdulGaniy Raji",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:44:39.722331",
+      "last_updated": "2025-12-22T09:44:39.722331"
+    },
+    {
+      "slug": "adedeji-adeleke-profile-adeleke-university-president",
+      "label": "Profile: Adedeji Adeleke — President of Adeleke University (wealth estimates)",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:45:38.771912",
+      "last_updated": "2025-12-22T09:45:38.771912"
+    },
+    {
+      "slug": "tetfund-commendation-fg-funding-nigerian-universities",
+      "label": "TETFund Commends FG Funding of Nigerian Universities",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:47:12.074900",
+      "last_updated": "2025-12-22T09:47:12.074900"
+    },
+    {
+      "slug": "education-nnamdi-azikiwe-education-profile",
+      "label": "Education - Nnamdi Azikiwe education / historical profile",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:47:27.917878",
+      "last_updated": "2025-12-22T09:47:27.917878"
+    },
+    {
+      "slug": "tinubu-appoints-ceos-nuc-nerdc",
+      "label": "President Tinubu Appoints CEOs to NUC and NERDC",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:48:16.452108",
+      "last_updated": "2025-12-22T09:48:16.452108"
+    },
+    {
+      "slug": "education-unity-colleges-reopening",
+      "label": "Education - Reopening of Unity Colleges",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:53:09.122096",
+      "last_updated": "2025-12-22T09:53:09.122096"
+    },
+    {
+      "slug": "education-admissions-reform-ghost-students",
+      "label": "Education — Calls to shut down universities / re-run admissions over 'ghost' admissions",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:54:39.194996",
+      "last_updated": "2025-12-22T09:54:39.194996"
+    },
+    {
+      "slug": "education-government-criticism",
+      "label": "Education - Criticism of Government Actions",
+      "mention_count": 11,
+      "created_at": "2025-12-22T09:55:40.392680",
+      "last_updated": "2025-12-22T19:21:35.864192"
+    },
+    {
+      "slug": "education-inspirational-remarks-president",
+      "label": "Education - Inspirational Remarks About President's Educational Journey",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:55:46.815219",
+      "last_updated": "2025-12-22T09:55:46.815219"
+    },
+    {
+      "slug": "education-reform-nigeria",
+      "label": "Education Reform in Nigeria",
+      "mention_count": 2,
+      "created_at": "2025-12-22T09:56:17.974666",
+      "last_updated": "2025-12-22T19:12:16.591247"
+    },
+    {
+      "slug": "education-maaun-foreign-scholarships",
+      "label": "Education — MAAUN founder awards foreign scholarships to graduates",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:56:39.130534",
+      "last_updated": "2025-12-22T09:56:39.130534"
+    },
+    {
+      "slug": "education-national-cooperation-initiative",
+      "label": "Education - Call for National Unity and Collaboration",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:56:41.124345",
+      "last_updated": "2025-12-22T09:56:41.124345"
+    },
+    {
+      "slug": "education-school-insults-president",
+      "label": "School Insults President (Education sector criticism of the President)",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:57:40.859351",
+      "last_updated": "2025-12-22T09:57:40.859351"
+    },
+    {
+      "slug": "education-student-laptop-pledge",
+      "label": "Education - Student Laptop Pledge",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:58:21.029377",
+      "last_updated": "2025-12-22T09:58:21.029377"
+    },
+    {
+      "slug": "education-school-reaction-against-president",
+      "label": "School reaction/protest against the President in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:58:34.998372",
+      "last_updated": "2025-12-22T09:58:34.998372"
+    },
+    {
+      "slug": "tinubu-education-credentials",
+      "label": "President Bola Tinubu - Education credentials / degree verification",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:59:50.427909",
+      "last_updated": "2025-12-22T09:59:50.427909"
+    }
+  ]
+}

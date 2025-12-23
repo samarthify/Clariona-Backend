@@ -60,7 +60,7 @@ logs/
 
 # Data Directories (optional - uncomment if you don't want to commit data)
 # data/
-# ministry_issues/
+# Note: ministry_issues/ is needed for issue classification - keep it in repo
 
 # Database
 *.db

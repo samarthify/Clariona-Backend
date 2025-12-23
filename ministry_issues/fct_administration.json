@@ -1,0 +1,147 @@
+{
+  "ministry": "fct_administration",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "tinubu-administration-fct-development",
+      "label": "Tinubu Administration's Development in FCT",
+      "mention_count": 67,
+      "created_at": "2025-11-14T21:17:35.417511",
+      "last_updated": "2025-12-22T19:18:10.730085"
+    },
+    {
+      "slug": "fct-minister-clash-with-naval-officer",
+      "label": "FCT Minister Clash with Naval Officer",
+      "mention_count": 6,
+      "created_at": "2025-11-14T20:18:36.892438",
+      "last_updated": "2025-12-22T18:33:08.456745"
+    },
+    {
+      "slug": "state-house-abuja",
+      "label": "State House in Abuja",
+      "mention_count": 3,
+      "created_at": "2025-11-14T21:19:38.687936",
+      "last_updated": "2025-12-22T10:10:11.099106"
+    },
+    {
+      "slug": "land-use-violation-fine",
+      "label": "Land Use Violation Fine in FCTA",
+      "mention_count": 2,
+      "created_at": "2025-11-14T21:08:14.401576",
+      "last_updated": "2025-12-17T09:02:04.780166"
+    },
+    {
+      "slug": "abuja-masterplan-violations-enforcement",
+      "label": "Abuja Masterplan Violations Enforcement",
+      "mention_count": 2,
+      "created_at": "2025-11-14T21:10:26.448265",
+      "last_updated": "2025-12-17T09:04:23.078271"
+    },
+    {
+      "slug": "security-clearance:-“peter",
+      "label": "Security Clearance: “Peter Obi Should Stop Politicizing Everything”",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:04:00.060173",
+      "last_updated": "2025-11-03T01:04:00.060173"
+    },
+    {
+      "slug": "jonathan-2027-presidential-election",
+      "label": "Jonathan's 2027 Presidential Election Candidacy",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:14:11.049143",
+      "last_updated": "2025-11-05T02:14:11.049143"
+    },
+    {
+      "slug": "illegal-shacks-clearance",
+      "label": "Illegal Shacks Clearance in FCTA",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:18:28.777723",
+      "last_updated": "2025-11-05T02:18:28.777723"
+    },
+    {
+      "slug": "emerging-abuja-project-groovy-dec",
+      "label": "Emerging Abuja Project Groovy Dec Event",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:09:07.961395",
+      "last_updated": "2025-11-14T21:09:07.961395"
+    },
+    {
+      "slug": "abuja-safety-assurance",
+      "label": "Abuja Safety Assurance by FCT Minister",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:18:14.704117",
+      "last_updated": "2025-11-14T21:18:14.704117"
+    },
+    {
+      "slug": "fct-area-council-elections-2026",
+      "label": "FCT Area Council Elections 2026",
+      "mention_count": 3,
+      "created_at": "2025-11-14T21:21:49.945899",
+      "last_updated": "2025-12-22T18:40:33.935668"
+    },
+    {
+      "slug": "disputed-abuja-land-visit-by-wike",
+      "label": "Disputed Abuja Land Visit by Wike",
+      "mention_count": 2,
+      "created_at": "2025-11-14T21:22:00.401315",
+      "last_updated": "2025-12-22T18:38:46.888015"
+    },
+    {
+      "slug": "abuja-waste-management-contractors",
+      "label": "Abuja Waste Management Contractors Approval",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:22:38.852817",
+      "last_updated": "2025-11-14T21:22:38.852817"
+    },
+    {
+      "slug": "reuben-abati-urges-tinubu-to-call-wike-to-order",
+      "label": "Reuben Abati Urges Tinubu to Call Wike to Order",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:23:33.951403",
+      "last_updated": "2025-11-14T21:23:33.951403"
+    },
+    {
+      "slug": "abuja-land-drama",
+      "label": "Abuja Land Drama",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:23:57.918048",
+      "last_updated": "2025-11-14T21:23:57.918048"
+    },
+    {
+      "slug": "abuja-restaurant-demolition",
+      "label": "Abuja Restaurant Demolition Without Warning",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:25:44.252616",
+      "last_updated": "2025-11-14T21:25:44.252616"
+    },
+    {
+      "slug": "presidential-remarks-2023",
+      "label": "Presidential Remarks / Statements",
+      "mention_count": 1,
+      "created_at": "2025-11-28T17:54:25.927010",
+      "last_updated": "2025-11-28T17:54:25.927010"
+    },
+    {
+      "slug": "federal-revenue-distribution",
+      "label": "Federal Revenue Distribution",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:01:09.882299",
+      "last_updated": "2025-12-16T14:01:09.882299"
+    },
+    {
+      "slug": "presidential-biography-launch",
+      "label": "Launch of Presidential Biography",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:02:06.686078",
+      "last_updated": "2025-12-16T14:02:06.686078"
+    },
+    {
+      "slug": "nigeria-presidential-election-discussion",
+      "label": "Nigerian Presidential Election Discussion",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:21:56.843687",
+      "last_updated": "2025-12-16T14:21:56.843687"
+    }
+  ]
+}

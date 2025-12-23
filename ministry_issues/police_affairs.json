@@ -1,0 +1,147 @@
+{
+  "ministry": "police_affairs",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "@egi_nupe___-insecurity",
+      "label": "@Egi_Nupe___ The Way Insecurity Go Reduce Ehn... Imagine",
+      "mention_count": 8,
+      "created_at": "2025-12-22T10:08:40.474060",
+      "last_updated": "2025-12-22T19:21:42.575716"
+    },
+    {
+      "slug": "police-brutality-protest-silencing",
+      "label": "Police brutality, repression of protest & silencing of dissent",
+      "mention_count": 7,
+      "created_at": "2025-12-22T10:08:52.992052",
+      "last_updated": "2025-12-22T19:01:18.305266"
+    },
+    {
+      "slug": "clothing-restrictions-and-rights",
+      "label": "Clothing restrictions & fundamental rights (need for police/army public education)",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:09:39.921873",
+      "last_updated": "2025-12-22T10:09:39.921873"
+    },
+    {
+      "slug": "political-misinformation-nigeria",
+      "label": "Political misinformation and false allegations about Nigerian leaders",
+      "mention_count": 6,
+      "created_at": "2025-12-22T10:10:08.083088",
+      "last_updated": "2025-12-22T19:22:25.463288"
+    },
+    {
+      "slug": "state-police-and-local-government-autonomy",
+      "label": "State police & local government autonomy reforms",
+      "mention_count": 16,
+      "created_at": "2025-12-22T10:10:33.133889",
+      "last_updated": "2025-12-22T19:21:20.392936"
+    },
+    {
+      "slug": "arrest-for-insulting-public-officials",
+      "label": "Arrests/prosecution for insulting politicians & limits on freedom of expression",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:10:49.635613",
+      "last_updated": "2025-12-22T10:10:49.635613"
+    },
+    {
+      "slug": "withdrawal-of-police-protection-for-lawmakers",
+      "label": "Withdrawal of police protection for lawmakers & safety concerns",
+      "mention_count": 3,
+      "created_at": "2025-12-22T10:15:46.758311",
+      "last_updated": "2025-12-22T18:40:33.647779"
+    },
+    {
+      "slug": "school-kidnappings-and-child-abductions",
+      "label": "School kidnappings & child abductions",
+      "mention_count": 11,
+      "created_at": "2025-12-22T10:17:04.165501",
+      "last_updated": "2025-12-22T19:20:39.003762"
+    },
+    {
+      "slug": "staged-kidnappings-and-extortion",
+      "label": "Staged kidnappings, extortion & false crime reports",
+      "mention_count": 2,
+      "created_at": "2025-12-22T10:22:00.749974",
+      "last_updated": "2025-12-22T10:25:08.459853"
+    },
+    {
+      "slug": "police-affairs-public-communications",
+      "label": "Police Affairs - Public Communications and Announcements",
+      "mention_count": 13,
+      "created_at": "2025-12-22T10:22:38.929934",
+      "last_updated": "2025-12-22T19:20:59.577375"
+    },
+    {
+      "slug": "religion-unity-peaceful-coexistence-benue",
+      "label": "Religion, unity and peaceful coexistence in Benue",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:24:39.183527",
+      "last_updated": "2025-12-22T10:24:39.183527"
+    },
+    {
+      "slug": "false-identity-and-defamation-online",
+      "label": "False Identity and Defamation Online",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:28:51.819555",
+      "last_updated": "2025-12-22T10:28:51.819555"
+    },
+    {
+      "slug": "police-officer-misconduct-and-killings",
+      "label": "Police officer misconduct & killings (including extrajudicial killings and criminal charges against officers)",
+      "mention_count": 2,
+      "created_at": "2025-12-22T10:29:14.751284",
+      "last_updated": "2025-12-22T19:16:10.021236"
+    },
+    {
+      "slug": "police-investigative-inaction",
+      "label": "Police failure to investigate / alleged investigative inaction",
+      "mention_count": 3,
+      "created_at": "2025-12-22T10:30:06.571134",
+      "last_updated": "2025-12-22T19:19:03.420531"
+    },
+    {
+      "slug": "election-integrity-vote-buying-ballot-box-snatching",
+      "label": "Election integrity — vote buying & ballot box snatching",
+      "mention_count": 1,
+      "created_at": "2025-12-22T18:36:03.332661",
+      "last_updated": "2025-12-22T18:36:03.332661"
+    },
+    {
+      "slug": "banditry-kidnapping-unknown-gunmen-boko-haram-insecurity",
+      "label": "Banditry, kidnapping, unknown gunmen & Boko Haram — general insecurity",
+      "mention_count": 1,
+      "created_at": "2025-12-22T18:40:57.326812",
+      "last_updated": "2025-12-22T18:40:57.326812"
+    },
+    {
+      "slug": "law-enforcement-corruption-allegations",
+      "label": "Law enforcement corruption allegations (EFCC & police)",
+      "mention_count": 1,
+      "created_at": "2025-12-22T18:58:07.032070",
+      "last_updated": "2025-12-22T18:58:07.032070"
+    },
+    {
+      "slug": "police-training-and-capacity-building",
+      "label": "Police training and capacity building (professional development, anti‑corruption, cybercrime, human rights)",
+      "mention_count": 1,
+      "created_at": "2025-12-22T18:58:17.122738",
+      "last_updated": "2025-12-22T18:58:17.122738"
+    },
+    {
+      "slug": "separatist-threats-and-targeting-of-critics",
+      "label": "Threats to critics by separatist groups & ethnically-targeted intimidation",
+      "mention_count": 1,
+      "created_at": "2025-12-22T19:01:11.728251",
+      "last_updated": "2025-12-22T19:01:11.728251"
+    },
+    {
+      "slug": "banditry-insecurity-and-kidnapping",
+      "label": "Banditry, insecurity & kidnapping (general public concerns and calls for collective response)",
+      "mention_count": 1,
+      "created_at": "2025-12-22T19:09:20.217557",
+      "last_updated": "2025-12-22T19:09:20.217557"
+    }
+  ]
+}

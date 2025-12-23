@@ -1,0 +1,35 @@
+{
+  "ministry": "art_culture_creative",
+  "issue_count": 4,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "cutting-edge-labs,-rainforest",
+      "label": "Cutting-Edge Labs, A Rainforest Gallery And Guesthouse: Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:12:23.454892",
+      "last_updated": "2025-11-05T02:12:23.454892"
+    },
+    {
+      "slug": "art-x-lagos-impact",
+      "label": "Art X Lagos Impact on Nigeria's Creative Ecosystem",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:17:14.207366",
+      "last_updated": "2025-11-14T20:17:14.207366"
+    },
+    {
+      "slug": "aspiring-writers-in-nigerian-afrobeat-scene",
+      "label": "Aspiring Writers in Nigerian Afrobeat Scene",
+      "mention_count": 2,
+      "created_at": "2025-11-28T17:54:28.367072",
+      "last_updated": "2025-12-18T02:50:18.184469"
+    },
+    {
+      "slug": "art_culture_creative",
+      "label": "art_culture_creative",
+      "mention_count": 248,
+      "created_at": "2025-12-16T14:02:12.269223",
+      "last_updated": "2025-12-22T19:16:04.915124"
+    }
+  ]
+}

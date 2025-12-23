@@ -1,0 +1,147 @@
+{
+  "ministry": "livestock_development",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "relocating-cattle-to-grazing-reserves",
+      "label": "Relocating Cattle to Grazing Reserves",
+      "mention_count": 12,
+      "created_at": "2025-11-14T21:23:20.319902",
+      "last_updated": "2025-12-22T18:39:59.764595"
+    },
+    {
+      "slug": "livestock-develop-viral-memes",
+      "label": "Livestock Development - Viral Memes",
+      "mention_count": 10,
+      "created_at": "2025-12-16T14:35:02.123580",
+      "last_updated": "2025-12-22T19:01:13.053218"
+    },
+    {
+      "slug": "nigeria-rival-global",
+      "label": "Nigeria Can Rival Global Livestock Producers — President,",
+      "mention_count": 6,
+      "created_at": "2025-11-03T03:30:08.440838",
+      "last_updated": "2025-12-22T10:23:53.139598"
+    },
+    {
+      "slug": "rising-meat-prices-affordability",
+      "label": "Rising Meat Prices and Affordability",
+      "mention_count": 3,
+      "created_at": "2025-12-16T14:10:23.028704",
+      "last_updated": "2025-12-17T20:15:07.786861"
+    },
+    {
+      "slug": "limited-quality-animal-feeds-challenge",
+      "label": "Limited Quality Animal Feeds Challenge",
+      "mention_count": 2,
+      "created_at": "2025-11-14T21:07:33.969559",
+      "last_updated": "2025-12-18T05:45:23.107959"
+    },
+    {
+      "slug": "rare-five-horned-ram",
+      "label": "Rare Five-Horned Ram in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:26:48.358921",
+      "last_updated": "2025-11-05T02:26:48.358921"
+    },
+    {
+      "slug": "boosting-fish-production-collaboration",
+      "label": "Boosting Fish Production Collaboration",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:25:11.473768",
+      "last_updated": "2025-11-14T20:25:11.473768"
+    },
+    {
+      "slug": "empowering-border-families",
+      "label": "Empowering Border Families",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:04:54.168411",
+      "last_updated": "2025-11-14T21:04:54.168411"
+    },
+    {
+      "slug": "investigative-public-hearing",
+      "label": "Investigative Public Hearing in Abuja",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:24:49.083600",
+      "last_updated": "2025-11-14T21:24:49.083600"
+    },
+    {
+      "slug": "challenges-of-entrepreneurship-in-agriculture",
+      "label": "Challenges of Entrepreneurship in Agriculture",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:03:07.700014",
+      "last_updated": "2025-12-16T14:03:07.700014"
+    },
+    {
+      "slug": "integrated-poultry-development-project",
+      "label": "Integrated Poultry Development Project (Kaduna $200M)",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:49:12.170626",
+      "last_updated": "2025-12-16T14:49:12.170626"
+    },
+    {
+      "slug": "livestock-productive-inputs",
+      "label": "Livestock Productivity and Support",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:34:54.266819",
+      "last_updated": "2025-12-16T15:34:54.266819"
+    },
+    {
+      "slug": "dependency-on-foreign-dairy-imports",
+      "label": "Dependency on Foreign Dairy Imports",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:35:52.055008",
+      "last_updated": "2025-12-16T15:35:52.055008"
+    },
+    {
+      "slug": "reviving-dormant-livestock-facilities-ppp",
+      "label": "Revival of Dormant Livestock Facilities Through PPP",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:42:40.058403",
+      "last_updated": "2025-12-16T15:42:40.058403"
+    },
+    {
+      "slug": "promoting-sustainable-poultry-farming",
+      "label": "Promoting Sustainable Poultry Farming and Poultry Fairs",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:26:12.512334",
+      "last_updated": "2025-12-17T07:26:12.512334"
+    },
+    {
+      "slug": "monitoring-evaluation-in-livestock-projects",
+      "label": "Monitoring & Evaluation in Livestock Projects",
+      "mention_count": 1,
+      "created_at": "2025-12-17T08:58:29.672507",
+      "last_updated": "2025-12-17T08:58:29.672507"
+    },
+    {
+      "slug": "fulani-herdsmen-menace",
+      "label": "Fulani Herdsmen Menace in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-17T08:59:36.506170",
+      "last_updated": "2025-12-17T08:59:36.506170"
+    },
+    {
+      "slug": "dog-puppy-sales",
+      "label": "Dog / Puppy Sales and Breeding",
+      "mention_count": 1,
+      "created_at": "2025-12-17T12:32:32.454181",
+      "last_updated": "2025-12-17T12:32:32.454181"
+    },
+    {
+      "slug": "fulani-herdsmen-attacks-origin",
+      "label": "Origin of Fulani Herdsmen Attacks",
+      "mention_count": 1,
+      "created_at": "2025-12-17T12:33:52.222422",
+      "last_updated": "2025-12-17T12:33:52.222422"
+    },
+    {
+      "slug": "insufficient-livestock-yield-due-to-local-breeds",
+      "label": "Insufficient Livestock Yield due to Local Breeds",
+      "mention_count": 1,
+      "created_at": "2025-12-17T13:43:18.112198",
+      "last_updated": "2025-12-17T13:43:18.112198"
+    }
+  ]
+}

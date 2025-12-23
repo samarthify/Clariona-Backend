@@ -1,0 +1,147 @@
+{
+  "ministry": "interior",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "interior-bandits-kidnappers",
+      "label": "Interior: Bandits Turned Kidnappers",
+      "mention_count": 61,
+      "created_at": "2025-12-22T09:41:35.600941",
+      "last_updated": "2025-12-22T19:23:32.081721"
+    },
+    {
+      "slug": "president-bola-ahmed-tinubu",
+      "label": "President Bola Ahmed Tinubu Commends Olubunmi Tunji-Ojo On",
+      "mention_count": 9,
+      "created_at": "2025-12-22T09:20:24.015985",
+      "last_updated": "2025-12-22T18:54:07.430389"
+    },
+    {
+      "slug": "visa-requirements-for-british-citizens",
+      "label": "Visa requirements for British citizens / immigration policy",
+      "mention_count": 8,
+      "created_at": "2025-12-22T09:25:45.694598",
+      "last_updated": "2025-12-22T10:29:26.256161"
+    },
+    {
+      "slug": "kidnapping-and-government-negotiations",
+      "label": "Kidnapping and Government Negotiations",
+      "mention_count": 7,
+      "created_at": "2025-12-22T09:22:51.562428",
+      "last_updated": "2025-12-22T19:17:47.837083"
+    },
+    {
+      "slug": "separation-of-nigeria-and-separatist-sentiment",
+      "label": "Calls for Separation of Nigeria / Separatist Sentiment",
+      "mention_count": 22,
+      "created_at": "2025-12-22T09:26:35.699076",
+      "last_updated": "2025-12-22T19:01:17.693891"
+    },
+    {
+      "slug": "local-government-autonomy-compliance",
+      "label": "Local Government Autonomy Compliance",
+      "mention_count": 8,
+      "created_at": "2025-12-22T09:41:40.608288",
+      "last_updated": "2025-12-22T18:36:28.664182"
+    },
+    {
+      "slug": "interior-terrorist-designation-of-bandits-and-violent-groups",
+      "label": "Interior: Tinubu Declares Bandits, Cults and Armed Groups Terrorists",
+      "mention_count": 4,
+      "created_at": "2025-12-22T09:44:30.562305",
+      "last_updated": "2025-12-22T09:58:44.750598"
+    },
+    {
+      "slug": "security-agency-stops-without-reported-crime",
+      "label": "Security agencies stopping individuals without reported crimes / civil liberties concerns",
+      "mention_count": 3,
+      "created_at": "2025-12-22T09:27:31.575558",
+      "last_updated": "2025-12-22T18:33:21.832977"
+    },
+    {
+      "slug": "prophetic-calls-against-rebellion",
+      "label": "Prophetic Calls Against Rebellion / Threats to President Tinubu",
+      "mention_count": 5,
+      "created_at": "2025-12-22T09:29:16.234557",
+      "last_updated": "2025-12-22T18:58:09.071494"
+    },
+    {
+      "slug": "cjtf-and-local-vigilante-groups-eliminate-bandit-leader-in-zamfara",
+      "label": "CJTF and Local Vigilante Groups Eliminate Bandit Leader in Zamfara",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:21:40.794681",
+      "last_updated": "2025-12-22T09:21:40.794681"
+    },
+    {
+      "slug": "interior-miyetti-allah-presidency",
+      "label": "Interior: Miyetti Allah Leadership and Government Relations",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:44:35.018881",
+      "last_updated": "2025-12-22T09:44:35.018881"
+    },
+    {
+      "slug": "interior-terrorist-designation-new",
+      "label": "Interior: Comprehensive List of Terrorists and Security Doctrine",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:44:36.081252",
+      "last_updated": "2025-12-22T09:44:36.081252"
+    },
+    {
+      "slug": "interior-border-wall-construction",
+      "label": "Interior: Border Wall Construction / Border Security",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:48:20.466049",
+      "last_updated": "2025-12-22T09:48:20.466049"
+    },
+    {
+      "slug": "interior-misinformation-and-security-response",
+      "label": "Interior: Government / security agency response to misinformation and fake news",
+      "mention_count": 8,
+      "created_at": "2025-12-22T09:53:36.594335",
+      "last_updated": "2025-12-22T19:21:40.280341"
+    },
+    {
+      "slug": "interior-minister-honored-by-tampan",
+      "label": "Interior: Minister Honored by TAMPAN (cultural recognition)",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:54:45.939404",
+      "last_updated": "2025-12-22T09:54:45.939404"
+    },
+    {
+      "slug": "public-service-delivery-emergency-response-nigeria",
+      "label": "Public service delivery / Emergency response (Nigeria)",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:56:18.854045",
+      "last_updated": "2025-12-22T09:56:18.854045"
+    },
+    {
+      "slug": "interior-violence-against-christians",
+      "label": "Interior: Violence/Persecution Against Christians",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:57:37.060083",
+      "last_updated": "2025-12-22T09:57:37.060083"
+    },
+    {
+      "slug": "silence-of-pastors-on-christian-genocide-in-nigeria",
+      "label": "Ministry: Interior - Silence of Pastors on Christian Genocide in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:07:38.557647",
+      "last_updated": "2025-12-22T10:07:38.557647"
+    },
+    {
+      "slug": "interior-religious-persecution-claims",
+      "label": "Interior: Claims/Denials of Religious Violence and Persecution",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:08:31.791658",
+      "last_updated": "2025-12-22T10:08:31.791658"
+    },
+    {
+      "slug": "interior-immigration-and-reciprocal-expulsions",
+      "label": "Interior: Immigration and Reciprocal Expulsions (Nigeria–Ghana)",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:08:45.165294",
+      "last_updated": "2025-12-22T10:08:45.165294"
+    }
+  ]
+}

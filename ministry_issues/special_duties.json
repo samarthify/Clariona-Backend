@@ -1,0 +1,147 @@
+{
+  "ministry": "special_duties",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "special_duties-legacy-and-values",
+      "label": "Special Duties - Legacy and Values",
+      "mention_count": 63,
+      "created_at": "2025-12-16T14:02:14.995165",
+      "last_updated": "2025-12-22T18:59:06.964922"
+    },
+    {
+      "slug": "special_duties-presidential-absence",
+      "label": "Special Duties - Presidential Absence/Accountability",
+      "mention_count": 36,
+      "created_at": "2025-12-16T14:09:32.172237",
+      "last_updated": "2025-12-22T18:58:09.055673"
+    },
+    {
+      "slug": "president-tinubu-opposition-humbling",
+      "label": "President Tinubu Opposition Humbling",
+      "mention_count": 27,
+      "created_at": "2025-11-14T21:17:16.890766",
+      "last_updated": "2025-12-22T19:18:55.275807"
+    },
+    {
+      "slug": "special_duties-security",
+      "label": "Special Duties - Security Concerns in Nigeria",
+      "mention_count": 24,
+      "created_at": "2025-11-28T17:54:25.817411",
+      "last_updated": "2025-12-22T18:57:08.425751"
+    },
+    {
+      "slug": "senior-special-assistant-appointment",
+      "label": "Senior Special Assistant Appointment",
+      "mention_count": 11,
+      "created_at": "2025-11-05T02:09:37.787362",
+      "last_updated": "2025-12-18T05:40:59.173358"
+    },
+    {
+      "slug": "group-urges",
+      "label": "Bat Group Urges Apc Leaders To Review Reward",
+      "mention_count": 3,
+      "created_at": "2025-11-03T03:26:03.789510",
+      "last_updated": "2025-12-22T18:38:07.225379"
+    },
+    {
+      "slug": "career-progression",
+      "label": "Career Progression",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:15:29.608113",
+      "last_updated": "2025-12-16T14:27:56.718158"
+    },
+    {
+      "slug": "mowaa-special-committee",
+      "label": "MOWAA Special Committee Formation",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:07:14.845225",
+      "last_updated": "2025-11-14T21:07:31.566119"
+    },
+    {
+      "slug": "religious-tensions",
+      "label": "Religious Tensions",
+      "mention_count": 2,
+      "created_at": "2025-12-03T16:06:17.504231",
+      "last_updated": "2025-12-03T16:07:16.356213"
+    },
+    {
+      "slug": "special_duties-anioma-state-creation",
+      "label": "Special Duties - Anioma State Creation Demand",
+      "mention_count": 2,
+      "created_at": "2025-12-16T14:10:56.580559",
+      "last_updated": "2025-12-17T13:41:11.342837"
+    },
+    {
+      "slug": "special_duties-state-capture-concerns",
+      "label": "Special Duties - State Capture Concerns",
+      "mention_count": 6,
+      "created_at": "2025-12-16T14:23:58.565789",
+      "last_updated": "2025-12-22T19:18:04.316980"
+    },
+    {
+      "slug": "religious-discourse",
+      "label": "Religious Discourse",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:32:52.633115",
+      "last_updated": "2025-12-16T14:32:52.633115"
+    },
+    {
+      "slug": "special_duties-legislative-achievements",
+      "label": "Special Duties - Legislative Achievements",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:32:56.093490",
+      "last_updated": "2025-12-16T14:32:56.093490"
+    },
+    {
+      "slug": "political-leadership-history",
+      "label": "Political Leadership History and Analysis",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:35:56.484580",
+      "last_updated": "2025-12-16T14:35:56.484580"
+    },
+    {
+      "slug": "special_duties-tone-and-language",
+      "label": "Special Duties - Tone and Language",
+      "mention_count": 2,
+      "created_at": "2025-12-16T14:36:53.331037",
+      "last_updated": "2025-12-22T19:18:18.735403"
+    },
+    {
+      "slug": "special_duties-meritocracy-and-transparency",
+      "label": "Special Duties - Meritocracy and Transparency",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:37:55.948062",
+      "last_updated": "2025-12-16T14:37:55.948062"
+    },
+    {
+      "slug": "special_duties-ccb-budget-increase",
+      "label": "Special Duties - Code of Conduct Bureau (CCB) Budget Increase",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:38:58.739145",
+      "last_updated": "2025-12-16T14:38:58.739145"
+    },
+    {
+      "slug": "special_duties-leadership-and-maturity",
+      "label": "Special Duties - Leadership and Maturity",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:44:56.230048",
+      "last_updated": "2025-12-16T14:44:56.230048"
+    },
+    {
+      "slug": "special_duties-praise-for-president-tinubu",
+      "label": "Special Duties - Praise/Support for President Tinubu",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:46:45.334243",
+      "last_updated": "2025-12-16T14:46:45.334243"
+    },
+    {
+      "slug": "special_duties-legacy-and-values",
+      "label": "Special Duties - Legacy and Values",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:34:55.111432",
+      "last_updated": "2025-12-16T15:34:55.111432"
+    }
+  ]
+}

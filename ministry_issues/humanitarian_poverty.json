@@ -1,0 +1,147 @@
+{
+  "ministry": "humanitarian_poverty",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "poverty-and-cultural-stereotypes-in-nigeria",
+      "label": "Poverty and Cultural Stereotypes in Nigeria",
+      "mention_count": 43,
+      "created_at": "2025-12-16T14:02:08.965230",
+      "last_updated": "2025-12-22T19:21:40.083675"
+    },
+    {
+      "slug": "tinubu’s-poverty-reduction-drive-better",
+      "label": "Tinubu’S Poverty-Reduction Drive Better Than Previous Govts —",
+      "mention_count": 17,
+      "created_at": "2025-11-03T04:09:44.816570",
+      "last_updated": "2025-12-22T18:55:42.620913"
+    },
+    {
+      "slug": "peter-obi-on-leadership-and-corruption-driving-poverty",
+      "label": "Peter Obi on Leadership and Corruption Driving Poverty",
+      "mention_count": 17,
+      "created_at": "2025-11-28T17:55:01.389205",
+      "last_updated": "2025-12-22T19:20:28.798524"
+    },
+    {
+      "slug": "genocide-in-nigeria-and-sudan",
+      "label": "Genocide in Nigeria and Sudan",
+      "mention_count": 8,
+      "created_at": "2025-12-03T16:07:53.583608",
+      "last_updated": "2025-12-22T09:47:42.611018"
+    },
+    {
+      "slug": "us-donation-for-food-aid-in-nigeria",
+      "label": "US Donation for Food Aid in Nigeria",
+      "mention_count": 4,
+      "created_at": "2025-11-05T02:09:07.457999",
+      "last_updated": "2025-11-05T02:23:40.327800"
+    },
+    {
+      "slug": "un-acknowledgement-of-hunger-crises-in-africa",
+      "label": "UN Acknowledgement of Hunger Crises in Africa",
+      "mention_count": 5,
+      "created_at": "2025-12-03T16:06:15.570394",
+      "last_updated": "2025-12-22T18:40:32.396662"
+    },
+    {
+      "slug": "trump-interference-in-nigeria-poverty",
+      "label": "Trump Interference in Nigeria Poverty",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:15:09.888800",
+      "last_updated": "2025-12-22T10:32:38.489270"
+    },
+    {
+      "slug": "afghanistan-earthquake-response",
+      "label": "Afghanistan Earthquake Response",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:23:59.823713",
+      "last_updated": "2025-11-05T02:23:59.823713"
+    },
+    {
+      "slug": "moroccan-earthquake-response",
+      "label": "Moroccan Earthquake Response",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:24:03.267608",
+      "last_updated": "2025-11-05T02:24:03.267608"
+    },
+    {
+      "slug": "sokoto-flood-relief-distribution-2025",
+      "label": "Sokoto Flood Relief Distribution 2025",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:03:18.587623",
+      "last_updated": "2025-12-16T14:03:18.587623"
+    },
+    {
+      "slug": "nigeria-government-neglect-of-victims",
+      "label": "Governance and accountability / Victim neglect",
+      "mention_count": 3,
+      "created_at": "2025-12-16T14:25:41.932221",
+      "last_updated": "2025-12-22T18:57:25.957998"
+    },
+    {
+      "slug": "humanitarian_poverty-child-abduction",
+      "label": "Humanitarian Poverty and Child Abduction in Nigeria",
+      "mention_count": 2,
+      "created_at": "2025-12-16T15:34:52.503966",
+      "last_updated": "2025-12-22T18:32:58.007347"
+    },
+    {
+      "slug": "christmas-charity-drive-for-orphanages",
+      "label": "Christmas Charity Drive for Orphanages",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:36:57.453959",
+      "last_updated": "2025-12-16T15:36:57.453959"
+    },
+    {
+      "slug": "vdm-distribution-to-nigerian-communities",
+      "label": "Advocacy for VDM distribution across Nigerian communities",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:40:40.328740",
+      "last_updated": "2025-12-16T15:40:40.328740"
+    },
+    {
+      "slug": "presidential-christmas-relief-distribution",
+      "label": "Presidential Office Christmas Relief Distribution",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:42:31.255798",
+      "last_updated": "2025-12-16T15:42:31.255798"
+    },
+    {
+      "slug": "cost-of-living-crisis-in-nigeria",
+      "label": "Cost of Living Crisis in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:02:33.228333",
+      "last_updated": "2025-12-17T07:02:33.228333"
+    },
+    {
+      "slug": "rchi-charity-launch-images-abuja",
+      "label": "RCHI Charity Launch Images (Abuja)",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:23:58.992190",
+      "last_updated": "2025-12-17T07:23:58.992190"
+    },
+    {
+      "slug": "nigeria-insecurity-impact-on-children",
+      "label": "Nigeria Insecurity Impact on Children",
+      "mention_count": 1,
+      "created_at": "2025-12-17T09:00:30.753353",
+      "last_updated": "2025-12-17T09:00:30.753353"
+    },
+    {
+      "slug": "nigeria-is-dead",
+      "label": "Nigeria Is Dead",
+      "mention_count": 1,
+      "created_at": "2025-12-17T09:01:34.097379",
+      "last_updated": "2025-12-17T09:01:34.097379"
+    },
+    {
+      "slug": "international-advocacy-and-factfinding-in-nigeria",
+      "label": "International Advocacy and Factfinding in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-17T12:25:20.411609",
+      "last_updated": "2025-12-17T12:25:20.411609"
+    }
+  ]
+}

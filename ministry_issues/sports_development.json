@@ -1,0 +1,147 @@
+{
+  "ministry": "sports_development",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "nigeria-gabon-fifa-plus-free",
+      "label": "Nigeria vs Gabon FIFA+ Free Viewing",
+      "mention_count": 67,
+      "created_at": "2025-11-14T20:08:01.813780",
+      "last_updated": "2025-11-14T21:23:58.943434"
+    },
+    {
+      "slug": "live-cricket-match-updates",
+      "label": "Live Cricket Match Updates",
+      "mention_count": 31,
+      "created_at": "2025-11-03T01:11:55.658415",
+      "last_updated": "2025-11-14T21:26:27.927882"
+    },
+    {
+      "slug": "dr-congo-nigeria-world-cup-playoff",
+      "label": "DR Congo vs Nigeria World Cup Playoff",
+      "mention_count": 26,
+      "created_at": "2025-11-14T20:11:02.609624",
+      "last_updated": "2025-12-22T18:38:50.960126"
+    },
+    {
+      "slug": "india-vs-south-africa-test-match",
+      "label": "India vs South Africa Test Match Coverage",
+      "mention_count": 15,
+      "created_at": "2025-11-14T21:09:01.860599",
+      "last_updated": "2025-11-14T21:26:19.191436"
+    },
+    {
+      "slug": "mlb-batting-leaders-quiz",
+      "label": "MLB Batting Leaders Quiz",
+      "mention_count": 13,
+      "created_at": "2025-11-03T01:10:53.100254",
+      "last_updated": "2025-11-14T21:25:20.248479"
+    },
+    {
+      "slug": "nigeria-appoints-eric-chelle-as-super-eagles-coach",
+      "label": "Nigeria Appoints Eric Chelle as Super Eagles Coach",
+      "mention_count": 12,
+      "created_at": "2025-11-05T02:21:23.660359",
+      "last_updated": "2025-11-14T21:22:06.989920"
+    },
+    {
+      "slug": "super-eagles-allowances-controversy",
+      "label": "Super Eagles Allowances Controversy",
+      "mention_count": 11,
+      "created_at": "2025-11-14T20:18:53.668888",
+      "last_updated": "2025-12-22T19:17:19.039356"
+    },
+    {
+      "slug": "nigerian-sports-betting-trends",
+      "label": "Nigerian Sports Betting Trends",
+      "mention_count": 8,
+      "created_at": "2025-11-03T01:14:43.603696",
+      "last_updated": "2025-11-14T21:12:34.731834"
+    },
+    {
+      "slug": "lack-of-sports-development-in-nigeria",
+      "label": "Lack of Sports Development in Nigeria",
+      "mention_count": 10,
+      "created_at": "2025-11-05T02:27:21.320433",
+      "last_updated": "2025-12-22T18:40:41.753067"
+    },
+    {
+      "slug": "bangladesh-t20i-squad-announcement",
+      "label": "Bangladesh T20I Squad Announcement",
+      "mention_count": 7,
+      "created_at": "2025-11-05T02:08:13.171643",
+      "last_updated": "2025-11-14T21:12:05.939383"
+    },
+    {
+      "slug": "womens-cricket-world-cup",
+      "label": "Women's Cricket World Cup Coverage",
+      "mention_count": 6,
+      "created_at": "2025-11-03T01:05:35.829719",
+      "last_updated": "2025-11-03T01:13:56.840328"
+    },
+    {
+      "slug": "cheteshwar-pujara-retirement",
+      "label": "Cheteshwar Pujara Retirement",
+      "mention_count": 5,
+      "created_at": "2025-11-03T01:05:43.126078",
+      "last_updated": "2025-12-18T02:52:00.102214"
+    },
+    {
+      "slug": "french-open-2025-sheikh-tamim-sheikha-moza",
+      "label": "French Open 2025: Sheikh Tamim & Sheikha Moza Appearance",
+      "mention_count": 5,
+      "created_at": "2025-11-05T02:10:43.422324",
+      "last_updated": "2025-11-05T02:26:10.487388"
+    },
+    {
+      "slug": "nigeria-boycott-drama",
+      "label": "Nigeria Boycott Drama",
+      "mention_count": 5,
+      "created_at": "2025-11-14T20:13:26.688506",
+      "last_updated": "2025-11-14T20:24:57.992715"
+    },
+    {
+      "slug": "president-commends-mumuni",
+      "label": "Nff President Commends Mumuni Alao, Urges Sportswriters To",
+      "mention_count": 4,
+      "created_at": "2025-11-03T01:04:37.988740",
+      "last_updated": "2025-12-18T03:07:21.315332"
+    },
+    {
+      "slug": "senator-barau-rewards-players",
+      "label": "Senator Barau Rewards Players",
+      "mention_count": 4,
+      "created_at": "2025-11-03T01:05:32.871559",
+      "last_updated": "2025-12-22T10:07:27.079859"
+    },
+    {
+      "slug": "messi-world-cup-win",
+      "label": "Messi World Cup Win",
+      "mention_count": 4,
+      "created_at": "2025-11-05T02:14:13.933168",
+      "last_updated": "2025-11-05T02:20:58.533117"
+    },
+    {
+      "slug": "amir-cup-champions-luncheon",
+      "label": "Amir Cup Champions Luncheon Event",
+      "mention_count": 4,
+      "created_at": "2025-11-05T02:15:47.115404",
+      "last_updated": "2025-11-14T20:53:55.614371"
+    },
+    {
+      "slug": "lady-redskins-region-title",
+      "label": "Lady Redskins Region Title Win",
+      "mention_count": 3,
+      "created_at": "2025-11-03T01:11:38.030890",
+      "last_updated": "2025-11-03T01:14:47.056489"
+    },
+    {
+      "slug": "all-rounder-nitish-kumar-reddy",
+      "label": "All-Rounder Nitish Kumar Reddy Potential for India Test Cricket",
+      "mention_count": 3,
+      "created_at": "2025-11-03T01:11:52.686473",
+      "last_updated": "2025-11-03T01:14:09.368711"
+    }
+  ]
+}

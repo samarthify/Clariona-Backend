@@ -1,0 +1,147 @@
+{
+  "ministry": "power",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "nigeria-energy-grid",
+      "label": "Nigeria's Energy Grid Challenges",
+      "mention_count": 98,
+      "created_at": "2025-11-05T02:27:14.568275",
+      "last_updated": "2025-12-22T19:21:08.610654"
+    },
+    {
+      "slug": "tinubu-energy-reforms",
+      "label": "Tinubu's Reforms in Energy Sector",
+      "mention_count": 41,
+      "created_at": "2025-11-03T03:26:55.814850",
+      "last_updated": "2025-12-22T18:54:29.358358"
+    },
+    {
+      "slug": "nigeria-off-grid-solar-solution",
+      "label": "Nigeria Off-Grid Solar Solution",
+      "mention_count": 15,
+      "created_at": "2025-11-14T20:09:34.631090",
+      "last_updated": "2025-12-22T19:12:09.698220"
+    },
+    {
+      "slug": "nigeria-sustainable-power-collaboration",
+      "label": "Nigeria Sustainable Power Collaboration",
+      "mention_count": 7,
+      "created_at": "2025-11-14T20:16:26.635183",
+      "last_updated": "2025-12-22T10:27:57.248340"
+    },
+    {
+      "slug": "power-protection-surge-protectors",
+      "label": "Power Protection with Surge Protectors",
+      "mention_count": 6,
+      "created_at": "2025-11-05T02:18:40.892265",
+      "last_updated": "2025-12-18T02:45:47.995854"
+    },
+    {
+      "slug": "qatar-support-syrian-electricity",
+      "label": "Qatar Support for Syrian Electricity Sector",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:25:11.602979",
+      "last_updated": "2025-11-05T02:26:57.792049"
+    },
+    {
+      "slug": "tinubu-mobile-power-stations",
+      "label": "Tinubu's Mobile Power Stations Initiative",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:11:46.212994",
+      "last_updated": "2025-12-17T08:59:35.657185"
+    },
+    {
+      "slug": "chides-tinubu-over",
+      "label": "Obi Chides Tinubu Over Inability To Keep Campaign",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:06:57.340924",
+      "last_updated": "2025-11-03T01:06:57.340924"
+    },
+    {
+      "slug": "trump-nuclear-tests",
+      "label": "Trump Administration Nuclear Tests",
+      "mention_count": 1,
+      "created_at": "2025-11-03T04:10:16.372711",
+      "last_updated": "2025-11-03T04:10:16.372711"
+    },
+    {
+      "slug": "qatar-solar-power-plant",
+      "label": "Qatar Solar Power Plant",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:16:06.711686",
+      "last_updated": "2025-11-05T02:16:06.711686"
+    },
+    {
+      "slug": "tinubu-afam-power-plant-sale",
+      "label": "Tinubu's Afam Power Plant Sale",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:17:16.585709",
+      "last_updated": "2025-11-14T20:17:16.585709"
+    },
+    {
+      "slug": "nigeria-disco-revenue-record",
+      "label": "Nigeria DISCO Revenue Record",
+      "mention_count": 2,
+      "created_at": "2025-11-14T21:08:45.292587",
+      "last_updated": "2025-12-22T19:11:10.011267"
+    },
+    {
+      "slug": "rigasa-electricity-solution",
+      "label": "Rigasa Electricity Solution",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:12:30.818834",
+      "last_updated": "2025-11-14T21:12:30.818834"
+    },
+    {
+      "slug": "green-ammonia-low-carbon-future",
+      "label": "Green Ammonia Advances for a Low-Carbon Future",
+      "mention_count": 1,
+      "created_at": "2025-12-03T16:06:17.381356",
+      "last_updated": "2025-12-03T16:06:17.381356"
+    },
+    {
+      "slug": "green-ammonia-low-carbon-future",
+      "label": "Green Ammonia Advances for a Low-Carbon Future",
+      "mention_count": 1,
+      "created_at": "2025-12-03T16:07:16.715870",
+      "last_updated": "2025-12-03T16:07:16.715870"
+    },
+    {
+      "slug": "power-politicians-use",
+      "label": "Power: Politicians Weaponizing Issues",
+      "mention_count": 1,
+      "created_at": "2025-12-16T13:59:52.176595",
+      "last_updated": "2025-12-16T13:59:52.176595"
+    },
+    {
+      "slug": "solar-training-basics",
+      "label": "Solar Training Basics",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:05:43.183825",
+      "last_updated": "2025-12-16T14:05:43.183825"
+    },
+    {
+      "slug": "south-africa-nigeria-power-cuts-cross-talk",
+      "label": "South Africa-Nigeria Cross-Country Power-Cuts and Insults",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:39:46.191054",
+      "last_updated": "2025-12-16T15:39:46.191054"
+    },
+    {
+      "slug": "nigeria-nerc-appointments",
+      "label": "NERC Commissioners Confirmation / Regulatory Appointments",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:41:29.745644",
+      "last_updated": "2025-12-16T15:41:29.745644"
+    },
+    {
+      "slug": "nigeria-just-energy-transition-law",
+      "label": "Nigeria: Just Energy Transition Law and Rights to Energy",
+      "mention_count": 1,
+      "created_at": "2025-12-17T12:24:59.455760",
+      "last_updated": "2025-12-17T12:24:59.455760"
+    }
+  ]
+}

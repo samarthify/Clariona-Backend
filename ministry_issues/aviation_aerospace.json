@@ -1,0 +1,147 @@
+{
+  "ministry": "aviation_aerospace",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "nigeria-international-airshow",
+      "label": "Nigeria International Airshow Support",
+      "mention_count": 4,
+      "created_at": "2025-11-14T21:15:21.807564",
+      "last_updated": "2025-12-22T18:32:03.121972"
+    },
+    {
+      "slug": "jkia-sale-qatar",
+      "label": "JKIA Sale to Emir of Qatar",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:50:32.656730",
+      "last_updated": "2025-11-14T20:50:42.249202"
+    },
+    {
+      "slug": "“peter-can’t-penetrate",
+      "label": "“Peter Obi Can’T Penetrate North In 2027 Election”",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:04:28.917449",
+      "last_updated": "2025-11-03T01:04:28.917449"
+    },
+    {
+      "slug": "establishment-flight-data-centre",
+      "label": "Establishment of Flight Data Centre",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:11:22.646401",
+      "last_updated": "2025-12-22T18:35:12.341058"
+    },
+    {
+      "slug": "boeing-qatar-airways-deal",
+      "label": "Boeing-Qatar Airways Deal",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:13:24.607356",
+      "last_updated": "2025-11-05T02:13:24.607356"
+    },
+    {
+      "slug": "saudi-airline-luxury-strategy",
+      "label": "Saudi Airline Luxury Strategy",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:23:17.653967",
+      "last_updated": "2025-11-05T02:23:17.653967"
+    },
+    {
+      "slug": "qatar-emir-boeing-747-landing",
+      "label": "Qatar Emir's Boeing 747 Landing Incident",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:38:57.862101",
+      "last_updated": "2025-11-14T20:38:57.862101"
+    },
+    {
+      "slug": "thai-airways-first-class-removal",
+      "label": "Thai Airways First Class Removal",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:40:34.229413",
+      "last_updated": "2025-11-14T20:40:34.229413"
+    },
+    {
+      "slug": "naape-ncaa-suspension",
+      "label": "NAAPE Appeal for Fair Treatment of Suspended Pilots by NCAA",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:26:13.265287",
+      "last_updated": "2025-11-14T21:26:13.265287"
+    },
+    {
+      "slug": "porter-recruitment-transparency",
+      "label": "Porter recruitment transparency / lack of opportunities",
+      "mention_count": 1,
+      "created_at": "2025-11-28T17:55:02.196523",
+      "last_updated": "2025-11-28T17:55:02.196523"
+    },
+    {
+      "slug": "nigeria-aircraft-emergency-landing-protocol",
+      "label": "Nigeria Aircraft Emergency Landing Protocol",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:02:19.218710",
+      "last_updated": "2025-12-16T14:02:19.218710"
+    },
+    {
+      "slug": "misuse-of-government-aircraft",
+      "label": "Use of government aircraft/escorts by officials for non-official travel",
+      "mention_count": 3,
+      "created_at": "2025-12-16T14:06:35.677213",
+      "last_updated": "2025-12-22T19:17:04.524621"
+    },
+    {
+      "slug": "presidential-jet-procurement-and-luxury-use",
+      "label": "Presidential jet/vehicle procurement and luxury use (extravagance, misuse of state transport)",
+      "mention_count": 3,
+      "created_at": "2025-12-16T14:07:50.814698",
+      "last_updated": "2025-12-22T18:55:29.339944"
+    },
+    {
+      "slug": "nigeria-presidential-aircraft-purchase",
+      "label": "Presidential aircraft purchase / government spending on aircraft",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:09:01.925642",
+      "last_updated": "2025-12-16T14:09:01.925642"
+    },
+    {
+      "slug": "ekiti-airport-commercial-flights",
+      "label": "Commencement of commercial flights at Ekiti Airport",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:10:53.166497",
+      "last_updated": "2025-12-16T14:10:53.166497"
+    },
+    {
+      "slug": "burkina-faso-presidential-aircraft-violation",
+      "label": "Burkina Faso Presidential Aircraft Violation",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:21:55.211035",
+      "last_updated": "2025-12-16T14:21:55.211035"
+    },
+    {
+      "slug": "portugal-denies-nigeria-flight-airspace-breach",
+      "label": "Portugal denies knowledge of Nigerian scheduled flight; alleged airspace breach",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:25:10.065631",
+      "last_updated": "2025-12-16T14:25:10.065631"
+    },
+    {
+      "slug": "aviation-emergency-incident-burkina-faso",
+      "label": "Aviation Emergency Incident in Burkina Faso",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:27:54.887436",
+      "last_updated": "2025-12-16T14:27:54.887436"
+    },
+    {
+      "slug": "nigerian-air-force-emergency-landing-burkina-faso-2025",
+      "label": "Nigerian Air Force Emergency Landing in Burkina Faso (Dec 8, 2025)",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:29:01.931028",
+      "last_updated": "2025-12-16T14:29:01.931028"
+    },
+    {
+      "slug": "airspace-violation-burkina-faso-nigeria-flight-incident",
+      "label": "Airspace Violation and Interception of Nigerian Aircraft by Burkina Faso",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:32:58.256884",
+      "last_updated": "2025-12-16T14:32:58.256884"
+    }
+  ]
+}

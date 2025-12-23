@@ -1,0 +1,147 @@
+{
+  "ministry": "works",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "road-infrastructure-projects",
+      "label": "Road Infrastructure Projects",
+      "mention_count": 139,
+      "created_at": "2025-11-03T03:25:39.029876",
+      "last_updated": "2025-12-22T19:16:16.937557"
+    },
+    {
+      "slug": "infrastructure-maintenance-neglect",
+      "label": "Infrastructure Maintenance Neglect",
+      "mention_count": 16,
+      "created_at": "2025-11-05T02:13:36.366674",
+      "last_updated": "2025-12-22T19:11:08.337526"
+    },
+    {
+      "slug": "public-project-commissioning",
+      "label": "Rethinking Public Project Commissioning in Nigeria",
+      "mention_count": 14,
+      "created_at": "2025-11-03T01:13:32.183123",
+      "last_updated": "2025-12-22T18:34:55.746819"
+    },
+    {
+      "slug": "2027-south-east-supports-tinubu",
+      "label": "South-East Support for Tinubu in 2027 Elections",
+      "mention_count": 3,
+      "created_at": "2025-11-03T01:10:29.449127",
+      "last_updated": "2025-12-18T03:15:35.026615"
+    },
+    {
+      "slug": "lcdas-establishment-grassroots-development",
+      "label": "Establishment of LCDAs for Grassroots Development",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:19:05.493286",
+      "last_updated": "2025-12-22T10:09:13.225691"
+    },
+    {
+      "slug": "foreign-construction-companies",
+      "label": "Foreign Construction Companies Dominance",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:09:19.615722",
+      "last_updated": "2025-11-05T02:10:33.338968"
+    },
+    {
+      "slug": "tinubu-son-company-infrastructure",
+      "label": "Tinubu's Son Company Infrastructure Allegations",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:09:25.509359",
+      "last_updated": "2025-12-18T02:50:38.403407"
+    },
+    {
+      "slug": "akpabio-transformation-record",
+      "label": "Akpabio's Transformation Record",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:14:43.199039",
+      "last_updated": "2025-12-16T14:10:58.436951"
+    },
+    {
+      "slug": "building-collapse-synergy",
+      "label": "Building Collapse Synergy Among Professionals",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:26:18.287610",
+      "last_updated": "2025-11-14T21:22:43.732465"
+    },
+    {
+      "slug": "2025-budget-includes-increased",
+      "label": "2025 Budget Includes Increased Allocation For Infrastructure",
+      "mention_count": 1,
+      "created_at": "2025-11-03T00:59:45.468247",
+      "last_updated": "2025-11-03T00:59:45.468247"
+    },
+    {
+      "slug": "new-states-creation-1991",
+      "label": "Creation of New States in 1991",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:20:01.901085",
+      "last_updated": "2025-11-05T02:20:01.901085"
+    },
+    {
+      "slug": "obadina-location-discrepancy",
+      "label": "Obadina Location Discrepancy in Isale Eko",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:26:23.248029",
+      "last_updated": "2025-11-05T02:26:23.248029"
+    },
+    {
+      "slug": "modern-market-construction",
+      "label": "Modern Market Construction in Kogi State",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:21:59.253516",
+      "last_updated": "2025-11-14T20:21:59.253516"
+    },
+    {
+      "slug": "governor-decision-supporters",
+      "label": "Governor's Decision Supporters Gathering",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:39:09.391013",
+      "last_updated": "2025-11-14T20:39:09.391013"
+    },
+    {
+      "slug": "coima-partnership-qatar-investment",
+      "label": "Coima Partnership with Qatar Investment Authority",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:41:05.145323",
+      "last_updated": "2025-11-14T20:41:05.145323"
+    },
+    {
+      "slug": "abuja-coworking-hub",
+      "label": "Abuja's Largest Co-working Hub Unveiled",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:25:07.889976",
+      "last_updated": "2025-11-14T21:25:07.889976"
+    },
+    {
+      "slug": "biafra-agitation-integration",
+      "label": "Biafra Agitation and South-East Integration",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:26:58.789600",
+      "last_updated": "2025-12-16T14:26:58.789600"
+    },
+    {
+      "slug": "works-minister-award-2025",
+      "label": "Works Minister Award and Political Endorsement (DMOMA 2025)",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:38:11.761527",
+      "last_updated": "2025-12-16T14:38:11.761527"
+    },
+    {
+      "slug": "nigeria-ethnic-and-regional-politics",
+      "label": "Nigeria Ethnic and Regional Politics",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:35:01.589305",
+      "last_updated": "2025-12-16T15:35:01.589305"
+    },
+    {
+      "slug": "construction-fraud-ethics",
+      "label": "Construction Fraud and Ethical Practices",
+      "mention_count": 1,
+      "created_at": "2025-12-17T06:56:25.329156",
+      "last_updated": "2025-12-17T06:56:25.329156"
+    }
+  ]
+}

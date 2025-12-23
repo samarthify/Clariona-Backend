@@ -1,0 +1,147 @@
+{
+  "ministry": "communications_digital",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "digital-economy-nigeria",
+      "label": "Digital Economy in Nigeria",
+      "mention_count": 131,
+      "created_at": "2025-11-03T03:33:12.234871",
+      "last_updated": "2025-12-22T19:18:00.535487"
+    },
+    {
+      "slug": "tinubu-absence-anambra-rally",
+      "label": "Tinubu's Absence at Anambra Rally",
+      "mention_count": 40,
+      "created_at": "2025-11-03T03:25:01.586797",
+      "last_updated": "2025-12-22T18:38:12.854756"
+    },
+    {
+      "slug": "qatar-royal-family-communications",
+      "label": "Qatar Royal Family Communications",
+      "mention_count": 6,
+      "created_at": "2025-11-05T02:25:14.030749",
+      "last_updated": "2025-11-14T20:56:27.922886"
+    },
+    {
+      "slug": "digital-communication-links",
+      "label": "Digital Communication Links",
+      "mention_count": 13,
+      "created_at": "2025-11-14T20:51:47.809362",
+      "last_updated": "2025-12-22T19:12:01.981819"
+    },
+    {
+      "slug": "anti-peter-obi-propaganda",
+      "label": "Anti-Peter Obi Propaganda",
+      "mention_count": 7,
+      "created_at": "2025-11-03T01:10:15.299122",
+      "last_updated": "2025-12-22T19:00:45.626466"
+    },
+    {
+      "slug": "president-communication-absence",
+      "label": "President's Communication Absence",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:20:40.684344",
+      "last_updated": "2025-11-05T02:21:55.694607"
+    },
+    {
+      "slug": "insults-towards-politicians",
+      "label": "Insults Towards Politicians",
+      "mention_count": 5,
+      "created_at": "2025-11-05T02:22:04.771059",
+      "last_updated": "2025-12-22T19:01:28.047988"
+    },
+    {
+      "slug": "nigeria-binance-geopolitical-test",
+      "label": "Nigeria as Geopolitical Test for Binance",
+      "mention_count": 2,
+      "created_at": "2025-11-03T03:45:10.103386",
+      "last_updated": "2025-12-17T08:57:26.098174"
+    },
+    {
+      "slug": "president-tweeting-activity",
+      "label": "President's Tweeting Activity",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:12:04.800794",
+      "last_updated": "2025-11-05T02:12:34.660864"
+    },
+    {
+      "slug": "solidarity-with-president",
+      "label": "Solidarity with President Message",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:19:08.561365",
+      "last_updated": "2025-11-05T02:22:36.766343"
+    },
+    {
+      "slug": "2027-election:-“strongest-ticket",
+      "label": "2027 Election: “Strongest Ticket Opposition Can Present Is",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:05:56.378039",
+      "last_updated": "2025-11-03T01:05:56.378039"
+    },
+    {
+      "slug": "adc-pdp-rift",
+      "label": "ADC-PDP Rift",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:07:10.988187",
+      "last_updated": "2025-11-03T01:07:10.988187"
+    },
+    {
+      "slug": "independence-day-wishes",
+      "label": "Independence Day Wishes",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:12:33.232937",
+      "last_updated": "2025-11-03T01:12:33.232937"
+    },
+    {
+      "slug": "atiku-presidential-destiny",
+      "label": "Atiku's Presidential Destiny",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:13:47.667190",
+      "last_updated": "2025-11-03T01:13:47.667190"
+    },
+    {
+      "slug": "pdp-apc-tinubu-endorsement",
+      "label": "PDP Mocks APC's Endorsement of Tinubu",
+      "mention_count": 1,
+      "created_at": "2025-11-03T03:39:31.443063",
+      "last_updated": "2025-11-03T03:39:31.443063"
+    },
+    {
+      "slug": "david-mark-abandoned-property-appointment",
+      "label": "David Mark's Appointment on Abandoned Property",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:09:16.307997",
+      "last_updated": "2025-11-05T02:09:16.307997"
+    },
+    {
+      "slug": "africa-ai-leadership",
+      "label": "Africa's AI Leadership at GITEX NIGERIA Summit",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:09:25.905980",
+      "last_updated": "2025-11-05T02:09:25.905980"
+    },
+    {
+      "slug": "crazy-man-nigeria-president",
+      "label": "Crazy Man as Nigeria President",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:09:29.654820",
+      "last_updated": "2025-11-05T02:09:29.654820"
+    },
+    {
+      "slug": "nigeria-data-price-hike",
+      "label": "Nigeria Data Price Hike",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:09:59.254597",
+      "last_updated": "2025-11-05T02:09:59.254597"
+    },
+    {
+      "slug": "supporter-handle-nigeria-president",
+      "label": "Supporter Handle for Nigeria President",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:10:01.370220",
+      "last_updated": "2025-11-05T02:10:01.370220"
+    }
+  ]
+}

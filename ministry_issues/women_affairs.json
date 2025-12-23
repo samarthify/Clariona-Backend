@@ -1,0 +1,147 @@
+{
+  "ministry": "women_affairs",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "cooperation-between-genders",
+      "label": "Cooperation Between Genders for Development",
+      "mention_count": 26,
+      "created_at": "2025-11-14T20:16:55.771336",
+      "last_updated": "2025-12-22T18:35:11.500888"
+    },
+    {
+      "slug": "tinubu-reelection-women-support",
+      "label": "Tinubu's Re-election Support by Women Group",
+      "mention_count": 16,
+      "created_at": "2025-11-14T20:13:03.364770",
+      "last_updated": "2025-12-22T09:28:50.139929"
+    },
+    {
+      "slug": "female-presidency-nigeria",
+      "label": "Female Presidency in Nigeria",
+      "mention_count": 6,
+      "created_at": "2025-11-03T01:13:56.580258",
+      "last_updated": "2025-12-22T09:57:33.325620"
+    },
+    {
+      "slug": "emir-qatar-women-rights",
+      "label": "Emir of Qatar and Women's Rights Advocacy",
+      "mention_count": 3,
+      "created_at": "2025-11-14T20:43:59.321440",
+      "last_updated": "2025-11-14T20:55:48.386365"
+    },
+    {
+      "slug": "trolling-actresses-childlessness",
+      "label": "Trolling Actresses' Childlessness",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:23:27.052241",
+      "last_updated": "2025-12-22T09:52:38.679922"
+    },
+    {
+      "slug": "prince-william-kate-middleton-chivalry",
+      "label": "Prince William & Kate Middleton Chivalry",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:25:30.545227",
+      "last_updated": "2025-11-05T02:27:25.348061"
+    },
+    {
+      "slug": "women-presidency-opinion",
+      "label": "Opinion on Women Presidency",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:42:14.992599",
+      "last_updated": "2025-11-14T21:10:07.548329"
+    },
+    {
+      "slug": "aisha-yesufu-knocks-coalition",
+      "label": "Aisha Yesufu Knocks Coalition Group, Calls For Youths,",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:05:22.283420",
+      "last_updated": "2025-11-03T01:05:22.283420"
+    },
+    {
+      "slug": "sheikha-moza-fashion-style",
+      "label": "Sheikha Moza's Fashion Style",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:12:13.716585",
+      "last_updated": "2025-11-05T02:12:13.716585"
+    },
+    {
+      "slug": "concerns-about-presidential-candidates-sons",
+      "label": "Concerns About Presidential Candidates' Sons",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:15:59.857305",
+      "last_updated": "2025-11-05T02:15:59.857305"
+    },
+    {
+      "slug": "actress-loses-son",
+      "label": "Actress Loses Son",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:19:13.311730",
+      "last_updated": "2025-11-05T02:19:13.311730"
+    },
+    {
+      "slug": "feminists-support-insecurity",
+      "label": "Feminists Support Insecurity",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:19:17.686604",
+      "last_updated": "2025-11-05T02:19:17.686604"
+    },
+    {
+      "slug": "merck-foundation-conference",
+      "label": "Merck Foundation Conference in Senegal and India",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:19:23.919962",
+      "last_updated": "2025-11-14T20:19:23.919962"
+    },
+    {
+      "slug": "cardi-b-welcomes-fourth-child",
+      "label": "Cardi B Welcomes Fourth Child",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:22:59.039357",
+      "last_updated": "2025-11-14T20:22:59.039357"
+    },
+    {
+      "slug": "child-defilement-abuja",
+      "label": "Child Defilement in Abuja",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:04:22.451359",
+      "last_updated": "2025-11-14T21:04:22.451359"
+    },
+    {
+      "slug": "gender-based-violence-fcta-un-women",
+      "label": "Gender-Based Violence Partnership in FCTA",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:12:54.340734",
+      "last_updated": "2025-11-14T21:12:54.340734"
+    },
+    {
+      "slug": "sexual-misconduct-allegation-paystack",
+      "label": "Sexual Misconduct Allegation at Paystack",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:22:56.395570",
+      "last_updated": "2025-11-14T21:22:56.395570"
+    },
+    {
+      "slug": "celebrity-role-model-criticism",
+      "label": "Celebrity Role Model Criticism",
+      "mention_count": 1,
+      "created_at": "2025-11-28T17:54:26.183733",
+      "last_updated": "2025-11-28T17:54:26.183733"
+    },
+    {
+      "slug": "sexual-violence-rape-underreporting-prosecution-nigeria",
+      "label": "Sexual Violence, Underreporting and Lack of Prosecution in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-03T16:07:56.799268",
+      "last_updated": "2025-12-03T16:07:56.799268"
+    },
+    {
+      "slug": "perceptions-of-wealth-among-women-nigeria",
+      "label": "Perceptions of Wealth Among Women in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:02:15.609552",
+      "last_updated": "2025-12-16T14:02:15.609552"
+    }
+  ]
+}

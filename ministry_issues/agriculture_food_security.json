@@ -1,0 +1,147 @@
+{
+  "ministry": "agriculture_food_security",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "food-price-manipulation",
+      "label": "Food Price Manipulation for Political Gains",
+      "mention_count": 36,
+      "created_at": "2025-11-03T03:37:56.489589",
+      "last_updated": "2025-12-22T18:40:56.167654"
+    },
+    {
+      "slug": "food-access-improvement",
+      "label": "Food Access Improvement",
+      "mention_count": 32,
+      "created_at": "2025-11-05T02:08:21.163906",
+      "last_updated": "2025-12-22T19:22:06.168611"
+    },
+    {
+      "slug": "agricultural-mechanization-initiative",
+      "label": "Agricultural Mechanization Initiative",
+      "mention_count": 13,
+      "created_at": "2025-11-05T02:16:22.381671",
+      "last_updated": "2025-12-22T19:19:07.439778"
+    },
+    {
+      "slug": "tech-driven-development",
+      "label": "Tech-Driven Development for Food Security",
+      "mention_count": 10,
+      "created_at": "2025-11-05T02:09:10.523110",
+      "last_updated": "2025-12-22T10:32:46.733842"
+    },
+    {
+      "slug": "us-aid-to-nigeria",
+      "label": "US Aid to Nigeria for Hunger Relief",
+      "mention_count": 4,
+      "created_at": "2025-11-05T02:08:59.165151",
+      "last_updated": "2025-11-05T02:23:57.119113"
+    },
+    {
+      "slug": "unchecked-gmos-nigeria-food-sovereignty",
+      "label": "Unchecked GMOs Impact on Nigeria's Food Sovereignty",
+      "mention_count": 5,
+      "created_at": "2025-11-05T02:15:05.502779",
+      "last_updated": "2025-12-22T19:20:40.732534"
+    },
+    {
+      "slug": "qatar-investment-agreements",
+      "label": "Qatar Investment Agreements for Agriculture",
+      "mention_count": 4,
+      "created_at": "2025-11-14T20:47:04.752543",
+      "last_updated": "2025-11-14T20:53:42.142491"
+    },
+    {
+      "slug": "tinubu-assures-farmers",
+      "label": "Tinubu Assures Farmers Of Subsidized Fertilizer Next Season",
+      "mention_count": 3,
+      "created_at": "2025-11-03T03:25:41.221130",
+      "last_updated": "2025-12-22T10:09:32.746920"
+    },
+    {
+      "slug": "african-breadfruit-un-status",
+      "label": "African Breadfruit UN Cultural Status",
+      "mention_count": 2,
+      "created_at": "2025-11-03T03:38:40.081232",
+      "last_updated": "2025-11-03T04:43:06.370543"
+    },
+    {
+      "slug": "food-waste-dog-feeding",
+      "label": "Food Waste and Dog Feeding",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:09:45.569654",
+      "last_updated": "2025-11-14T20:06:17.660879"
+    },
+    {
+      "slug": "nigeria-shea-value-capture",
+      "label": "Nigeria's Shea Value Capture",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:20:23.151422",
+      "last_updated": "2025-11-05T02:23:43.900054"
+    },
+    {
+      "slug": "usda-snap-authorization",
+      "label": "USDA SNAP Authorization Amid Government Shutdown",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:13:56.000451",
+      "last_updated": "2025-11-05T02:13:56.000451"
+    },
+    {
+      "slug": "women-empowerment-agriculture",
+      "label": "Women Empowerment in Agriculture",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:16:52.685039",
+      "last_updated": "2025-11-05T02:16:52.685039"
+    },
+    {
+      "slug": "politicians-gifts-to-voters",
+      "label": "Politicians' Gifts to Voters",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:17:00.449050",
+      "last_updated": "2025-11-05T02:17:00.449050"
+    },
+    {
+      "slug": "largest-jollof-rice-pot-attempt",
+      "label": "Largest Jollof Rice Pot Attempt",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:17:44.597212",
+      "last_updated": "2025-11-05T02:17:44.597212"
+    },
+    {
+      "slug": "tinubu-diplomatic-mess",
+      "label": "Tinubu's Diplomatic Mess",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:18:41.740734",
+      "last_updated": "2025-11-05T02:18:41.740734"
+    },
+    {
+      "slug": "cocoa-value-addition-failure",
+      "label": "Cocoa Value Addition Failure",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:19:01.451709",
+      "last_updated": "2025-11-05T02:19:01.451709"
+    },
+    {
+      "slug": "rice-political-commentary",
+      "label": "Rice Political Commentary",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:24:17.314358",
+      "last_updated": "2025-11-05T02:24:17.314358"
+    },
+    {
+      "slug": "lazy-farmer-blaming-implements",
+      "label": "Lazy Farmer Blaming Implements",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:26:47.144713",
+      "last_updated": "2025-11-05T02:26:47.144713"
+    },
+    {
+      "slug": "rice-price-reduction",
+      "label": "Rice Price Reduction Policy Impact",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:11:41.936422",
+      "last_updated": "2025-11-14T20:11:41.936422"
+    }
+  ]
+}

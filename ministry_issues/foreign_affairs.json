@@ -1,0 +1,147 @@
+{
+  "ministry": "foreign_affairs",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "foreign-affairs-criticism-of-leaders",
+      "label": "Criticism of Foreign Leaders",
+      "mention_count": 237,
+      "created_at": "2025-11-05T02:26:00.977967",
+      "last_updated": "2025-12-22T19:21:47.533325"
+    },
+    {
+      "slug": "qatar-emir-mention",
+      "label": "Qatar Emir Mention",
+      "mention_count": 131,
+      "created_at": "2025-11-14T20:43:29.255015",
+      "last_updated": "2025-11-14T20:59:29.385781"
+    },
+    {
+      "slug": "qatar-turkey-relations",
+      "label": "Qatar-Turkey Relations Discussion",
+      "mention_count": 39,
+      "created_at": "2025-11-05T02:26:44.975456",
+      "last_updated": "2025-11-14T20:58:52.626866"
+    },
+    {
+      "slug": "correct-naming-of-qatari-royalty",
+      "label": "Correct Naming of Qatari Royalty",
+      "mention_count": 39,
+      "created_at": "2025-11-14T20:37:43.671936",
+      "last_updated": "2025-11-14T20:57:39.226693"
+    },
+    {
+      "slug": "qatar-hamas-hostage-situation",
+      "label": "Qatar-Hamas Hostage Situation",
+      "mention_count": 36,
+      "created_at": "2025-11-05T02:26:05.808728",
+      "last_updated": "2025-11-14T20:59:12.735692"
+    },
+    {
+      "slug": "mocking-country-leadership",
+      "label": "Mocking Country's Leadership",
+      "mention_count": 26,
+      "created_at": "2025-11-05T02:25:54.224946",
+      "last_updated": "2025-12-22T19:17:55.094960"
+    },
+    {
+      "slug": "qatar-summit-solidarity",
+      "label": "Qatar Summit Solidarity",
+      "mention_count": 21,
+      "created_at": "2025-11-14T20:39:06.436811",
+      "last_updated": "2025-11-14T20:59:21.193020"
+    },
+    {
+      "slug": "trump-nigeria-genocide-designation",
+      "label": "Trump's Nigeria Genocide Designation",
+      "mention_count": 14,
+      "created_at": "2025-11-05T02:27:23.534265",
+      "last_updated": "2025-11-14T21:19:33.134243"
+    },
+    {
+      "slug": "foreign-affairs-trump-threat-nigerians",
+      "label": "Trump Threat to Nigerians Abroad",
+      "mention_count": 13,
+      "created_at": "2025-11-14T20:05:10.445580",
+      "last_updated": "2025-11-14T21:21:21.680195"
+    },
+    {
+      "slug": "qatar-world-cup-criticism",
+      "label": "Qatar World Cup Criticism",
+      "mention_count": 12,
+      "created_at": "2025-11-05T02:27:10.732839",
+      "last_updated": "2025-11-14T20:50:38.055085"
+    },
+    {
+      "slug": "foreign-affairs-threats-against-multiple-countries",
+      "label": "Threats Against Multiple Countries",
+      "mention_count": 14,
+      "created_at": "2025-11-05T02:27:26.326167",
+      "last_updated": "2025-12-22T19:19:44.801224"
+    },
+    {
+      "slug": "foreign-affairs-mention-of-public-figures",
+      "label": "Mention of Public Figures in Foreign Affairs Context",
+      "mention_count": 23,
+      "created_at": "2025-11-14T20:46:17.955904",
+      "last_updated": "2025-12-22T19:18:53.052113"
+    },
+    {
+      "slug": "qatar-support-for-terrorist-groups",
+      "label": "Qatar Support for Terrorist Groups",
+      "mention_count": 9,
+      "created_at": "2025-11-14T20:46:35.656473",
+      "last_updated": "2025-11-14T20:58:21.683568"
+    },
+    {
+      "slug": "africa-colonialism-critique",
+      "label": "Critique of Africa Colonialism",
+      "mention_count": 9,
+      "created_at": "2025-11-05T02:26:24.577513",
+      "last_updated": "2025-12-22T18:54:51.599282"
+    },
+    {
+      "slug": "nigeria-christian-persecution",
+      "label": "Nigeria Christian Persecution",
+      "mention_count": 7,
+      "created_at": "2025-11-14T20:24:39.898975",
+      "last_updated": "2025-11-14T21:20:28.261437"
+    },
+    {
+      "slug": "qatar-china-bilateral-relations",
+      "label": "Qatar-China Bilateral Relations",
+      "mention_count": 7,
+      "created_at": "2025-11-14T20:40:00.746398",
+      "last_updated": "2025-11-14T20:56:57.404235"
+    },
+    {
+      "slug": "qatar-mediation-colombia-drug-cartels",
+      "label": "Qatar Mediation in Colombia Drug Cartels",
+      "mention_count": 7,
+      "created_at": "2025-11-14T20:40:17.043383",
+      "last_updated": "2025-11-14T20:57:52.000810"
+    },
+    {
+      "slug": "anti-semitism-in-political-discourse",
+      "label": "Anti-Semitism in Political Discourse",
+      "mention_count": 6,
+      "created_at": "2025-11-14T20:43:18.631139",
+      "last_updated": "2025-11-14T20:56:25.040039"
+    },
+    {
+      "slug": "qatar-us-official-meetings",
+      "label": "Qatar-US Official Meetings",
+      "mention_count": 6,
+      "created_at": "2025-11-14T20:52:04.796672",
+      "last_updated": "2025-11-14T20:58:44.697518"
+    },
+    {
+      "slug": "gumi-tinubu-us-ties",
+      "label": "Sheikh Gumi Urges Tinubu Government to Cut Ties with US Over Trump's Threat",
+      "mention_count": 5,
+      "created_at": "2025-11-05T02:26:28.217452",
+      "last_updated": "2025-11-14T21:21:51.463031"
+    }
+  ]
+}

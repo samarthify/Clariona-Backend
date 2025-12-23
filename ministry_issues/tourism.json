@@ -1,0 +1,294 @@
+{
+  "ministry": "tourism",
+  "issue_count": 41,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "@onemola-tourist-president,-owambe",
+      "label": "@Onemola Tourist President, Owambe President, Globetrotting President Of",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:09:21.912170",
+      "last_updated": "2025-11-05T02:09:21.912170"
+    },
+    {
+      "slug": "qatar-investment-in-savoy-hotel",
+      "label": "Qatar Investment in Savoy Hotel",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:15:36.149927",
+      "last_updated": "2025-11-05T02:19:07.043720"
+    },
+    {
+      "slug": "nigerians-in-diaspora-partnership",
+      "label": "Nigerians in Diaspora Partnership for Sustainable Economy",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:08:13.271591",
+      "last_updated": "2025-12-18T07:04:31.649037"
+    },
+    {
+      "slug": "gombe-emirs-palace-market",
+      "label": "Gombe Emir's Palace Market Activity",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:56:06.156918",
+      "last_updated": "2025-11-14T20:56:06.156918"
+    },
+    {
+      "slug": "luxury-beauty-boutique-launch",
+      "label": "Luxury Beauty Boutique Launch at Abuja Airport",
+      "mention_count": 4,
+      "created_at": "2025-11-14T21:05:14.417235",
+      "last_updated": "2025-11-14T21:25:26.979590"
+    },
+    {
+      "slug": "abuja-continental-hotel-award",
+      "label": "Abuja Continental Hotel Distinguished Legacy Award",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:14:47.620658",
+      "last_updated": "2025-11-14T21:14:47.620658"
+    },
+    {
+      "slug": "accor-expands-west-africa-footprint",
+      "label": "Accor Expands West Africa Footprint",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:17:18.796580",
+      "last_updated": "2025-11-14T21:17:18.796580"
+    },
+    {
+      "slug": "zuma-hills-national-monument-defacement",
+      "label": "Zuma Hills National Monument Defacement",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:21:17.361518",
+      "last_updated": "2025-11-14T21:21:17.361518"
+    },
+    {
+      "slug": "nigeria-travel-diversity",
+      "label": "Encourage Exploring Diverse Nigerian Destinations",
+      "mention_count": 47,
+      "created_at": "2025-12-16T14:02:06.290289",
+      "last_updated": "2025-12-22T10:30:02.124009"
+    },
+    {
+      "slug": "burkina-faso-tourism-promotion",
+      "label": "Burkina Faso Tourism Promotion",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:04:38.698250",
+      "last_updated": "2025-12-16T14:04:38.698250"
+    },
+    {
+      "slug": "ogun-gateway-hotel-resuscitation",
+      "label": "Ogun: Resuscitation and Modernisation of Gateway Hotel",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:42:09.956952",
+      "last_updated": "2025-12-16T15:42:09.956952"
+    },
+    {
+      "slug": "ogun-gateway-hotel-resuscitation",
+      "label": "Ogun Assembly Seeks Resuscitation of Gateway Hotel",
+      "mention_count": 1,
+      "created_at": "2025-12-17T06:57:32.669782",
+      "last_updated": "2025-12-17T06:57:32.669782"
+    },
+    {
+      "slug": "miss-cosmo-preliminaries-competition",
+      "label": "Miss Cosmo Preliminaries Competition",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:18:17.922414",
+      "last_updated": "2025-12-17T07:18:17.922414"
+    },
+    {
+      "slug": "auto-sales-and-marketing",
+      "label": "Auto Sales and Marketing",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:23:19.289838",
+      "last_updated": "2025-12-17T07:23:19.289838"
+    },
+    {
+      "slug": "tanzania-tourism-promotion",
+      "label": "Tanzania Tourism Promotion",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:23:53.373696",
+      "last_updated": "2025-12-17T07:23:53.373696"
+    },
+    {
+      "slug": "west-africa-tourism-promotion",
+      "label": "West Africa Tourism Promotion",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:24:16.288899",
+      "last_updated": "2025-12-17T07:24:16.288899"
+    },
+    {
+      "slug": "tanzania-tourism-promotion",
+      "label": "Tanzania tourism promotion / Visit Tanzania social media post",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:25:04.134325",
+      "last_updated": "2025-12-17T07:25:04.134325"
+    },
+    {
+      "slug": "family-fun-fiesta-boxing-day-event-2025",
+      "label": "Family Fun Fiesta Boxing Day Event 2025",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:25:19.933360",
+      "last_updated": "2025-12-17T07:25:19.933360"
+    },
+    {
+      "slug": "vacation-rentals-and-yacht-charters",
+      "label": "Vacation rentals and yacht/boat charter promotions",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:29:20.671378",
+      "last_updated": "2025-12-17T07:29:20.671378"
+    },
+    {
+      "slug": "beauty-and-personal-care-promotions",
+      "label": "Beauty & Personal Care Promotions",
+      "mention_count": 1,
+      "created_at": "2025-12-17T08:58:20.816901",
+      "last_updated": "2025-12-17T08:58:20.816901"
+    },
+    {
+      "slug": "kenya-tourism-promotion",
+      "label": "Kenya Tourism Promotion (Masai Mara)",
+      "mention_count": 1,
+      "created_at": "2025-12-17T09:04:15.862241",
+      "last_updated": "2025-12-17T09:04:15.862241"
+    },
+    {
+      "slug": "bantu-ethnic-history-and-cultural-impact",
+      "label": "Bantu Ethnic History and Cultural Impact",
+      "mention_count": 1,
+      "created_at": "2025-12-17T12:26:47.970130",
+      "last_updated": "2025-12-17T12:26:47.970130"
+    },
+    {
+      "slug": "tanzania-tourism-promotion",
+      "label": "Tanzania Tourism Promotion",
+      "mention_count": 1,
+      "created_at": "2025-12-17T12:31:07.751702",
+      "last_updated": "2025-12-17T12:31:07.751702"
+    },
+    {
+      "slug": "airbnb-vs-hotels-pricing-nigeria",
+      "label": "Airbnb vs Hotels Pricing in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-17T12:35:03.783359",
+      "last_updated": "2025-12-17T12:35:03.783359"
+    },
+    {
+      "slug": "nigeria-travel-diversity",
+      "label": "Encourage Exploring Diverse Nigerian Destinations",
+      "mention_count": 1,
+      "created_at": "2025-12-17T12:47:29.458222",
+      "last_updated": "2025-12-17T12:47:29.458222"
+    },
+    {
+      "slug": "nigeria-tanzania-tourism-growth",
+      "label": "Nigeria-Tanzania Tourism Growth",
+      "mention_count": 1,
+      "created_at": "2025-12-17T13:43:59.568346",
+      "last_updated": "2025-12-17T13:43:59.568346"
+    },
+    {
+      "slug": "zoo-called-nigeria",
+      "label": "Zoo Called Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-17T20:15:10.791500",
+      "last_updated": "2025-12-17T20:15:10.791500"
+    },
+    {
+      "slug": "film-industry-international-collaboration",
+      "label": "Film Industry International Collaboration",
+      "mention_count": 1,
+      "created_at": "2025-12-17T20:16:10.483974",
+      "last_updated": "2025-12-17T20:16:10.483974"
+    },
+    {
+      "slug": "nigeria-hotel-leadership-appointment",
+      "label": "Nigeria Hotel Industry Leadership Appointment (Transcorp Hotels chair)",
+      "mention_count": 1,
+      "created_at": "2025-12-17T20:19:07.529546",
+      "last_updated": "2025-12-17T20:19:07.529546"
+    },
+    {
+      "slug": "ogun-gateway-hotel-resuscitation",
+      "label": "Resuscitation and Modernisation of Gateway Hotel (Ogun State)",
+      "mention_count": 1,
+      "created_at": "2025-12-17T20:21:12.889599",
+      "last_updated": "2025-12-17T20:21:12.889599"
+    },
+    {
+      "slug": "luxury-corporate-group-travel-services",
+      "label": "Luxury Corporate and Group Travel Services",
+      "mention_count": 1,
+      "created_at": "2025-12-18T02:48:06.902149",
+      "last_updated": "2025-12-18T02:48:06.902149"
+    },
+    {
+      "slug": "ogun-gateway-hotel-resuscitation",
+      "label": "Ogun Gateway Hotel Resuscitation",
+      "mention_count": 1,
+      "created_at": "2025-12-18T03:14:46.856728",
+      "last_updated": "2025-12-18T03:14:46.856728"
+    },
+    {
+      "slug": "presidential-visit-tourism-support",
+      "label": "Presidential Visit Support in Tourism",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:27:15.007574",
+      "last_updated": "2025-12-22T09:27:15.007574"
+    },
+    {
+      "slug": "president-tinubu-endoftheyear-lagos-visit",
+      "label": "President Tinubu End-of-Year Lagos Visit",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:41:41.170289",
+      "last_updated": "2025-12-22T09:41:41.170289"
+    },
+    {
+      "slug": "west-africa-tourism-social-media-content",
+      "label": "West Africa Tourism - Social Media Content",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:18:36.578259",
+      "last_updated": "2025-12-22T10:18:36.578259"
+    },
+    {
+      "slug": "nigeria-travel-diversity",
+      "label": "Nigeria Travel Diversity",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:19:53.938084",
+      "last_updated": "2025-12-22T10:19:53.938084"
+    },
+    {
+      "slug": "plateau-state-undp-mou-economic-development",
+      "label": "Plateau State - UNDP MoU for Economic Development",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:21:37.250927",
+      "last_updated": "2025-12-22T10:21:37.250927"
+    },
+    {
+      "slug": "lagos-continental-hotel-marketing",
+      "label": "Lagos Continental Hotel Promotion",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:21:51.027935",
+      "last_updated": "2025-12-22T10:21:51.027935"
+    },
+    {
+      "slug": "mauritius-tourism-promotion",
+      "label": "Mauritius Tourism Promotion (AFCON 2025 trips)",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:23:20.833175",
+      "last_updated": "2025-12-22T10:23:20.833175"
+    },
+    {
+      "slug": "ogun-gateway-hotel-resuscitation",
+      "label": "Ogun Gateway Hotel Resuscitation & Modernisation",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:25:20.755787",
+      "last_updated": "2025-12-22T10:25:20.755787"
+    },
+    {
+      "slug": "tourism-initiatives-in-africa-claims-and-launches",
+      "label": "Tourism Initiatives in Africa: Claims and Launches",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:28:52.906081",
+      "last_updated": "2025-12-22T10:28:52.906081"
+    }
+  ]
+}

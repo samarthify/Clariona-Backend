@@ -1,0 +1,147 @@
+{
+  "ministry": "health_social_welfare",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "nigerian-healthcare-criticism",
+      "label": "Criticism of Nigerian Healthcare System",
+      "mention_count": 91,
+      "created_at": "2025-11-03T01:12:58.505722",
+      "last_updated": "2025-12-22T19:23:00.792686"
+    },
+    {
+      "slug": "bat-fungus-disease",
+      "label": "Bat Fungus Disease Outbreak",
+      "mention_count": 10,
+      "created_at": "2025-11-03T01:05:39.981917",
+      "last_updated": "2025-11-14T21:11:45.968543"
+    },
+    {
+      "slug": "launches-healthcare-program",
+      "label": "Fg Launches Healthcare Program For Rural Areas",
+      "mention_count": 7,
+      "created_at": "2025-11-03T00:59:55.830949",
+      "last_updated": "2025-12-22T09:27:40.953719"
+    },
+    {
+      "slug": "life-expectancy-comparison",
+      "label": "Life Expectancy Comparison",
+      "mention_count": 6,
+      "created_at": "2025-11-03T01:06:55.365832",
+      "last_updated": "2025-12-22T10:29:18.935858"
+    },
+    {
+      "slug": "presidential-jet-spending",
+      "label": "Presidential Jet Spending Concerns",
+      "mention_count": 5,
+      "created_at": "2025-11-03T01:08:13.060761",
+      "last_updated": "2025-12-16T14:34:02.341639"
+    },
+    {
+      "slug": "maternal-mortality-initiative",
+      "label": "Maternal Mortality Initiative",
+      "mention_count": 4,
+      "created_at": "2025-11-03T00:59:59.993160",
+      "last_updated": "2025-12-22T10:30:04.015995"
+    },
+    {
+      "slug": "peter-obi-medical-break",
+      "label": "Peter Obi Medical Break",
+      "mention_count": 6,
+      "created_at": "2025-11-03T01:06:05.117156",
+      "last_updated": "2025-12-22T18:38:17.780651"
+    },
+    {
+      "slug": "lyssavirus-bat-rabies-uk",
+      "label": "Lyssavirus Bat Rabies in UK",
+      "mention_count": 4,
+      "created_at": "2025-11-03T01:07:43.887719",
+      "last_updated": "2025-11-05T02:26:39.799899"
+    },
+    {
+      "slug": "hiv-drug-shortage-africa",
+      "label": "HIV Drug Shortage in Africa",
+      "mention_count": 4,
+      "created_at": "2025-11-05T02:11:13.683127",
+      "last_updated": "2025-11-14T20:18:44.915591"
+    },
+    {
+      "slug": "royal-state-visit-cancer-diagnosis",
+      "label": "Royal State Visit After Cancer Diagnosis",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:07:54.216515",
+      "last_updated": "2025-11-05T02:27:17.954138"
+    },
+    {
+      "slug": "lassa-fever-uk-case",
+      "label": "Lassa Fever Case in UK",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:10:38.775135",
+      "last_updated": "2025-11-14T21:17:11.970945"
+    },
+    {
+      "slug": "malaria-vaccine-rollout-nigeria",
+      "label": "Malaria Vaccine Rollout in Nigeria",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:12:54.460179",
+      "last_updated": "2025-11-14T21:24:45.723732"
+    },
+    {
+      "slug": "abuja-hospital-regina-daniels-drug-test",
+      "label": "Abuja Hospital Denies Regina Daniels Drug Test Circulation",
+      "mention_count": 3,
+      "created_at": "2025-11-14T21:20:30.089834",
+      "last_updated": "2025-11-14T21:21:26.880807"
+    },
+    {
+      "slug": "president-hospital-choice",
+      "label": "President's Hospital Choice",
+      "mention_count": 2,
+      "created_at": "2025-11-03T01:14:29.311089",
+      "last_updated": "2025-11-05T02:19:39.535034"
+    },
+    {
+      "slug": "healthcare-national-security",
+      "label": "Healthcare as Critical National Security Component",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:09:17.332605",
+      "last_updated": "2025-12-22T19:09:37.465926"
+    },
+    {
+      "slug": "polio-variant-threat-north-west",
+      "label": "Polio Variant Threat in North-West Nigeria",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:16:11.383766",
+      "last_updated": "2025-11-14T20:53:47.360632"
+    },
+    {
+      "slug": "health-financing-challenges-nigeria",
+      "label": "Health Financing Challenges in Nigeria",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:17:18.062153",
+      "last_updated": "2025-11-14T20:06:47.009127"
+    },
+    {
+      "slug": "peter-obi-nursing-colleges-donation",
+      "label": "Peter Obi Nursing Colleges Donation",
+      "mention_count": 2,
+      "created_at": "2025-11-14T21:13:18.812262",
+      "last_updated": "2025-11-14T21:13:36.357502"
+    },
+    {
+      "slug": "misplaced-priorities-in-infrastructure-funding",
+      "label": "Misplaced Priorities in Infrastructure Funding",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:08:46.515853",
+      "last_updated": "2025-11-03T01:08:46.515853"
+    },
+    {
+      "slug": "peter-obi-birthday-donation",
+      "label": "Peter Obi Birthday Donation",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:10:26.257316",
+      "last_updated": "2025-11-03T01:10:26.257316"
+    }
+  ]
+}

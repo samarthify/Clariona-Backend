@@ -1,0 +1,147 @@
+{
+  "ministry": "transportation",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "abuja-kaduna-train-derailment",
+      "label": "Abuja-Kaduna Train Derailment Impact",
+      "mention_count": 20,
+      "created_at": "2025-11-05T02:09:26.464673",
+      "last_updated": "2025-12-22T10:08:42.567714"
+    },
+    {
+      "slug": "intelligent-transport-systems-nigeria",
+      "label": "Intelligent Transport Systems in Nigeria",
+      "mention_count": 14,
+      "created_at": "2025-11-05T02:17:18.457660",
+      "last_updated": "2025-12-22T18:35:24.520939"
+    },
+    {
+      "slug": "tinubu-benue-road-travel",
+      "label": "Tinubu's Concern for Nigeria and Road Travel to Benue",
+      "mention_count": 7,
+      "created_at": "2025-11-05T02:08:10.137243",
+      "last_updated": "2025-12-22T18:40:14.714968"
+    },
+    {
+      "slug": "qatar-emir-jet-mallorca-airport",
+      "label": "Qatar Emir's Jet Incident at Mallorca Airport",
+      "mention_count": 5,
+      "created_at": "2025-11-14T20:39:59.091651",
+      "last_updated": "2025-11-14T20:52:52.337726"
+    },
+    {
+      "slug": "abuja-airport-sisters-fight",
+      "label": "Abuja Airport Sisters Fight Incident",
+      "mention_count": 5,
+      "created_at": "2025-11-14T21:16:53.182499",
+      "last_updated": "2025-11-14T21:23:41.701701"
+    },
+    {
+      "slug": "will-move-seeking",
+      "label": "Will Move Sc Seeking Uniform Rules For Overage",
+      "mention_count": 3,
+      "created_at": "2025-11-03T01:07:50.712161",
+      "last_updated": "2025-11-03T01:13:47.106220"
+    },
+    {
+      "slug": "nigeria-boat-accidents",
+      "label": "Nigeria Boat Accidents",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:22:27.179201",
+      "last_updated": "2025-11-05T02:23:36.140984"
+    },
+    {
+      "slug": "aviation-treaty-implementation-nigeria",
+      "label": "Aviation Treaty Implementation in Nigeria",
+      "mention_count": 3,
+      "created_at": "2025-11-14T20:13:00.245778",
+      "last_updated": "2025-11-14T21:09:15.950677"
+    },
+    {
+      "slug": "air-peace-london-fares",
+      "label": "Air Peace London Fares Impact",
+      "mention_count": 2,
+      "created_at": "2025-11-03T03:35:01.615400",
+      "last_updated": "2025-11-03T04:14:46.263938"
+    },
+    {
+      "slug": "nigerian-ports-authority-iaph-appointment",
+      "label": "Nigerian Ports Authority IAPH Appointment",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:09:48.080510",
+      "last_updated": "2025-11-05T02:19:41.632873"
+    },
+    {
+      "slug": "kenya-qatar-airport-partnership",
+      "label": "Kenya-Qatar Airport Partnership",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:45:11.690762",
+      "last_updated": "2025-11-14T20:47:00.268693"
+    },
+    {
+      "slug": "jetour-suv-hybrid-showcase-abuja",
+      "label": "Jetour SUV & Hybrid Showcase in Abuja",
+      "mention_count": 2,
+      "created_at": "2025-11-14T21:05:23.687673",
+      "last_updated": "2025-11-14T21:06:46.059580"
+    },
+    {
+      "slug": "katsina-airport-closure",
+      "label": "Katsina Airport Closure Impact on Travel",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:09:23.062195",
+      "last_updated": "2025-11-03T01:09:23.062195"
+    },
+    {
+      "slug": "lagos-blue-line-fare-cut",
+      "label": "Lagos Blue Line Fare Cut",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:08:29.973865",
+      "last_updated": "2025-11-05T02:08:29.973865"
+    },
+    {
+      "slug": "presidential-aircraft-use",
+      "label": "Presidential Aircraft Use",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:09:41.329809",
+      "last_updated": "2025-11-05T02:09:41.329809"
+    },
+    {
+      "slug": "delta-road-crash-second-niger-bridge",
+      "label": "Delta Road Crash at Second Niger Bridge",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:13:54.664888",
+      "last_updated": "2025-11-05T02:13:54.664888"
+    },
+    {
+      "slug": "dangote-group-remains-evacuation",
+      "label": "Dangote Group Remains Evacuation",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:17:25.386603",
+      "last_updated": "2025-11-05T02:17:25.386603"
+    },
+    {
+      "slug": "brics-membership-lobbying",
+      "label": "BRICS Membership Lobbying Impact",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:23:25.163166",
+      "last_updated": "2025-11-05T02:23:25.163166"
+    },
+    {
+      "slug": "putin-convoy-traffic-control",
+      "label": "Putin Convoy Traffic Control",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:24:10.747905",
+      "last_updated": "2025-11-05T02:24:10.747905"
+    },
+    {
+      "slug": "turkey-gulf-transport-financing",
+      "label": "Turkey Gulf Transport Financing",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:24:42.069151",
+      "last_updated": "2025-11-05T02:24:42.069151"
+    }
+  ]
+}

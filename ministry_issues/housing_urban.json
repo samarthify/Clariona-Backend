@@ -1,0 +1,147 @@
+{
+  "ministry": "housing_urban",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "nigeria-luxury-housing-boom",
+      "label": "Nigeria Luxury Housing Boom",
+      "mention_count": 54,
+      "created_at": "2025-11-14T21:13:24.821441",
+      "last_updated": "2025-12-22T18:37:46.809548"
+    },
+    {
+      "slug": "africas-housing-crisis",
+      "label": "Africa's Housing Crisis",
+      "mention_count": 9,
+      "created_at": "2025-11-05T02:14:57.375483",
+      "last_updated": "2025-12-22T09:54:14.031980"
+    },
+    {
+      "slug": "mreif-listing-nigeria-housing-deficit",
+      "label": "MREIF Listing Impact on Nigeria's Housing Deficit",
+      "mention_count": 6,
+      "created_at": "2025-11-14T20:20:50.025788",
+      "last_updated": "2025-12-22T18:40:44.365477"
+    },
+    {
+      "slug": "landlord-regulation",
+      "label": "Landlord Regulation",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:17:52.270542",
+      "last_updated": "2025-12-17T12:31:02.831311"
+    },
+    {
+      "slug": "rent-hikes-nigerian-cities",
+      "label": "Rent Hikes in Nigerian Cities",
+      "mention_count": 2,
+      "created_at": "2025-11-14T21:19:10.739952",
+      "last_updated": "2025-12-16T14:07:41.112919"
+    },
+    {
+      "slug": "peter-urges-lagos",
+      "label": "Peter Obi Urges Lagos Govt. To Exercise Compassion",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:08:15.017457",
+      "last_updated": "2025-11-03T01:08:15.017457"
+    },
+    {
+      "slug": "buhari-commissions-housing-units-sokoto",
+      "label": "Buhari Commissions Housing Units in Sokoto",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:08:47.550979",
+      "last_updated": "2025-11-05T02:08:47.550979"
+    },
+    {
+      "slug": "sustainable-afres-nigeria",
+      "label": "Sustainable AfRES in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:18:28.916336",
+      "last_updated": "2025-11-05T02:18:28.916336"
+    },
+    {
+      "slug": "house-rent-assistance",
+      "label": "House Rent Assistance Request",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:27:00.979805",
+      "last_updated": "2025-11-05T02:27:00.979805"
+    },
+    {
+      "slug": "underperforming-housing-corporations",
+      "label": "Underperforming Housing Corporations in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:25:43.428933",
+      "last_updated": "2025-11-14T20:25:43.428933"
+    },
+    {
+      "slug": "home-renovation-services",
+      "label": "Home Renovation and Decoration Services Offered",
+      "mention_count": 1,
+      "created_at": "2025-12-03T16:07:58.422637",
+      "last_updated": "2025-12-03T16:07:58.422637"
+    },
+    {
+      "slug": "land-ownership-laws-nigeria",
+      "label": "Land Ownership Laws in Nigeria",
+      "mention_count": 2,
+      "created_at": "2025-12-16T14:02:05.785655",
+      "last_updated": "2025-12-22T18:34:07.896264"
+    },
+    {
+      "slug": "land-grabs-forced-evictions",
+      "label": "Land Grabs and Forced Evictions",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:09:53.302652",
+      "last_updated": "2025-12-16T14:09:53.302652"
+    },
+    {
+      "slug": "housing-urban-discontent",
+      "label": "Housing and Urban Discontent",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:23:53.760664",
+      "last_updated": "2025-12-16T14:23:53.760664"
+    },
+    {
+      "slug": "victor-umeh-housing-advocacy-political-comments",
+      "label": "Victor Umeh — Housing advocacy, political statements and legal update",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:36:23.710238",
+      "last_updated": "2025-12-16T14:36:23.710238"
+    },
+    {
+      "slug": "tinubu-lagos-institutional-reforms",
+      "label": "Tinubu's Lagos Institutional & Urban Governance Reforms",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:45:20.857124",
+      "last_updated": "2025-12-16T14:45:20.857124"
+    },
+    {
+      "slug": "housing-investment-fund-nigeria",
+      "label": "Housing Investment Fund in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:45:56.951859",
+      "last_updated": "2025-12-16T14:45:56.951859"
+    },
+    {
+      "slug": "internal-migration-nigerian-urban-housing",
+      "label": "Internal Migration and Urban Housing in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:39:28.809531",
+      "last_updated": "2025-12-16T15:39:28.809531"
+    },
+    {
+      "slug": "pedestrian-unfriendly-urban-design",
+      "label": "Pedestrian-unfriendly Urban Design / Hostile Built Environment",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:42:38.447911",
+      "last_updated": "2025-12-16T15:42:38.447911"
+    },
+    {
+      "slug": "interior-decor-ads",
+      "label": "Interior Decor & Home Improvement Ads",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:42:46.677943",
+      "last_updated": "2025-12-16T15:42:46.677943"
+    }
+  ]
+}

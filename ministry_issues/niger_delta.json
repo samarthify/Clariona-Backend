@@ -1,0 +1,98 @@
+{
+  "ministry": "niger_delta",
+  "issue_count": 13,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "riverine-herald",
+      "label": "| Riverine Herald",
+      "mention_count": 7,
+      "created_at": "2025-11-03T03:33:30.161567",
+      "last_updated": "2025-12-22T09:27:26.271301"
+    },
+    {
+      "slug": "tinubu-colonisation",
+      "label": "Tinubu's Colonisation in Rivers State",
+      "mention_count": 7,
+      "created_at": "2025-11-05T02:10:45.909936",
+      "last_updated": "2025-12-18T03:15:21.540225"
+    },
+    {
+      "slug": "oil-allocation-percentage",
+      "label": "Oil Allocation Percentage Dispute",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:22:12.826909",
+      "last_updated": "2025-12-03T15:56:27.202966"
+    },
+    {
+      "slug": "niger-delta-resource-control",
+      "label": "Niger Delta Resource Control",
+      "mention_count": 3,
+      "created_at": "2025-12-03T16:07:16.200722",
+      "last_updated": "2025-12-17T06:57:33.035887"
+    },
+    {
+      "slug": "bayelsa-deputy-governor-death",
+      "label": "Bayelsa Deputy Governor Death",
+      "mention_count": 2,
+      "created_at": "2025-12-16T14:02:16.092587",
+      "last_updated": "2025-12-16T14:46:53.430463"
+    },
+    {
+      "slug": "niger-delta-pop-culture",
+      "label": "Niger Delta Pop Culture",
+      "mention_count": 2,
+      "created_at": "2025-12-16T14:05:35.292212",
+      "last_updated": "2025-12-17T08:59:35.913007"
+    },
+    {
+      "slug": "senator-john-azuta-mbata-profile",
+      "label": "Senator John Azuta-Mbata Profile and Ohanaeze Ndi Igbo Presidency",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:23:00.463100",
+      "last_updated": "2025-12-16T14:23:00.463100"
+    },
+    {
+      "slug": "niger-delta-politics",
+      "label": "Niger Delta Politics",
+      "mention_count": 47,
+      "created_at": "2025-12-16T14:24:55.444973",
+      "last_updated": "2025-12-22T19:18:08.496970"
+    },
+    {
+      "slug": "niger-delta-politics",
+      "label": "Niger Delta Politics",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:37:53.975345",
+      "last_updated": "2025-12-16T14:37:53.975345"
+    },
+    {
+      "slug": "south-south-ethnic-groups-discussion",
+      "label": "South-South Ethnic Groups Discussion",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:36:57.772309",
+      "last_updated": "2025-12-16T15:36:57.772309"
+    },
+    {
+      "slug": "niger-delta-geography-identity",
+      "label": "Niger Delta Geography and Regional Naming",
+      "mention_count": 1,
+      "created_at": "2025-12-16T15:41:34.600042",
+      "last_updated": "2025-12-16T15:41:34.600042"
+    },
+    {
+      "slug": "niger-delta-politics",
+      "label": "Niger Delta Politics",
+      "mention_count": 1,
+      "created_at": "2025-12-17T06:56:25.008779",
+      "last_updated": "2025-12-17T06:56:25.008779"
+    },
+    {
+      "slug": "separatism-and-self-determination",
+      "label": "Separatism and Self-Determination Movements",
+      "mention_count": 1,
+      "created_at": "2025-12-22T19:00:06.594591",
+      "last_updated": "2025-12-22T19:00:06.594591"
+    }
+  ]
+}

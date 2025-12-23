@@ -1,0 +1,147 @@
+{
+  "ministry": "petroleum_resources",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "dangote-refinery-tinubu-fuel-import-duty",
+      "label": "Dangote Refinery Support for Tinubu's Fuel Import Duty",
+      "mention_count": 36,
+      "created_at": "2025-11-03T03:26:58.528023",
+      "last_updated": "2025-12-22T18:59:00.205138"
+    },
+    {
+      "slug": "fuel-import-tariff",
+      "label": "Fuel Import Tariff Impact in Nigeria",
+      "mention_count": 19,
+      "created_at": "2025-11-03T03:27:27.481569",
+      "last_updated": "2025-12-22T10:07:47.803209"
+    },
+    {
+      "slug": "president-tinubu-announces-removal",
+      "label": "President Tinubu Announces Removal Of Fuel Subsidy",
+      "mention_count": 18,
+      "created_at": "2025-11-03T00:59:12.071875",
+      "last_updated": "2025-12-22T19:17:11.156146"
+    },
+    {
+      "slug": "fuel-duty-local-refineries",
+      "label": "Fuel Duty Impact on Local Refineries",
+      "mention_count": 16,
+      "created_at": "2025-11-03T03:28:00.939173",
+      "last_updated": "2025-12-22T18:58:53.949286"
+    },
+    {
+      "slug": "tinubu-fuel-price-increase",
+      "label": "Tinubu's Fuel Price Increase",
+      "mention_count": 9,
+      "created_at": "2025-11-05T02:12:30.989613",
+      "last_updated": "2025-12-22T09:46:41.927575"
+    },
+    {
+      "slug": "oil-theft-losses",
+      "label": "Oil Theft Losses",
+      "mention_count": 8,
+      "created_at": "2025-11-03T00:59:25.337887",
+      "last_updated": "2025-12-18T03:07:42.114087"
+    },
+    {
+      "slug": "stable-oil-supplies-middle-east-visit",
+      "label": "Stable Oil Supplies - Middle East Visit",
+      "mention_count": 4,
+      "created_at": "2025-11-05T02:12:06.108696",
+      "last_updated": "2025-11-05T02:23:44.900300"
+    },
+    {
+      "slug": "dangote-refinery-cng-truck-distribution",
+      "label": "Dangote Refinery CNG Truck Distribution",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:08:56.827194",
+      "last_updated": "2025-11-14T21:19:58.496280"
+    },
+    {
+      "slug": "nnpc-gceo-removal-demand",
+      "label": "NNPC GCEO Removal Demand by Niger Delta Youth Leaders",
+      "mention_count": 10,
+      "created_at": "2025-11-05T02:15:44.640997",
+      "last_updated": "2025-12-22T19:19:09.397825"
+    },
+    {
+      "slug": "tinubu-control-over-resources",
+      "label": "Tinubu's Control Over Resources",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:16:00.288319",
+      "last_updated": "2025-12-22T18:37:53.280537"
+    },
+    {
+      "slug": "yoruba-group-tinubu-petroleum-import-tax",
+      "label": "Yoruba Group Disagrees with Tinubu on Petroleum Import Tax",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:07:42.816309",
+      "last_updated": "2025-11-14T21:06:18.748255"
+    },
+    {
+      "slug": "pensioners-condition-concern",
+      "label": "Concern Over Pensioners' Condition",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:08:59.439468",
+      "last_updated": "2025-11-14T21:27:02.090641"
+    },
+    {
+      "slug": "methanol-factory-ondo-local-production",
+      "label": "Methanol Factory in Ondo for Local Production",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:11:53.955993",
+      "last_updated": "2025-11-14T20:25:33.555683"
+    },
+    {
+      "slug": "oil-well-rehabilitation",
+      "label": "Oil Well Rehabilitation",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:19:17.166699",
+      "last_updated": "2025-11-14T21:06:30.618917"
+    },
+    {
+      "slug": "pipeline-vandalism-delta-state",
+      "label": "Pipeline Vandalism in Delta State",
+      "mention_count": 1,
+      "created_at": "2025-11-03T00:59:21.737208",
+      "last_updated": "2025-11-03T00:59:21.737208"
+    },
+    {
+      "slug": "modular-refineries-challenges",
+      "label": "Challenges Faced by Modular Refineries in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:07:53.892456",
+      "last_updated": "2025-11-05T02:07:53.892456"
+    },
+    {
+      "slug": "trump-tinubu-oil-boko-puppet-show",
+      "label": "Trump, Tinubu, Oil-Boko Puppet Show",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:13:36.412080",
+      "last_updated": "2025-11-05T02:13:36.412080"
+    },
+    {
+      "slug": "nnpc-new-spokesman-appointment",
+      "label": "NNPC New Spokesman Appointment",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:15:13.600158",
+      "last_updated": "2025-11-05T02:15:13.600158"
+    },
+    {
+      "slug": "africa-refining-agenda-2025-summit",
+      "label": "Africa Refining Agenda 2025 Summit",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:15:31.925928",
+      "last_updated": "2025-11-05T02:15:31.925928"
+    },
+    {
+      "slug": "oil-gas-economy-appraisal",
+      "label": "Appraisal of Oil & Gas Economy",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:18:33.197382",
+      "last_updated": "2025-11-05T02:18:33.197382"
+    }
+  ]
+}

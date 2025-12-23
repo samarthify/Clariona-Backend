@@ -1,0 +1,147 @@
+{
+  "ministry": "solid_minerals",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "yes,-nigeria-significant",
+      "label": "Yes, Nigeria Has Significant Rare Earth Deposits Including",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:19:08.575705",
+      "last_updated": "2025-12-17T20:15:20.436735"
+    },
+    {
+      "slug": "billion-dollar-potential",
+      "label": "Billion Dollar Potential in Mineral Fields",
+      "mention_count": 3,
+      "created_at": "2025-11-14T20:15:54.829971",
+      "last_updated": "2025-12-17T12:32:24.277427"
+    },
+    {
+      "slug": "kaduna-mineral-discovery",
+      "label": "Kaduna Mineral Discovery",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:16:07.990081",
+      "last_updated": "2025-11-14T21:16:07.990081"
+    },
+    {
+      "slug": "opposition-to-african-mineral-ownership",
+      "label": "Claims that political leaders oppose African ownership of minerals",
+      "mention_count": 1,
+      "created_at": "2025-12-16T14:10:13.101032",
+      "last_updated": "2025-12-16T14:10:13.101032"
+    },
+    {
+      "slug": "galamsey-illegal-small-scale-mining",
+      "label": "Concerns about galamsey (illegal small-scale mining) and need for government focus",
+      "mention_count": 4,
+      "created_at": "2025-12-16T14:26:00.138411",
+      "last_updated": "2025-12-22T18:40:15.308125"
+    },
+    {
+      "slug": "foreign-exploitation-chinese-mining-and-logging",
+      "label": "Concerns about foreign (especially Chinese) exploitation of Nigeria's minerals and forests",
+      "mention_count": 4,
+      "created_at": "2025-12-16T14:36:08.688046",
+      "last_updated": "2025-12-22T10:25:08.207370"
+    },
+    {
+      "slug": "export-promotion-support-for-miners-and-farmers",
+      "label": "Export Promotion Support for Miners and Farmers",
+      "mention_count": 2,
+      "created_at": "2025-12-16T15:36:03.596080",
+      "last_updated": "2025-12-17T20:20:17.600945"
+    },
+    {
+      "slug": "mining-cadastre-digitalization-revenue",
+      "label": "Digitalization boosts mining cadastre revenue",
+      "mention_count": 8,
+      "created_at": "2025-12-16T15:41:56.472275",
+      "last_updated": "2025-12-22T10:18:19.885909"
+    },
+    {
+      "slug": "burkina-faso-economic-infrastructure-achievements",
+      "label": "Burkina Faso Economic and Infrastructure Achievements",
+      "mention_count": 1,
+      "created_at": "2025-12-17T06:57:34.147684",
+      "last_updated": "2025-12-17T06:57:34.147684"
+    },
+    {
+      "slug": "africa-mineral-reserves-global-importance",
+      "label": "Africa's Mineral Reserves and Global Importance",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:23:49.071584",
+      "last_updated": "2025-12-17T07:23:49.071584"
+    },
+    {
+      "slug": "precious-metals-market-volatility",
+      "label": "Precious Metals Market Volatility",
+      "mention_count": 1,
+      "created_at": "2025-12-17T07:25:13.265532",
+      "last_updated": "2025-12-17T07:25:13.265532"
+    },
+    {
+      "slug": "neiti-leadership-stakeholder-engagement",
+      "label": "NEITI leadership and stakeholder engagement",
+      "mention_count": 1,
+      "created_at": "2025-12-17T13:43:44.107535",
+      "last_updated": "2025-12-17T13:43:44.107535"
+    },
+    {
+      "slug": "nigeria-france-mou-critical-minerals",
+      "label": "Nigeria-France MoU on Critical Minerals",
+      "mention_count": 1,
+      "created_at": "2025-12-17T20:18:47.257728",
+      "last_updated": "2025-12-17T20:18:47.257728"
+    },
+    {
+      "slug": "tribal-mining-skill-comparisons",
+      "label": "Comparisons of Mining Skills Among Nigerian Tribes",
+      "mention_count": 1,
+      "created_at": "2025-12-18T02:47:04.993102",
+      "last_updated": "2025-12-18T02:47:04.993102"
+    },
+    {
+      "slug": "political-leadership-and-resource-control",
+      "label": "Political Leadership and Resource Control Concerns",
+      "mention_count": 2,
+      "created_at": "2025-12-18T03:08:54.841906",
+      "last_updated": "2025-12-22T19:18:55.457131"
+    },
+    {
+      "slug": "mining-site-violence-nigeria",
+      "label": "Attacks and violence at mining sites in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-18T07:04:35.519223",
+      "last_updated": "2025-12-18T07:04:35.519223"
+    },
+    {
+      "slug": "foreign-mining-company-closing-or-seizing-operations",
+      "label": "Foreign mining company closing or seizing operations in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-12-18T07:05:11.742350",
+      "last_updated": "2025-12-18T07:05:11.742350"
+    },
+    {
+      "slug": "attendance-at-nigeria-mining-event",
+      "label": "Attendance at Nigeria Mining Event / On-site Presence",
+      "mention_count": 1,
+      "created_at": "2025-12-22T09:28:09.183987",
+      "last_updated": "2025-12-22T09:28:09.183987"
+    },
+    {
+      "slug": "regional-mining-interest",
+      "label": "Regional Mining Interest in East and West Africa",
+      "mention_count": 1,
+      "created_at": "2025-12-22T10:19:55.329186",
+      "last_updated": "2025-12-22T10:19:55.329186"
+    },
+    {
+      "slug": "mineral-revenue-used-for-political-financing",
+      "label": "Allegations that mineral/state resource revenues are used to fund political campaigns or protect politicians",
+      "mention_count": 1,
+      "created_at": "2025-12-22T18:54:55.844719",
+      "last_updated": "2025-12-22T18:54:55.844719"
+    }
+  ]
+}

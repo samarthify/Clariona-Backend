@@ -1,0 +1,147 @@
+{
+  "ministry": "finance",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "tinubus-economic-reforms",
+      "label": "Tinubu's Economic Reforms Impact on Nigeria's Growth",
+      "mention_count": 201,
+      "created_at": "2025-11-03T03:24:18.698025",
+      "last_updated": "2025-12-22T19:17:56.808714"
+    },
+    {
+      "slug": "financial-disparity-in-nigeria",
+      "label": "Financial Disparity in Nigeria",
+      "mention_count": 26,
+      "created_at": "2025-11-03T01:12:36.962905",
+      "last_updated": "2025-12-22T19:16:10.500721"
+    },
+    {
+      "slug": "tinubus-reckless-debt-addiction",
+      "label": "Tinubu's Reckless Debt Addiction",
+      "mention_count": 14,
+      "created_at": "2025-11-14T20:07:48.034085",
+      "last_updated": "2025-12-22T19:17:43.724770"
+    },
+    {
+      "slug": "tinubus-fuel-duty",
+      "label": "Tinubu's 15% Fuel Duty",
+      "mention_count": 10,
+      "created_at": "2025-11-03T03:26:35.474620",
+      "last_updated": "2025-11-14T21:13:09.049645"
+    },
+    {
+      "slug": "borrowing-tinubu-leg",
+      "label": "Borrowing Tinubu's Leg for Management",
+      "mention_count": 9,
+      "created_at": "2025-11-05T02:07:52.892754",
+      "last_updated": "2025-11-14T21:07:57.643407"
+    },
+    {
+      "slug": "qatar-kenya-investment-partnership",
+      "label": "Qatar-Kenya Investment Partnership",
+      "mention_count": 9,
+      "created_at": "2025-11-14T20:46:51.648797",
+      "last_updated": "2025-11-14T20:57:42.842197"
+    },
+    {
+      "slug": "fuel-subsidy-removal",
+      "label": "Fuel Subsidy Removal",
+      "mention_count": 8,
+      "created_at": "2025-11-03T01:28:10.001884",
+      "last_updated": "2025-12-22T19:20:40.692041"
+    },
+    {
+      "slug": "qatar-islamic-bank-annual-report",
+      "label": "Qatar International Islamic Bank Annual Report 2022",
+      "mention_count": 5,
+      "created_at": "2025-11-05T02:22:44.638426",
+      "last_updated": "2025-11-14T20:53:00.163267"
+    },
+    {
+      "slug": "binance-nigeria-geopolitical-test",
+      "label": "Binance Nigeria Geopolitical Test",
+      "mention_count": 4,
+      "created_at": "2025-11-03T04:59:23.843663",
+      "last_updated": "2025-12-22T10:08:40.907119"
+    },
+    {
+      "slug": "currency-redenomination-impact",
+      "label": "Currency Redenomination Impact on Nigeria's Economy",
+      "mention_count": 4,
+      "created_at": "2025-11-05T02:11:12.763994",
+      "last_updated": "2025-11-14T21:21:32.800169"
+    },
+    {
+      "slug": "fg-private-sector-growth-commitment",
+      "label": "FG's Commitment to Private Sector Growth",
+      "mention_count": 4,
+      "created_at": "2025-11-03T03:25:30.821372",
+      "last_updated": "2025-12-22T18:56:10.594314"
+    },
+    {
+      "slug": "zenith-bank-innovation-integrity",
+      "label": "Zenith Bank's Innovation and Integrity",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:14:22.379892",
+      "last_updated": "2025-11-05T02:24:19.911886"
+    },
+    {
+      "slug": "nigerias-cost-of-capital",
+      "label": "Nigeria's Cost of Capital",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:09:33.253068",
+      "last_updated": "2025-11-14T21:15:13.054822"
+    },
+    {
+      "slug": "naira-valuation-concerns",
+      "label": "Naira Valuation Concerns",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:21:10.804546",
+      "last_updated": "2025-12-22T19:17:30.296544"
+    },
+    {
+      "slug": "rivers-payroll-fraud",
+      "label": "Rivers Payroll Fraud Discovery",
+      "mention_count": 5,
+      "created_at": "2025-11-05T02:22:07.495935",
+      "last_updated": "2025-12-22T19:11:41.789753"
+    },
+    {
+      "slug": "unpaid-pensions-gratuities",
+      "label": "Unpaid Pensions and Gratuities in Nigerian States",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:16:03.994093",
+      "last_updated": "2025-11-14T20:23:42.130173"
+    },
+    {
+      "slug": "“nigeria’s-debt-surpass",
+      "label": "“Nigeria’S Debt May Surpass N200Trn By End Of",
+      "mention_count": 1,
+      "created_at": "2025-11-03T01:05:01.541552",
+      "last_updated": "2025-11-03T01:05:01.541552"
+    },
+    {
+      "slug": "nelfund-applicant-milestone",
+      "label": "NELFUND Hits One Million Applicants Milestone",
+      "mention_count": 1,
+      "created_at": "2025-11-03T03:29:52.424977",
+      "last_updated": "2025-11-03T03:29:52.424977"
+    },
+    {
+      "slug": "trumps-impact-on-nigerias-economy",
+      "label": "Trump's Impact on Nigeria's Economy",
+      "mention_count": 1,
+      "created_at": "2025-11-03T03:35:57.931693",
+      "last_updated": "2025-11-03T03:35:57.931693"
+    },
+    {
+      "slug": "nelfund-applicant-milestone",
+      "label": "NELFUND Applicant Milestone",
+      "mention_count": 1,
+      "created_at": "2025-11-03T04:07:10.837733",
+      "last_updated": "2025-11-03T04:07:10.837733"
+    }
+  ]
+}

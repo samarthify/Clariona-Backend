@@ -1,0 +1,147 @@
+{
+  "ministry": "industry_trade",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "trade-surpasses-oil",
+      "label": "Trade Surpasses Oil as Key Driver of Prosperity in Nigeria",
+      "mention_count": 7,
+      "created_at": "2025-11-03T01:12:49.914317",
+      "last_updated": "2025-12-22T18:34:09.784561"
+    },
+    {
+      "slug": "president-preference-foreign-products",
+      "label": "President's Preference for Foreign Products",
+      "mention_count": 11,
+      "created_at": "2025-11-03T01:13:49.205916",
+      "last_updated": "2025-12-22T19:10:11.810198"
+    },
+    {
+      "slug": "obasanjo-lauds-oramah",
+      "label": "Obasanjo Lauds Oramah As Intra-African Trade Begins In",
+      "mention_count": 3,
+      "created_at": "2025-11-03T01:11:04.630700",
+      "last_updated": "2025-11-03T01:14:24.912166"
+    },
+    {
+      "slug": "msme-role-in-economy",
+      "label": "MSMEs as Engine of $1 Trillion Economy",
+      "mention_count": 3,
+      "created_at": "2025-11-14T20:10:28.328648",
+      "last_updated": "2025-11-14T21:14:26.454915"
+    },
+    {
+      "slug": "currency-devaluation-impact",
+      "label": "Currency Devaluation Impact on Local Manufacturing",
+      "mention_count": 3,
+      "created_at": "2025-11-05T02:08:21.224326",
+      "last_updated": "2025-12-22T18:59:11.168949"
+    },
+    {
+      "slug": "shea-export-suspension",
+      "label": "Shea Export Suspension Impact",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:18:09.325393",
+      "last_updated": "2025-11-05T02:19:50.556347"
+    },
+    {
+      "slug": "germany-nigeria-trade-relations",
+      "label": "Germany-Nigeria Trade Relations",
+      "mention_count": 2,
+      "created_at": "2025-11-05T02:20:13.772117",
+      "last_updated": "2025-11-14T21:11:58.135556"
+    },
+    {
+      "slug": "boosting-national-security-through-industrial-growth",
+      "label": "Boosting National Security Through Industrial Growth",
+      "mention_count": 3,
+      "created_at": "2025-11-14T20:08:55.601905",
+      "last_updated": "2025-12-22T18:39:25.267702"
+    },
+    {
+      "slug": "qatari-investment-in-africa",
+      "label": "Qatari Investment in Africa",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:08:27.170282",
+      "last_updated": "2025-11-05T02:08:27.170282"
+    },
+    {
+      "slug": "reckless-taxation-abia-traders",
+      "label": "Reckless Taxation on Abia Traders",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:08:41.283050",
+      "last_updated": "2025-11-05T02:08:41.283050"
+    },
+    {
+      "slug": "ota-industrial-zone-potential",
+      "label": "Ota Industrial Zone Potential",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:11:41.760684",
+      "last_updated": "2025-11-05T02:11:41.760684"
+    },
+    {
+      "slug": "nigeria-poland-economic-forum",
+      "label": "Nigeria-Poland Economic Forum",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:11:45.861436",
+      "last_updated": "2025-11-05T02:11:45.861436"
+    },
+    {
+      "slug": "india-qatar-business-forum",
+      "label": "India-Qatar Business Forum",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:12:36.552958",
+      "last_updated": "2025-11-05T02:12:36.552958"
+    },
+    {
+      "slug": "export-financing-impact",
+      "label": "Export Financing Impact on Job Creation",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:16:44.923763",
+      "last_updated": "2025-11-05T02:16:44.923763"
+    },
+    {
+      "slug": "shea-industry-development",
+      "label": "Shea Industry Development in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:19:53.374517",
+      "last_updated": "2025-11-05T02:19:53.374517"
+    },
+    {
+      "slug": "apc-protectionist-stance",
+      "label": "APC Protectionist Stance in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:21:20.395646",
+      "last_updated": "2025-11-05T02:21:20.395646"
+    },
+    {
+      "slug": "midea-proshop-launch-abuja",
+      "label": "Midea Proshop Launch in Abuja",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:21:56.765174",
+      "last_updated": "2025-11-05T02:21:56.765174"
+    },
+    {
+      "slug": "informal-market-penetration",
+      "label": "Informal Market Penetration by Food Giants in Africa",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:22:49.555852",
+      "last_updated": "2025-11-05T02:22:49.555852"
+    },
+    {
+      "slug": "impact-economy-celebration",
+      "label": "Impact Economy Celebration in Nigeria",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:10:19.003885",
+      "last_updated": "2025-11-14T20:10:19.003885"
+    },
+    {
+      "slug": "dangote-investment-zimbabwe",
+      "label": "Dangote's $1 Billion Investment in Zimbabwe",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:14:43.117086",
+      "last_updated": "2025-11-14T20:14:43.117086"
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "ministry": "youth_development",
+  "issue_count": 20,
+  "max_issues": 20,
+  "issues": [
+    {
+      "slug": "youth-leadership-inspiration",
+      "label": "Youth Leadership Inspiration",
+      "mention_count": 43,
+      "created_at": "2025-11-05T02:27:29.154333",
+      "last_updated": "2025-12-22T19:17:15.103589"
+    },
+    {
+      "slug": "youth-support-for-tinubu",
+      "label": "Youth Support for Tinubu",
+      "mention_count": 37,
+      "created_at": "2025-11-14T20:06:52.539527",
+      "last_updated": "2025-12-22T18:54:06.609134"
+    },
+    {
+      "slug": "patriot-tinubu-youth-perceptions",
+      "label": "Youth Perceptions of Patriot Tinubu",
+      "mention_count": 9,
+      "created_at": "2025-11-05T02:19:54.466223",
+      "last_updated": "2025-12-22T18:55:00.969373"
+    },
+    {
+      "slug": "@jrnaib2-president-tinubu's-exhortation",
+      "label": "@Jrnaib2 President Tinubu'S Exhortation To Nigerian Youths. That",
+      "mention_count": 6,
+      "created_at": "2025-11-03T01:14:24.330584",
+      "last_updated": "2025-12-22T09:53:40.982724"
+    },
+    {
+      "slug": "future-president-of-nigeria",
+      "label": "Future President of Nigeria",
+      "mention_count": 6,
+      "created_at": "2025-11-05T02:18:53.386367",
+      "last_updated": "2025-12-22T09:54:19.248615"
+    },
+    {
+      "slug": "political-power-sharing-ahead-of-2027",
+      "label": "Political Power Sharing Ahead of 2027",
+      "mention_count": 4,
+      "created_at": "2025-11-05T02:21:18.734204",
+      "last_updated": "2025-12-22T19:09:17.697372"
+    },
+    {
+      "slug": "youth-demand-for-democracy",
+      "label": "Youth Demand for Democracy",
+      "mention_count": 4,
+      "created_at": "2025-11-05T02:10:46.417574",
+      "last_updated": "2025-12-22T19:18:26.495411"
+    },
+    {
+      "slug": "ohanaeze-youths-support-tinubu-ekweremadu-return",
+      "label": "Ohanaeze Youths Support Tinubu's Ekweremadu Return",
+      "mention_count": 2,
+      "created_at": "2025-11-14T20:08:31.154180",
+      "last_updated": "2025-11-14T21:09:12.939807"
+    },
+    {
+      "slug": "youth-development",
+      "label": "Youth Development",
+      "mention_count": 4,
+      "created_at": "2025-12-16T14:01:10.651416",
+      "last_updated": "2025-12-22T19:19:11.511614"
+    },
+    {
+      "slug": "nigerian-baptist-convention-arise-congress",
+      "label": "Nigerian Baptist Convention Arise Congress",
+      "mention_count": 1,
+      "created_at": "2025-11-05T02:18:19.825617",
+      "last_updated": "2025-11-05T02:18:19.825617"
+    },
+    {
+      "slug": "mtn-youth-empowerment-kano",
+      "label": "MTN Youth Empowerment in Kano",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:13:56.426821",
+      "last_updated": "2025-11-14T20:13:56.426821"
+    },
+    {
+      "slug": "soccer-sister-youth-intervention",
+      "label": "Soccer Sister Youth Intervention",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:15:17.007372",
+      "last_updated": "2025-11-14T20:15:17.007372"
+    },
+    {
+      "slug": "tinubu-sports-festival-ondo",
+      "label": "Tinubu Sports Festival in Ondo",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:18:07.071995",
+      "last_updated": "2025-11-14T20:18:07.071995"
+    },
+    {
+      "slug": "northern-youths-support-tinubu-shettima-re-election",
+      "label": "Northern Youths Support Tinubu-Shettima Re-election",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:21:09.410782",
+      "last_updated": "2025-11-14T20:21:09.410782"
+    },
+    {
+      "slug": "mowaa-controversy-tinubu-intervention",
+      "label": "MOWAA Controversy and Tinubu Intervention",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:22:59.223977",
+      "last_updated": "2025-11-14T20:22:59.223977"
+    },
+    {
+      "slug": "mumuye-cultural-development-association-youth-wing",
+      "label": "Mumuye Cultural Development Association Youth Wing Engagement",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:42:14.148009",
+      "last_updated": "2025-11-14T20:42:14.148009"
+    },
+    {
+      "slug": "qatar-national-day-slogan-2025",
+      "label": "Qatar National Day Slogan 2025",
+      "mention_count": 1,
+      "created_at": "2025-11-14T20:52:06.773595",
+      "last_updated": "2025-11-14T20:52:06.773595"
+    },
+    {
+      "slug": "youth-representation-accountability",
+      "label": "Youth Representation and Accountability Mechanisms",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:11:00.688820",
+      "last_updated": "2025-11-14T21:11:00.688820"
+    },
+    {
+      "slug": "yahoo-boys-redirection",
+      "label": "Yahoo Boys Redirection",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:14:03.805419",
+      "last_updated": "2025-11-14T21:14:03.805419"
+    },
+    {
+      "slug": "youth-movement-leadership",
+      "label": "Youth Movement Leadership Resignation",
+      "mention_count": 1,
+      "created_at": "2025-11-14T21:14:10.696326",
+      "last_updated": "2025-11-14T21:14:10.696326"
+    }
+  ]
+}
