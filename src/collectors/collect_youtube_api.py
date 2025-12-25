@@ -154,20 +154,50 @@ class YouTubeAPICollector:
 
     def _get_target_keywords(self) -> List[str]:
         """Get keywords to filter videos based on target configuration"""
-        if self.target_config and hasattr(self.target_config, 'keywords'):
+        if self.target_config and hasattr(self.target_config, 'sources'):
+            # First, check for YouTube-specific keywords
+            youtube_config = self.target_config.sources.get('youtube')
+            if youtube_config and hasattr(youtube_config, 'keywords') and youtube_config.keywords:
+                return youtube_config.keywords
+        
+        # Fallback to top-level target keywords
+        if self.target_config and hasattr(self.target_config, 'keywords') and self.target_config.keywords:
             return self.target_config.keywords
+        
         # Fallback to default Emir keywords for backward compatibility
         return ["emir", "amir", "sheikh tamim", "al thani"]
 
     def _get_target_countries(self) -> List[str]:
         """Get countries to search based on target configuration"""
         if self.target_config and hasattr(self.target_config, 'sources'):
+            # First, check for YouTube-specific channels/countries
+            youtube_config = self.target_config.sources.get('youtube')
+            if youtube_config and hasattr(youtube_config, 'channels') and youtube_config.channels:
+                # If YouTube config specifies channels, use those to determine countries
+                channels = youtube_config.channels
+                countries = []
+                if 'nigeria' in channels or 'ng' in channels:
+                    countries.append('ng')
+                if 'qatar' in channels or 'qa' in channels:
+                    countries.append('qa')
+                if countries:
+                    return countries
+            
+            # Fallback to news countries, but filter out 'qa' if target is not Qatar-related
             news_config = self.target_config.sources.get('news')
             if news_config and hasattr(news_config, 'countries') and news_config.countries:
-                return news_config.countries
+                countries = news_config.countries.copy()
+                # Filter out Qatar if target country is not Qatar
+                if hasattr(self.target_config, 'country_code') and self.target_config.country_code != 'qa':
+                    countries = [c for c in countries if c != 'qa']
+                return countries
         
-        # Fallback to default countries for backward compatibility
-        return ['qa', 'us', 'gb', 'ae', 'ng', 'in']
+        # Fallback: use target's country_code if available
+        if self.target_config and hasattr(self.target_config, 'country_code'):
+            return [self.target_config.country_code]
+        
+        # Fallback to default countries for backward compatibility (without qa)
+        return ['us', 'gb', 'ae', 'ng', 'in']
 
     def _should_include_video(self, title: str, description: str) -> bool:
         """Determine if a video should be included based on target configuration"""
