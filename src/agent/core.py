@@ -1,16 +1,13 @@
 import os
 import time
-import schedule
 import logging
 from datetime import datetime, timedelta
-from dateutil import parser as date_parser
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Any, Callable, Optional
 import json
 from pathlib import Path
 import subprocess
-import signal
 import sys
 
 # Enable UTF-8 mode on Windows to support emoji characters in logs
@@ -26,15 +23,11 @@ import threading
 import queue
 import asyncio
 import re
-import threading
 import requests
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 import multiprocessing
 from src.utils.mail_config import NOTIFY_ON_ANALYSIS
 from src.utils.notification_service import send_analysis_report, send_processing_notification, send_collection_notification
-from .brain import AgentBrain
-from .autogen_agents import AutogenAgentSystem
-import inspect
 from src.processing.presidential_sentiment_analyzer import PresidentialSentimentAnalyzer
 from src.processing.data_processor import DataProcessor
 from uuid import UUID
@@ -47,8 +40,6 @@ from sqlalchemy import or_
 from src.utils.deduplication_service import DeduplicationService
 
 # Configure logging
-import os
-
 # Configure handlers with UTF-8 encoding to support emoji characters
 handlers = []
 
@@ -671,16 +662,19 @@ class SentimentAnalysisAgent:
         logger.debug(f"SentimentAnalysisAgent.__init__ finished. Initial config: {self.config}")
 
     def _parse_date_string(self, date_str):
-        """Parse date string to datetime object, return None if invalid"""
+        """Parse date string to datetime object using DataProcessor's robust parser, return None if invalid"""
         if not date_str or pd.isna(date_str):
             return None
         try:
+            # If already a datetime object, return as-is
             if isinstance(date_str, datetime):
                 return date_str
+            # Use DataProcessor's robust parse_date method which handles Twitter dates and multiple formats
             if isinstance(date_str, str):
-                return date_parser.parse(date_str)
+                return self.data_processor.parse_date(date_str)
             return None
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:
+            logger.debug(f"Error parsing date string '{date_str}': {e}")
             return None
     
     def _validate_and_clean_location(self, location):
@@ -1201,7 +1195,7 @@ class SentimentAnalysisAgent:
                 if 'user_id' not in params:
                     return {"success": False, "message": "run_collection command requires 'user_id' parameter."}
                 # You might want to ensure this runs in a separate thread or async
-                self._run_task(lambda: self.collect_data(params['user_id']), f"collect_cmd_{params['user_id']}") 
+                self._run_task(lambda: self.collect_data_parallel(params['user_id']), f"collect_cmd_{params['user_id']}") 
                 return {"success": True, "message": f"Collection task triggered for user {params['user_id']}."}
             elif command == "run_processing":
                 # --- Requires user_id now ---
@@ -1260,24 +1254,141 @@ class SentimentAnalysisAgent:
         pass # Add actual stop logic if needed (e.g., closing resources)
         logger.debug("stop: Finished method.")
 
-    def process_data(self, user_id: str):
-        """Process collected raw data, perform analysis, and send to API for a specific user."""
-        if not user_id:
-            logger.error("process_data: Called without a user_id. Aborting.")
+    def _check_and_release_stuck_lock(self, task_name: str) -> bool:
+        """
+        Check if the current lock is stuck (exceeded max age) and force-release it.
+
+        Args:
+            task_name: Name of the task trying to acquire the lock
+
+        Returns:
+            True if lock was force-released, False if no action taken
+        """
+        if not self.task_status['is_busy']:
+            return False  # No lock to check
+
+        if not self.task_status.get('lock_time'):
+            # Lock exists but no timestamp (legacy state) - force release
+            logger.warning(f"Found lock without timestamp for task '{self.task_status['current_task']}'. Force-releasing.")
+            self.task_status['is_busy'] = False
+            self.task_status['current_task'] = None
+            self.task_status['lock_time'] = None
+            return True
+
+        # Calculate lock age
+        lock_time = datetime.fromisoformat(self.task_status['lock_time'])
+        lock_age = (datetime.now() - lock_time).total_seconds()
+
+        if lock_age > self.lock_max_age:
+            # Lock is stuck - force release
+            logger.error(
+                f"🚨 FORCE-RELEASING STUCK LOCK! "
+                f"Task '{self.task_status['current_task']}' has been locked for {lock_age:.1f}s "
+                f"(max: {self.lock_max_age}s). Requested by: '{task_name}'"
+            )
+
+            # Record the stuck lock in last_run for debugging
+            stuck_task = self.task_status['current_task']
+            self.task_status['last_run'][f"{stuck_task}_FORCE_RELEASED"] = {
+                'time': lock_time.isoformat(),
+                'success': False,
+                'duration': lock_age,
+                'error': f'Lock exceeded max age ({self.lock_max_age}s) and was force-released'
+            }
+
+            # Release the lock
+            self.task_status['is_busy'] = False
+            self.task_status['current_task'] = None
+            self.task_status['lock_time'] = None
+
+            return True
+
+        # Lock is valid
+        logger.debug(f"Lock age: {lock_age:.1f}s (max: {self.lock_max_age}s) - valid")
+        return False
+
+    def _run_task(self, task_func: Callable, task_name: str) -> bool:
+        """Runs a given task function, updates status, and handles basic timing/errors."""
+        logger.debug(f"_run_task: Preparing to run task '{task_name}'. Current busy status: {self.task_status['is_busy']}")
+
+        # Check for stuck locks before rejecting the task
+        if self.task_status['is_busy']:
+            # Try to auto-unlock if stuck
+            was_released = self._check_and_release_stuck_lock(task_name)
+
+            if was_released:
+                logger.warning(f"Stuck lock was released. Proceeding with task '{task_name}'.")
+            else:
+                # Lock is valid and active
+                lock_age = None
+                if self.task_status.get('lock_time'):
+                    lock_time = datetime.fromisoformat(self.task_status['lock_time'])
+                    lock_age = (datetime.now() - lock_time).total_seconds()
+
+                logger.warning(
+                    f"Agent is already busy with task: {self.task_status['current_task']} "
+                    f"(locked for {lock_age:.1f}s). Cannot start '{task_name}'."
+                )
+                return False # Indicate task did not run
+            
+        logger.debug(f"_run_task: Starting task '{task_name}'...")
+        self.task_status['is_busy'] = True
+        self.task_status['current_task'] = task_name
+        start_time = datetime.now()
+        self.task_status['lock_time'] = start_time.isoformat()  # NEW: Track lock time
+        
+        # Record task start in last_run immediately (prevents scheduler from re-scheduling)
+        self.task_status['last_run'][task_name] = {
+            'time': start_time.isoformat(),
+            'success': None,  # Will be updated in finally block
+            'duration': 0,
+            'error': None,
+            'status': 'running'  # Indicates task is currently running
+        }
+        
+        try:
+            # Run the task function
+            result = task_func() 
+            # We assume the task function returns True on success, False or raises Exception on failure
+            if isinstance(result, bool):
+                success = result
+            else:
+                # Non-boolean return is treated as success (None or other values)
+                success = True
+            
+            duration = (datetime.now() - start_time).total_seconds()
+            logger.info(f"_run_task: Task '{task_name}' completed successfully in {duration:.2f}s")
+            
+            # Update status
+            self.task_status['last_run'][task_name].update({
+                'success': success,
+                'duration': duration,
+                'status': 'completed'
+            })
+            
+            return success
+        except Exception as e:
+            duration = (datetime.now() - start_time).total_seconds()
+            error_msg = str(e)
+            logger.error(f"_run_task: Task '{task_name}' failed after {duration:.2f}s: {error_msg}", exc_info=True)
+            
+            # Update status
+            self.task_status['last_run'][task_name].update({
+                'success': False,
+                'duration': duration,
+                'error': error_msg,
+                'status': 'failed'
+            })
+            
             return False
-        logger.info(f"Starting data processing for user {user_id}...")
-        # --- [RESTORED] Original data processing logic --- 
-        logger.info("Starting data processing...")
-        raw_data_path = self.base_path / 'data' / 'raw'
-        processed_data_path = self.base_path / 'data' / 'processed'
-        processed_data_path.mkdir(parents=True, exist_ok=True)
+        finally:
+            # Always release lock
+            self.task_status['is_busy'] = False
+            self.task_status['current_task'] = None
+            self.task_status['lock_time'] = None
+            logger.debug(f"_run_task: Lock released for task '{task_name}'")
 
-        all_raw_files = list(raw_data_path.glob('*.csv'))
-        if not all_raw_files:
-            logger.warning("No raw data files found to process.")
-            return False # Indicate no processing happened
-
-        # Aggregate raw data
+    def _check_and_release_stuck_lock(self, task_name: str) -> bool:
         try:
             # Read CSVs individually and parse dates afterwards
             all_data_list = []
@@ -1954,254 +2065,6 @@ class SentimentAnalysisAgent:
             pass
 
     # --- Modified: Old scheduled run - Adapt or remove later --- 
-    def _run_collect_and_process(self, user_id: Optional[str] = None):
-        if not user_id:
-            logger.error("_run_collect_and_process: Called without user_id. Cannot run in multi-user mode without a target user. Aborting.")
-            return
-        
-        # Just call the new workflow directly
-        self._run_task(lambda: self.run_single_cycle(user_id), f'scheduled_cycle_{user_id}')
-
-    def update_metrics(self, latest_data: pd.DataFrame, analysis_result: Dict[str, Any]):
-        """Update system metrics and performance indicators with Autogen insights"""
-        try:
-            # Calculate basic metrics
-            metrics = {
-                'timestamp': datetime.now().isoformat(),
-                'total_records': len(latest_data),
-                'sentiment_distribution': latest_data['sentiment_label'].value_counts().to_dict(),
-                'average_sentiment_score': latest_data['sentiment_score'].mean(),
-                'data_sources': latest_data['source'].value_counts().to_dict()
-            }
-            
-            # Add Autogen insights
-            if 'insights' in analysis_result:
-                metrics.update({
-                    'autogen_insights': analysis_result['insights'],
-                    'data_quality': analysis_result['insights'].get('data_quality', {}),
-                    'analysis_recommendations': analysis_result['insights'].get('recommendations', [])
-                })
-            
-            # Update history
-            self.data_history['sentiment_trends'].append(metrics)
-            
-            # Keep only last 30 days of metrics
-            cutoff = len(self.data_history['sentiment_trends']) - (self.config['data_retention_days'] * 48)
-            if cutoff > 0:
-                self.data_history['sentiment_trends'] = self.data_history['sentiment_trends'][cutoff:]
-            
-            # Save metrics
-            metrics_file = self.base_path / 'data' / 'metrics' / 'history.json'
-            with open(metrics_file, 'w') as f:
-                json.dump(self.data_history, f, indent=4)
-            
-            # Update task status with Autogen suggestions
-            if 'recommendations' in analysis_result.get('insights', {}):
-                self.task_status['suggestions'] = analysis_result['insights']['recommendations']
-            
-            logger.info("Metrics updated successfully with Autogen insights")
-        except Exception as e:
-            logger.error(f"Failed to update metrics: {str(e)}")
-
-    async def optimize_system(self):
-        """Optimize system parameters using Autogen based on performance data."""
-        logger.debug("optimize_system: Entering async method.")
-        logger.info("Starting system optimization...")
-        try:
-            # Gather performance data
-            latest_sentiment_metrics = self.data_history['sentiment_trends'][-1] if self.data_history['sentiment_trends'] else {}
-            latest_health_metrics = self.data_history['system_health'][-1] if self.data_history['system_health'] else {}
-            latest_data_quality = latest_sentiment_metrics.get('data_quality', {}) # Get quality from sentiment metrics
-            last_collection_run = self.task_status['last_run'].get('collect', {}) # Get overall collection status
-            
-            performance_data = {
-                'overall_collection_status': {
-                    'timestamp': last_collection_run.get('timestamp'),
-                    'duration_seconds': last_collection_run.get('duration'),
-                    'success': last_collection_run.get('success')
-                 },
-                'latest_sentiment_analysis': {
-                    'timestamp': latest_sentiment_metrics.get('timestamp'),
-                    'total_records_processed': latest_sentiment_metrics.get('total_records'),
-                    'average_sentiment_score': latest_sentiment_metrics.get('average_sentiment_score'),
-                    'sentiment_distribution': latest_sentiment_metrics.get('sentiment_distribution'),
-                    'autogen_insights_summary': latest_sentiment_metrics.get('autogen_insights', {}).get('summary', [])[:3] # Sample of insights
-                },
-                'latest_data_quality': latest_data_quality,
-                'system_health': latest_health_metrics, # e.g., memory usage if tracked
-                'current_collection_interval_minutes': self.config.get('collection_interval_minutes'),
-                'current_processing_interval_minutes': self.config.get('processing_interval_minutes')
-            }
-
-            # Remove collection_stats which is often empty/unavailable
-            # 'collection_stats': {
-            #     source: self.task_status['last_run'].get(f'collect_{source}', {})
-            #     for source in self.config['sources']
-            #     if self.config['sources'][source]
-            # }
-
-            # Clean up None values before sending to LLM
-            performance_data = json.loads(json.dumps(performance_data, default=str)) # Convert non-serializable first
-
-            logger.info(f"Sending performance data to Autogen for optimization: {json.dumps(performance_data, indent=2)}")
-
-            # Get optimization suggestions from Autogen - now awaited
-            optimization_result = await self.autogen_system.optimize_collection(performance_data)
-
-            if optimization_result and 'optimizations' in optimization_result:
-                logger.info(f"Received optimization suggestions: {optimization_result['optimizations']}")
-                # Update collection frequency if suggested and valid
-                new_frequency = optimization_result['optimizations'].get('collection_frequency')
-                if isinstance(new_frequency, (int, float)) and 15 <= new_frequency <= 1440:  # Check type and reasonable bounds (15 min to 1 day)
-                    self.config['collection_interval_minutes'] = int(new_frequency)
-                    schedule.clear('collect-task') # Clear existing collection schedule
-                    schedule.every(self.config['collection_interval_minutes']).minutes.do(
-                        lambda: self._run_task(self.collect_data, 'collect')
-                    ).tag('collect-task') # Re-add with new interval and tag
-                    logger.info(f"Updated collection frequency to {int(new_frequency)} minutes based on optimization.")
-                elif new_frequency is not None:
-                     logger.warning(f"Received invalid collection frequency suggestion: {new_frequency}. Ignoring.")
-
-                # --- Placeholder for applying other suggested changes --- 
-                # Example: Adjusting data sources based on quality/performance
-                suggested_changes = optimization_result['optimizations'].get('suggested_changes', [])
-                for change in suggested_changes:
-                     # Implement logic to apply changes to self.config or elsewhere
-                     logger.info(f"Applying suggested change: {change}")
-                     pass # Add actual implementation later
-                # -----------------------------------------------------------
-
-                # Save updated config if changes were made (e.g., frequency)
-                if new_frequency is not None: # Check if frequency was actually updated
-                    self._save_config()
-                    logger.info("Configuration saved after applying optimizations.")
-
-                logger.info("System optimization processing completed.")
-                return True
-            else:
-                logger.warning("No valid optimization suggestions received from Autogen.")
-                return False
-
-        except Exception as e:
-            logger.error(f"Error in system optimization: {str(e)}", exc_info=True)
-            return False
-
-    def save_config(self):
-        """Save the current agent configuration to file."""
-        try:
-            config_path = self.base_path / 'config' / 'default_config.json'
-            with open(config_path, 'w') as f:
-                json.dump(self.config, f, indent=4, default=str) # Use default=str for non-serializable types
-            logger.info(f"Configuration successfully saved to {config_path}")
-        except Exception as e:
-            logger.error(f"Failed to save configuration: {e}", exc_info=True)
-
-    def cleanup_old_data(self):
-        """Clean up old data files based on retention policy"""
-        logger.debug("cleanup_old_data: Entering method.")
-        try:
-            retention_days = self.config['data_retention_days']
-            current_time = datetime.now()
-            
-            # Clean up processed data
-            processed_dir = self.base_path / 'data' / 'processed'
-            for file in processed_dir.glob('*.csv'):
-                if file.name == 'latest.csv':
-                    continue
-                file_stat = file.stat()
-                file_age = (current_time - datetime.fromtimestamp(file_stat.st_mtime)).days
-                if file_age > retention_days:
-                    file.unlink()
-                    logger.info(f"Deleted old processed file: {file}")
-            
-            # Clean up raw data
-            raw_dir = self.base_path / 'data' / 'raw'
-            for file in raw_dir.glob('*.csv'):
-                file_stat = file.stat()
-                file_age = (current_time - datetime.fromtimestamp(file_stat.st_mtime)).days
-                if file_age > retention_days:
-                    file.unlink()
-                    logger.info(f"Deleted old raw data file: {file}")
-            
-            # Archive old logs
-            log_file = self.base_path / 'logs' / 'agent.log'
-            if log_file.exists() and log_file.stat().st_size > 10 * 1024 * 1024:  # 10MB
-                archive_name = f"agent_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-                archive_path = self.base_path / 'logs' / 'archive' / archive_name
-                log_file.rename(archive_path)
-                logger.info(f"Archived log file to: {archive_path}")
-            
-            logger.info("Data cleanup completed successfully")
-        except Exception as e:
-            logger.error(f"Failed to clean up old data: {str(e)}")
-        logger.debug("cleanup_old_data: Finished method.")
-
-    def run(self):
-        """Main execution loop (DEPRECATED - Agent is now triggered via API)."""
-        logger.warning("Agent.run() method is deprecated and does nothing. Agent runs are triggered via API calls to run_single_cycle.")
-        # # --- Original Signal Handling (May not be needed if agent isn't long-running) ---
-        # def signal_handler(signum, frame):
-        #     logger.info("Shutdown signal received. Cleaning up...")
-        #     self.is_running = False
-        #     # self.brain.save_brain_state() # If brain exists
-        #     # self.event_loop.close() # If using asyncio
-        #     sys.exit(0)
-
-        # signal.signal(signal.SIGINT, signal_handler)
-        # signal.signal(signal.SIGTERM, signal_handler)
-        # # ----------------------------------------------------------------------------
-
-        # # --- Original Scheduling Setup (Commented out) ---
-        # # Schedule tasks
-        # # schedule.every(self.config['collection_interval_minutes']).minutes.do(
-        # #     lambda: self._run_task(self.collect_data, 'collect'))
-        # # schedule.every(self.config['processing_interval_minutes']).minutes.do(
-        # #     lambda: self._run_task(self.process_data, 'process'))
-        # # schedule.every().day.at("00:00").do(
-        # #     lambda: self._run_task(self.cleanup_old_data, 'cleanup'))
-        
-        # # # Add system optimization schedule
-        # # if self.config.get('auto_optimization', True):
-        # #     schedule.every(6).hours.do(
-        # #         lambda: self._run_task(self.optimize_system, 'optimize'))
-        # # -----------------------------------------------------
-
-        # logger.debug("run: Setting up scheduler... (Scheduler Disabled)")
-        # logger.info("Agent started (Scheduler Disabled). Waiting for API triggers.")
-        
-        # # --- Original Main Loop (Commented out) ---
-        # # while self.is_running:
-        # #     # schedule.run_pending() # No longer needed
-        # #     
-        # #     # --- Original Brain/Optimization Logic (Commented out) ---
-        # #     # # Check if auto-optimization and brain are enabled/initialized
-        # #     # if self.config.get('auto_optimization', True) and self.brain:
-        # #     #     metrics = {
-        # #     #         'data_quality': self.data_history['data_quality_metrics'][-1] if self.data_history['data_quality_metrics'] else {},
-        # #     #         'system_health': self.data_history['system_health'][-1] if self.data_history['system_health'] else {}
-        # #     #     }
-        # #     #     
-        # #     #     # Get suggestions only if brain exists
-        # #     #     try:
-        # #     #         brain_suggestions = self.brain.suggest_improvements(metrics)
-        # #     #         self.task_status['suggestions'] = brain_suggestions
-        # #     #         logger.debug(f"Brain suggestions received: {brain_suggestions}")
-        # #     #     except Exception as brain_e:
-        # #     #         logger.error(f"Error getting suggestions from brain: {brain_e}", exc_info=True)
-        # #     #         self.task_status['suggestions'] = [] # Reset suggestions on error
-        # #     #     
-        # #     #     # Periodically run system optimization (also depends on brain?)
-        # #     #     # Consider adding `and self.brain` to this check too if optimize_system requires it.
-        # #     #     if not self.task_status['is_busy'] and time.time() % 3600 < 1:  # Check every hour
-        # #     #         # Assuming optimize_system also requires the brain
-        # #     #         self._run_task(self.optimize_system, 'optimize')
-        # #     # -------------------------------------------------------
-        # #     
-        # #     time.sleep(60) # Sleep for a longer time as scheduling is disabled
-        # # logger.debug("run: Exited main loop (is_running is False).")
-        # # -------------------------------------------
-        pass # run() method now does nothing actively
-
     def _init_location_classifier(self):
         """Initialize the enhanced location classifier with country patterns."""
         try:
@@ -3115,29 +2978,5 @@ if __name__ == "__main__":
         logger.error(f"CRITICAL ERROR during SentimentAnalysisAgent initialization: {agent_init_e}", exc_info=True)
         sys.exit(1)
 
-    # --- REMOVED: Force exit after initialization to prevent further execution ---
-    # logger.info("DEBUG: Exiting script immediately after agent initialization.")
-    # sys.exit(0)
-    # ------------------------------------------------------------------------
-
-    logger.info("Performing initial data collection and processing... (Currently Disabled)") # Modified log
-    try:
-        logger.debug("Checking if initial run should be triggered... (Currently Disabled)") # Modified log
-        # --- Ensure the line below remains commented out to prevent automatic run on script start ---
-        # agent._run_collect_and_process() 
-        # --------------------------------------------------------------------------
-        logger.info("Initial data collection and processing skipped (commented out in main block). Agent ready for API triggers.")
-    except Exception as initial_run_e:
-        logger.error(f"CRITICAL ERROR during initial _run_collect_and_process (if uncommented): {initial_run_e}", exc_info=True)
-        sys.exit(1)
-
-    logger.info("Agent script finished initialization. Main loop is deprecated and not started. Ready for API triggers.") # Modified log
-    # --- Ensure the agent.run() call is commented out or removed ---
-    # logger.info("Attempting to start agent's main loop... (Deprecated - Agent is API-driven)")
-    # try:
-    #     logger.debug("Calling agent.run()... (Deprecated)") # Add debug log
-    #     agent.run()
-    # except Exception as run_e:
-    #     logger.error(f"CRITICAL ERROR during agent.run(): {run_e}", exc_info=True)
-    #     sys.exit(1)
-    # logger.debug("agent.run() exited unexpectedly (should loop indefinitely).") # Add debug log
+    logger.info("Initial data collection and processing skipped. Agent ready for API triggers.")
+    logger.info("Agent script finished initialization. Main loop is deprecated and not started. Ready for API triggers.")
