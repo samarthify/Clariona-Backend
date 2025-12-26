@@ -1,0 +1,102 @@
+[
+  {
+    "actor_id": "CJdippxWmn9uRfooo",
+    "actor_name": "Original Actor",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "str",
+          "example": "{ \"helloWorld\": 123 }",
+          "description": "Example value: { \"helloWorld\": 123 }"
+        },
+        "contentType": {
+          "type": "str",
+          "example": "application/json; charset=utf-8",
+          "description": "Example value: application/json; charset=utf-8"
+        }
+      }
+    },
+    "fields": [
+      {
+        "name": "body",
+        "type": "str",
+        "description": "Example value: { \"helloWorld\": 123 }",
+        "default": null,
+        "enum": null,
+        "required": false,
+        "schema": {
+          "type": "str",
+          "example": "{ \"helloWorld\": 123 }",
+          "description": "Example value: { \"helloWorld\": 123 }"
+        }
+      },
+      {
+        "name": "contentType",
+        "type": "str",
+        "description": "Example value: application/json; charset=utf-8",
+        "default": null,
+        "enum": null,
+        "required": false,
+        "schema": {
+          "type": "str",
+          "example": "application/json; charset=utf-8",
+          "description": "Example value: application/json; charset=utf-8"
+        }
+      }
+    ],
+    "date_fields": [],
+    "filter_fields": [],
+    "search_fields": []
+  },
+  {
+    "actor_id": "nfp1fpt5gUlBwPcor",
+    "actor_name": "New Actor",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "str",
+          "example": "{ \"helloWorld\": 123 }",
+          "description": "Example value: { \"helloWorld\": 123 }"
+        },
+        "contentType": {
+          "type": "str",
+          "example": "application/json; charset=utf-8",
+          "description": "Example value: application/json; charset=utf-8"
+        }
+      }
+    },
+    "fields": [
+      {
+        "name": "body",
+        "type": "str",
+        "description": "Example value: { \"helloWorld\": 123 }",
+        "default": null,
+        "enum": null,
+        "required": false,
+        "schema": {
+          "type": "str",
+          "example": "{ \"helloWorld\": 123 }",
+          "description": "Example value: { \"helloWorld\": 123 }"
+        }
+      },
+      {
+        "name": "contentType",
+        "type": "str",
+        "description": "Example value: application/json; charset=utf-8",
+        "default": null,
+        "enum": null,
+        "required": false,
+        "schema": {
+          "type": "str",
+          "example": "application/json; charset=utf-8",
+          "description": "Example value: application/json; charset=utf-8"
+        }
+      }
+    ],
+    "date_fields": [],
+    "filter_fields": [],
+    "search_fields": []
+  }
+]

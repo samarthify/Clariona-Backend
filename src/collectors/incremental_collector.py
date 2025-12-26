@@ -103,7 +103,7 @@ class IncrementalCollector:
     
     def collect_twitter_incremental(self, user_id: str, queries: List[str], 
                                     output_file: Optional[str] = None,
-                                    max_items: int = 10000,
+                                    max_items: int = 100,
                                     **kwargs) -> int:
         """
         Collect Twitter data incrementally.

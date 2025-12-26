@@ -324,7 +324,7 @@
             "bola tinubu",
             "nigerian politics"
           ],
-          "max_results_per_query": 200,
+          "max_results_per_query": 100,
           "search_type": "hashtag",
           "include_comments": true,
           "include_likes": true
@@ -349,7 +349,7 @@
             "NigeriaNews",
             "TrendingNaija"
           ],
-          "max_results_per_query": 200,
+          "max_results_per_query": 100,
           "search_type": "hashtag",
           "include_comments": true,
           "include_shares": true,

@@ -60,7 +60,7 @@ INSTAGRAM_ACTOR_CONFIGS: List[Dict] = [
         "name": "Instagram Scraper",
         "type": "general",
         "supports_filters": True,
-        "max_results": 1000,
+        "max_results": 100,
         "search_types": ["hashtag", "user", "location", "search"]
     },
     {
@@ -68,7 +68,7 @@ INSTAGRAM_ACTOR_CONFIGS: List[Dict] = [
         "name": "Instagram Hashtag Scraper",
         "type": "hashtag",
         "supports_filters": False,
-        "max_results": 1000,
+        "max_results": 100,
         "search_types": ["hashtag"]
     }
 ]
@@ -105,7 +105,7 @@ def determine_country_from_username(username: str) -> str:
             country = "india"
     return country
 
-def collect_instagram_apify(queries: List[str], output_file=None, max_results=1000, search_type="hashtag", 
+def collect_instagram_apify(queries: List[str], output_file=None, max_results=100, search_type="hashtag", 
                           include_comments=True, include_likes=True, **kwargs):
     """
     Collect Instagram data using multiple Apify Actors for the given queries.
@@ -113,7 +113,7 @@ def collect_instagram_apify(queries: List[str], output_file=None, max_results=10
     Args:
         queries (List[str]): List of query strings to search for (usernames, hashtags, locations).
         output_file: Path to save the results
-        max_results: Maximum number of results to fetch per query (default: 10000)
+        max_results: Maximum number of results to fetch per query (default: 100)
         search_type: Type of search to perform (default: "hashtag")
         include_comments: Whether to scrape comments (default: True)
         include_likes: Whether to scrape likes (default: True)

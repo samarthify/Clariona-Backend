@@ -76,7 +76,7 @@ TIKTOK_ACTOR_CONFIGS: List[Dict] = [
         "name": "Clockworks TikTok Scraper",
         "type": "general",
         "supports_filters": True,
-        "max_results": 10000,
+        "max_results": 100,
         "search_types": ["hashtag", "user", "sound", "trending"],
         "input_format": "hashtags"  # Uses 'hashtags' parameter
     },
@@ -85,7 +85,7 @@ TIKTOK_ACTOR_CONFIGS: List[Dict] = [
         "name": "Clockworks Free TikTok Scraper", 
         "type": "general",
         "supports_filters": False,
-        "max_results": 10000,
+        "max_results": 100,
         "search_types": ["hashtag", "user"],
         "input_format": "hashtags"  # Uses 'hashtags' parameter
     }
@@ -123,7 +123,7 @@ def determine_country_from_username(username: str) -> str:
             country = "india"
     return country
 
-def collect_tiktok_apify(queries: List[str], output_file=None, max_results=10000, search_type="hashtag", 
+def collect_tiktok_apify(queries: List[str], output_file=None, max_results=100, search_type="hashtag", 
                         include_comments=True, include_shares=True, download_subtitles=True, **kwargs):
     """
     Collect TikTok data using multiple Apify Actors for the given queries.
@@ -131,7 +131,7 @@ def collect_tiktok_apify(queries: List[str], output_file=None, max_results=10000
     Args:
         queries (List[str]): List of query strings to search for (usernames, hashtags, sounds).
         output_file: Path to save the results
-        max_results: Maximum number of results to fetch per query (default: 10000)
+        max_results: Maximum number of results to fetch per query (default: 100)
         search_type: Type of search to perform (default: "hashtag")
         include_comments: Whether to scrape comments (default: True)
         include_shares: Whether to scrape shares (default: True)

@@ -12,27 +12,29 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # Define actor configurations
 ACTOR_CONFIGS: List[Dict] = [
     {
-        "id": "CJdippxWmn9uRfooo",  # Original actor ID
+        "id": "CJdippxWmn9uRfooo",  # Original actor ID (kaitoeasyapi)
         "input_type_key": "queryType",
         "supports_filters": True,
+        "date_param_format": "since_until",  # Uses "since" and "until" parameters
         "name": "Original Actor"
     },
     {
-        "id": "nfp1fpt5gUlBwPcor",  # New actor ID
+        "id": "nfp1fpt5gUlBwPcor",  # New actor ID (apidojo/twitter-scraper-lite)
         "input_type_key": "sort",
-        "supports_filters": False,
+        "supports_filters": True,
+        "date_param_format": "start_end",  # Uses "start" and "end" parameters
         "name": "New Actor"
     }
 ]
 
-def collect_twitter_apify(queries: List[str], output_file=None, max_items=1000, query_type="Latest", language="en", **kwargs):
+def collect_twitter_apify(queries: List[str], output_file=None, max_items=100, query_type="Latest", language="en", **kwargs):
     """
     Collect Twitter/X data using the Apify API for the given queries, trying multiple actors.
     
     Args:
         queries (List[str]): List of query strings to search for.
         output_file: Path to save the results
-        max_items: Maximum number of items to fetch per query (default: 1000)
+        max_items: Maximum number of items to fetch per query (default: 100)
         query_type: Type of query to run (default: "Latest")
         language: Language of tweets to search for (default: "en")
     """
@@ -98,24 +100,40 @@ def collect_twitter_apify(queries: List[str], output_file=None, max_items=1000, 
 
             # Add filter parameters only if the actor supports them
             if supports_filters:
-                run_input.update({
-                    "since": since_date,
-                    "until": until_date,
-                    "filter:verified": False,
-                    "filter:blue_verified": False,
-                    "filter:nativeretweets": False,
-                    "include:nativeretweets": False,
-                    "filter:replies": False,
-                    "filter:quote": False,
-                    "min_retweets": 0,
-                    "min_faves": 0,
-                    "min_replies": 0,
-                    "filter:media": False,
-                    "filter:images": False,
-                    "filter:videos": False,
-                })
-                # Update search terms for actors supporting date filters
-                run_input["searchTerms"] = [f"{query} since:{since_date} until:{until_date}"]
+                date_param_format = actor_config.get("date_param_format", "since_until")
+                
+                if date_param_format == "start_end":
+                    # For apidojo/twitter-scraper-lite: use "start" and "end" parameters
+                    # Convert date format from "YYYY-MM-DD_HH:MM:SS_UTC" to YYYY-MM-DD format
+                    # The actor expects String format in YYYY-MM-DD format
+                    start_date_formatted = since_date.split("_")[0] if "_" in since_date else since_date.split("T")[0]
+                    end_date_formatted = until_date.split("_")[0] if "_" in until_date else until_date.split("T")[0]
+                    
+                    run_input.update({
+                        "start": start_date_formatted,  # Format: YYYY-MM-DD
+                        "end": end_date_formatted,      # Format: YYYY-MM-DD
+                    })
+                    print(f"[Twitter Apify - {actor_name}] Using date parameters: start={start_date_formatted}, end={end_date_formatted}")
+                else:
+                    # For original actor: use "since" and "until" parameters
+                    run_input.update({
+                        "since": since_date,
+                        "until": until_date,
+                        "filter:verified": False,
+                        "filter:blue_verified": False,
+                        "filter:nativeretweets": False,
+                        "include:nativeretweets": False,
+                        "filter:replies": False,
+                        "filter:quote": False,
+                        "min_retweets": 0,
+                        "min_faves": 0,
+                        "min_replies": 0,
+                        "filter:media": False,
+                        "filter:images": False,
+                        "filter:videos": False,
+                    })
+                    # Update search terms for actors supporting date filters
+                    run_input["searchTerms"] = [f"{query} since:{since_date} until:{until_date}"]
             
             print(f"[Twitter Apify - {actor_name}] Running Apify Actor ({actor_id}) with query: {query}")
             # Run the Actor and wait for it to finish
@@ -315,7 +333,7 @@ def main(target_and_variations: List[str]):
     # Call the collection function with the queries
     collect_twitter_apify(queries=queries, output_file=str(output_path))
 
-def collect_twitter_apify_with_dates(queries: List[str], output_file=None, max_items=1000, 
+def collect_twitter_apify_with_dates(queries: List[str], output_file=None, max_items=100, 
                                      query_type="Latest", language="en",
                                      since_date: str = None, until_date: str = None) -> int:
     """
