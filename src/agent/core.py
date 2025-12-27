@@ -1992,7 +1992,9 @@ class SentimentAnalysisAgent:
                 load_end = datetime.now()
                 load_duration = (load_end - load_start).total_seconds()
                 if load_success:
-                    auto_schedule_logger.info(f"[PHASE 2: DATA LOADING END] User: {user_id} | Timestamp: {load_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {load_duration:.2f}s | Status: SUCCESS")
+                    # Get mention count after collection
+                    mention_count = len(self._temp_raw_records) if hasattr(self, '_temp_raw_records') and self._temp_raw_records else 0
+                    auto_schedule_logger.info(f"[PHASE 2: DATA LOADING END] User: {user_id} | Timestamp: {load_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {load_duration:.2f}s | Status: SUCCESS | Mentions Collected: {mention_count}")
                 else:
                     auto_schedule_logger.error(f"[PHASE 2: DATA LOADING END] User: {user_id} | Timestamp: {load_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {load_duration:.2f}s | Status: FAILED")
                 
@@ -2008,7 +2010,13 @@ class SentimentAnalysisAgent:
                     dedup_end = datetime.now()
                     dedup_duration = (dedup_end - dedup_start).total_seconds()
                     if dedup_success:
-                        auto_schedule_logger.info(f"[PHASE 3: DEDUPLICATION END] User: {user_id} | Timestamp: {dedup_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {dedup_duration:.2f}s | Status: SUCCESS")
+                        # Get deduplication stats if available
+                        if hasattr(self, '_dedup_stats') and self._dedup_stats:
+                            before_count = self._dedup_stats.get('total', 0)
+                            after_count = self._dedup_stats.get('unique', 0)
+                            auto_schedule_logger.info(f"[PHASE 3: DEDUPLICATION END] User: {user_id} | Timestamp: {dedup_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {dedup_duration:.2f}s | Status: SUCCESS | Records: {before_count} -> {after_count}")
+                        else:
+                            auto_schedule_logger.info(f"[PHASE 3: DEDUPLICATION END] User: {user_id} | Timestamp: {dedup_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {dedup_duration:.2f}s | Status: SUCCESS")
                     else:
                         auto_schedule_logger.error(f"[PHASE 3: DEDUPLICATION END] User: {user_id} | Timestamp: {dedup_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {dedup_duration:.2f}s | Status: FAILED")
                 else:
@@ -2422,6 +2430,8 @@ class SentimentAnalysisAgent:
             
             if not hasattr(self, '_temp_raw_records') or not self._temp_raw_records:
                 logger.info("No raw records to deduplicate")
+                # Set empty stats for logging
+                self._dedup_stats = {'total': 0, 'unique': 0, 'duplicates': 0}
                 return True
             
             logger.info(f"Starting deduplication for user {user_id} with {len(self._temp_raw_records)} records")
@@ -2431,6 +2441,9 @@ class SentimentAnalysisAgent:
                 dedup_results = self.deduplication_service.deduplicate_new_data(
                     self._temp_raw_records, db, user_id
                 )
+                
+                # Store deduplication stats for logging
+                self._dedup_stats = dedup_results.get('stats', {})
                 
                 # Log deduplication summary
                 summary = self.deduplication_service.get_deduplication_summary(dedup_results)

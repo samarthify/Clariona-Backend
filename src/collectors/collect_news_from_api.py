@@ -63,10 +63,17 @@ class NewsAPICollector:
 
     def _get_target_keywords(self) -> List[str]:
         """Get keywords to filter articles based on target configuration"""
-        if self.target_config and hasattr(self.target_config, 'keywords'):
-            return self.target_config.keywords
-        # Fallback to default Emir keywords for backward compatibility
-        return ["emir", "amir", "sheikh tamim", "al thani"]
+        # Hardcoded keywords for news-from-api collector
+        return [
+            'Asiwaju Bola Ahmed Adekunle Tinubu',
+            'President of the Federal Republic of Nigeria',
+            'Bola Tinubu',
+            'Bola Ahmed Tinubu',
+            'President of Nigeria',
+            'Tinubu',
+            'Bola',
+            'nigeria'
+        ]
 
     def _get_target_countries(self) -> List[str]:
         """Get countries to search based on target configuration"""
@@ -80,11 +87,7 @@ class NewsAPICollector:
 
     def _should_include_article(self, content: str) -> bool:
         """Determine if an article should be included based on target configuration"""
-        if not self.target_config:
-            # Fallback to default Emir filtering for backward compatibility
-            return any(term.lower() in content.lower() for term in ["emir", "amir", "sheikh tamim", "al thani"])
-        
-        # Use target-specific keywords
+        # Use hardcoded keywords
         target_keywords = self._get_target_keywords()
         content_lower = content.lower()
         
@@ -288,7 +291,11 @@ class NewsAPICollector:
             "GNews": 0
         }
         
-        for query in queries:
+        # Use hardcoded keywords instead of queries from database
+        hardcoded_keywords = self._get_target_keywords()
+        logger.info(f"Using hardcoded keywords for news-from-api collector: {hardcoded_keywords}")
+        
+        for query in hardcoded_keywords:
             logger.info(f"\nCollecting news for query: {query}")
             
             # Collect from functional sources only
