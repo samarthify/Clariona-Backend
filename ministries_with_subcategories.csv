@@ -1,0 +1,147 @@
+Ministry Key,Ministry Name,Subcategory Key,Subcategory Name
+agriculture_food_security,"Agriculture & Food Security",crop_production,Crop Production
+agriculture_food_security,"Agriculture & Food Security",livestock_management,Livestock Management
+agriculture_food_security,"Agriculture & Food Security",fisheries,Fisheries
+agriculture_food_security,"Agriculture & Food Security",rural_development,Rural Development
+agriculture_food_security,"Agriculture & Food Security",food_security,Food Security
+aviation_aerospace,"Aviation & Aerospace Development",air_transport,"Air Transport Regulation"
+aviation_aerospace,"Aviation & Aerospace Development",aviation_safety,Aviation Safety
+aviation_aerospace,"Aviation & Aerospace Development",aerospace_research,Aerospace Research
+aviation_aerospace,"Aviation & Aerospace Development",airport_infrastructure,Airport Infrastructure
+budget_economic_planning,"Budget & Economic Planning",national_budgeting,National Budgeting
+budget_economic_planning,"Budget & Economic Planning",economic_policy,"Economic Policy Formulation"
+budget_economic_planning,"Budget & Economic Planning",development_planning,Development Planning
+budget_economic_planning,"Budget & Economic Planning",fiscal_management,Fiscal Management
+communications_digital,"Communications & Digital Economy",telecommunications,Telecommunications
+communications_digital,"Communications & Digital Economy",digital_infrastructure,Digital Infrastructure
+communications_digital,"Communications & Digital Economy",innovation_promotion,Innovation Promotion
+communications_digital,"Communications & Digital Economy",cybersecurity,Cybersecurity
+defence,Defence,military_operations,"Military Operations"
+defence,Defence,national_security,National Security
+defence,Defence,defence_policy,"Defence Policy"
+defence,Defence,veteran_affairs,"Veteran Affairs"
+education,Education,primary_education,Primary Education
+education,Education,secondary_education,Secondary Education
+education,Education,higher_education,Higher Education
+education,Education,vocational_training,Vocational Training
+education,Education,educational_policy,"Educational Policy"
+environment_ecological,"Environment & Ecological Management",environmental_protection,Environmental Protection
+environment_ecological,"Environment & Ecological Management",climate_change,"Climate Change Mitigation"
+environment_ecological,"Environment & Ecological Management",natural_resources,"Natural Resource Management"
+environment_ecological,"Environment & Ecological Management",waste_management,Waste Management
+finance,Finance,fiscal_policy,"Fiscal Policy"
+finance,Finance,revenue_collection,Revenue Collection
+finance,Finance,financial_regulations,Financial Regulations
+finance,Finance,debt_management,Debt Management
+foreign_affairs,"Foreign Affairs",diplomatic_relations,Diplomatic Relations
+foreign_affairs,"Foreign Affairs",international_cooperation,International Cooperation
+foreign_affairs,"Foreign Affairs",consular_services,Consular Services
+foreign_affairs,"Foreign Affairs",foreign_policy,"Foreign Policy"
+health_social_welfare,"Health & Social Welfare",public_health,Public Health
+health_social_welfare,"Health & Social Welfare",healthcare_services,Healthcare Services
+health_social_welfare,"Health & Social Welfare",social_welfare,"Social Welfare Programs"
+health_social_welfare,"Health & Social Welfare",disease_control,Disease Control
+housing_urban,"Housing & Urban Development",affordable_housing,Affordable Housing
+housing_urban,"Housing & Urban Development",urban_planning,Urban Planning
+housing_urban,"Housing & Urban Development",slum_upgrading,Slum Upgrading
+housing_urban,"Housing & Urban Development",housing_policy,Housing Policy
+humanitarian_poverty,"Humanitarian Affairs & Poverty Alleviation",disaster_response,Disaster Response
+humanitarian_poverty,"Humanitarian Affairs & Poverty Alleviation",poverty_reduction,"Poverty Reduction Programs"
+humanitarian_poverty,"Humanitarian Affairs & Poverty Alleviation",social_interventions,Social Interventions
+humanitarian_poverty,"Humanitarian Affairs & Poverty Alleviation",refugee_support,Refugee Support
+industry_trade,"Industry, Trade & Investment",industrial_development,Industrial Development
+industry_trade,"Industry, Trade & Investment",trade_promotion,Trade Promotion
+industry_trade,"Industry, Trade & Investment",investment_facilitation,Investment Facilitation
+industry_trade,"Industry, Trade & Investment",consumer_protection,Consumer Protection
+interior,Interior,internal_security,Internal Security
+interior,Interior,immigration_services,Immigration Services
+interior,Interior,civil_defence,"Civil Defence"
+interior,Interior,border_management,Border Management
+justice,Justice,legal_affairs,Legal Affairs
+justice,Justice,judicial_administration,"Judicial Administration"
+justice,Justice,human_rights,"Human Rights Protection"
+justice,Justice,legal_reforms,Legal Reforms
+labour_employment,"Labour & Employment",employment_services,Employment Services
+labour_employment,"Labour & Employment",labour_relations,Labour Relations
+labour_employment,"Labour & Employment",workplace_safety,Workplace Safety
+labour_employment,"Labour & Employment",skill_development,Skill Development
+marine_blue_economy,"Marine & Blue Economy",maritime_transport,Maritime Transport
+marine_blue_economy,"Marine & Blue Economy",ocean_resources,"Ocean Resources Management"
+marine_blue_economy,"Marine & Blue Economy",coastal_development,Coastal Development
+marine_blue_economy,"Marine & Blue Economy",marine_policy,Marine Policy
+niger_delta,"Niger Delta Development",regional_development,Regional Development
+niger_delta,"Niger Delta Development",environmental_remediation,Environmental Remediation
+niger_delta,"Niger Delta Development",community_empowerment,Community Empowerment
+niger_delta,"Niger Delta Development",infrastructure_development,Infrastructure Development
+petroleum_resources,"Petroleum Resources",oil_gas_exploration,"Oil & Gas Exploration"
+petroleum_resources,"Petroleum Resources",petroleum_policy,"Petroleum Policy"
+petroleum_resources,"Petroleum Resources",energy_security,Energy Security
+petroleum_resources,"Petroleum Resources",downstream_operations,Downstream Operations
+power,Power,electricity_generation,Electricity Generation
+power,Power,transmission_distribution,"Transmission & Distribution"
+power,Power,renewable_energy,Renewable Energy
+power,Power,energy_policy,Energy Policy
+science_technology,"Science & Technology",scientific_research,Scientific Research
+science_technology,"Science & Technology",technological_development,Technological Development
+science_technology,"Science & Technology",innovation_support,Innovation Support
+science_technology,"Science & Technology",space_exploration,Space Exploration
+solid_minerals,"Solid Minerals Development",mining_regulation,Mining Regulation
+solid_minerals,"Solid Minerals Development",mineral_exploration,Mineral Exploration
+solid_minerals,"Solid Minerals Development",resource_management,Resource Management
+solid_minerals,"Solid Minerals Development",mining_policy,Mining Policy
+sports_development,"Sports Development",athlete_development,Athlete Development
+sports_development,"Sports Development",sports_infrastructure,Sports Infrastructure
+sports_development,"Sports Development",national_sports_policy,"National Sports Policy"
+sports_development,"Sports Development",youth_sports,Youth Sports
+tourism,Tourism,tourism_promotion,Tourism Promotion
+tourism,Tourism,cultural_heritage,"Cultural Heritage Sites"
+tourism,Tourism,hospitality_industry,Hospitality Industry
+tourism,Tourism,tourism_policy,Tourism Policy
+transportation,Transportation,road_transport,Road Transport
+transportation,Transportation,rail_transport,Rail Transport
+transportation,Transportation,maritime_transport,Maritime Transport
+transportation,Transportation,transport_policy,Transport Policy
+water_resources,"Water Resources & Sanitation",water_supply,Water Supply
+water_resources,"Water Resources & Sanitation",sanitation_services,Sanitation Services
+water_resources,"Water Resources & Sanitation",irrigation_development,Irrigation Development
+water_resources,"Water Resources & Sanitation",water_policy,Water Policy
+women_affairs,"Women Affairs",gender_equality,Gender Equality
+women_affairs,"Women Affairs",women_empowerment,"Women's Empowerment"
+women_affairs,"Women Affairs",child_welfare,Child Welfare
+women_affairs,"Women Affairs",gender_policy,Gender Policy
+works,Works,infrastructure_development,Infrastructure Development
+works,Works,road_construction,Road Construction
+works,Works,public_works,Public Works
+works,Works,construction_policy,Construction Policy
+youth_development,"Youth Development",youth_empowerment,Youth Empowerment
+youth_development,"Youth Development",skill_acquisition,Skill Acquisition
+youth_development,"Youth Development",youth_policy,Youth Policy
+youth_development,"Youth Development",entrepreneurship,Entrepreneurship
+livestock_development,"Livestock Development",animal_husbandry,Animal Husbandry
+livestock_development,"Livestock Development",veterinary_services,Veterinary Services
+livestock_development,"Livestock Development",livestock_policy,Livestock Policy
+livestock_development,"Livestock Development",livestock_production,Livestock Production
+information_culture,"Information & Culture",public_information,"Public Information Dissemination"
+information_culture,"Information & Culture",national_orientation,"National Orientation Programs"
+information_culture,"Information & Culture",media_relations,Media Relations
+information_culture,"Information & Culture",cultural_promotion,Cultural Promotion
+police_affairs,"Police Affairs",law_enforcement,Law Enforcement
+police_affairs,"Police Affairs",public_safety,Public Safety
+police_affairs,"Police Affairs",police_training,Police Training
+police_affairs,"Police Affairs",police_reforms,Police Reforms
+steel_development,"Steel Development",steel_industry,"Steel Industry Promotion"
+steel_development,"Steel Development",industrialization,Industrialization
+steel_development,"Steel Development",resource_utilization,Resource Utilization
+steel_development,"Steel Development",steel_policy,"Steel Policy"
+special_duties,"Special Duties & Inter-Governmental Affairs",inter_governmental,"Inter-Governmental Coordination"
+special_duties,"Special Duties & Inter-Governmental Affairs",special_projects,Special Projects
+special_duties,"Special Duties & Inter-Governmental Affairs",policy_implementation,"Policy Implementation"
+special_duties,"Special Duties & Inter-Governmental Affairs",coordination,Coordination
+fct_administration,"Federal Capital Territory Administration",urban_planning,Urban Planning
+fct_administration,"Federal Capital Territory Administration",infrastructure_development,Infrastructure Development
+fct_administration,"Federal Capital Territory Administration",municipal_services,Municipal Services
+fct_administration,"Federal Capital Territory Administration",fct_policy,FCT Policy
+art_culture_creative,"Art, Culture & Creative Economy",cultural_heritage,Cultural Heritage
+art_culture_creative,"Art, Culture & Creative Economy",creative_industries,Creative Industries
+art_culture_creative,"Art, Culture & Creative Economy",tourism_promotion,Tourism Promotion
+art_culture_creative,"Art, Culture & Creative Economy",cultural_policy,Cultural Policy
