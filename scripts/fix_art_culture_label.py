@@ -116,3 +116,4 @@ except Exception as e:
     db.close()
     sys.exit(1)
 
+
