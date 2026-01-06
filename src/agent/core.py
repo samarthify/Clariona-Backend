@@ -2420,8 +2420,87 @@ class SentimentAnalysisAgent:
             logger.error(f"Error during raw data collection: {e}", exc_info=True)
             return False
 
+    def _prepare_record_mapping(self, record_data: Dict[str, Any], user_id: str, current_timestamp: datetime) -> Dict[str, Any]:
+        """Helper method to prepare a record mapping dictionary for database insert/update"""
+        # Handle JSON fields properly
+        issue_keywords_val = record_data.get('issue_keywords')
+        if issue_keywords_val and not isinstance(issue_keywords_val, (list, dict)):
+            try:
+                issue_keywords_val = json.loads(issue_keywords_val) if issue_keywords_val else None
+            except:
+                issue_keywords_val = None
+        
+        # Map CSV columns to database columns
+        # Note: CSV has 'location' but DB has 'user_location'
+        # CSV has 'username' but DB has 'user_name'
+        user_location_val = record_data.get('user_location') or record_data.get('location', '')
+        # Validate and clean location data
+        user_location_val = self._validate_and_clean_location(user_location_val)
+        
+        user_name_val = record_data.get('user_name') or record_data.get('username', '')
+        user_display_val = record_data.get('user_display_name', '')
+        if user_display_val and not user_name_val:
+            user_name_val = user_display_val
+        
+        # Build the mapping dictionary
+        db_mapping = {
+            'run_timestamp': current_timestamp,
+            'user_id': user_id,
+            'platform': record_data.get('platform', ''),
+            'text': record_data.get('text', ''),
+            'content': record_data.get('content', ''),
+            'title': record_data.get('title', ''),
+            'description': record_data.get('description', ''),
+            'url': record_data.get('url', ''),
+            'published_date': self._parse_date_string(record_data.get('published_date')),
+            'source': record_data.get('source', ''),
+            'source_url': record_data.get('source_url', ''),
+            'query': record_data.get('query', ''),
+            'language': record_data.get('language', ''),
+            'date': self._parse_date_string(record_data.get('date')),
+            'file_source': record_data.get('file_source', ''),
+            'original_id': record_data.get('id', ''),
+            'alert_id': safe_int(record_data.get('alert_id')),
+            'published_at': self._parse_date_string(record_data.get('published_at')),
+            'source_type': record_data.get('source_type', ''),
+            'country': record_data.get('country', ''),
+            'favorite': record_data.get('favorite'),
+            'tone': record_data.get('tone', ''),
+            'source_name': record_data.get('source_name', ''),
+            'parent_url': record_data.get('parent_url', ''),
+            'parent_id': record_data.get('parent_id', ''),
+            'children': safe_int(record_data.get('children')),
+            'direct_reach': safe_int(record_data.get('direct_reach')),
+            'cumulative_reach': safe_int(record_data.get('cumulative_reach')),
+            'domain_reach': safe_int(record_data.get('domain_reach')),
+            'tags': record_data.get('tags', ''),
+            'score': safe_float(record_data.get('score')),
+            'alert_name': record_data.get('alert_name', ''),
+            'type': record_data.get('type', ''),
+            'post_id': record_data.get('post_id', ''),
+            'retweets': safe_int(record_data.get('retweets')),
+            'likes': safe_int(record_data.get('likes')),
+            'user_location': user_location_val,
+            'comments': safe_int(record_data.get('comments')),
+            'user_name': user_name_val,
+            'user_handle': record_data.get('user_handle', ''),
+            'user_avatar': record_data.get('user_avatar', ''),
+            'sentiment_label': record_data.get('sentiment_label'),
+            'sentiment_score': safe_float(record_data.get('sentiment_score')),
+            'sentiment_justification': record_data.get('sentiment_justification'),
+            'location_label': record_data.get('location_label'),
+            'location_confidence': safe_float(record_data.get('location_confidence')),
+            'issue_label': record_data.get('issue_label'),
+            'issue_slug': record_data.get('issue_slug'),
+            'issue_confidence': safe_float(record_data.get('issue_confidence')),
+            'issue_keywords': issue_keywords_val,
+            'ministry_hint': record_data.get('ministry_hint')
+        }
+        
+        return db_mapping
+
     def _run_deduplication(self, user_id: str):
-        """Run deduplication on collected raw data before processing"""
+        """Run deduplication on collected raw data - updates existing records instead of filtering duplicates"""
         try:
             logger.info(f"🔍 DEBUG: Starting _run_deduplication for user {user_id}")
             logger.info(f"🔍 DEBUG: Has _temp_raw_records: {hasattr(self, '_temp_raw_records')}")
@@ -2429,116 +2508,71 @@ class SentimentAnalysisAgent:
                 logger.info(f"🔍 DEBUG: _temp_raw_records length: {len(self._temp_raw_records) if self._temp_raw_records else 'None'}")
             
             if not hasattr(self, '_temp_raw_records') or not self._temp_raw_records:
-                logger.info("No raw records to deduplicate")
+                logger.info("No raw records to process")
                 # Set empty stats for logging
-                self._dedup_stats = {'total': 0, 'unique': 0, 'duplicates': 0}
+                self._dedup_stats = {'total': 0, 'unique': 0, 'duplicates': 0, 'updated': 0}
                 return True
             
-            logger.info(f"Starting deduplication for user {user_id} with {len(self._temp_raw_records)} records")
+            logger.info(f"Starting deduplication/update for user {user_id} with {len(self._temp_raw_records)} records")
+            logger.info("🔄 DEDUPLICATION DISABLED: Duplicate records will be updated instead of filtered out")
             
             with self.db_factory() as db:
-                # Run deduplication
+                # Run deduplication to identify duplicates
                 dedup_results = self.deduplication_service.deduplicate_new_data(
                     self._temp_raw_records, db, user_id
                 )
                 
-                # Store deduplication stats for logging
-                self._dedup_stats = dedup_results.get('stats', {})
+                duplicate_map = dedup_results.get('duplicate_map', {})
+                duplicate_records = dedup_results.get('duplicate_records', [])
+                unique_records = dedup_results.get('unique_records', [])
                 
-                # Log deduplication summary
-                summary = self.deduplication_service.get_deduplication_summary(dedup_results)
-                logger.info(f"Deduplication results:\n{summary}")
+                current_timestamp = datetime.utcnow()
+                update_count = 0
+                insert_count = 0
+                update_mappings = []  # Initialize outside the if block
                 
-                # Store unique records for database insertion
-                self._unique_records = dedup_results['unique_records']
+                # Update existing duplicate records
+                if duplicate_map:
+                    logger.info(f"Updating {len(duplicate_map)} existing duplicate records")
+                    
+                    # For each duplicate, update the first existing record (take the first entry_id from the list)
+                    for new_index, existing_entry_ids in duplicate_map.items():
+                        if new_index < len(self._temp_raw_records) and existing_entry_ids:
+                            try:
+                                record_data = self._temp_raw_records[new_index]
+                                db_mapping = self._prepare_record_mapping(record_data, user_id, current_timestamp)
+                                # Add entry_id for update
+                                db_mapping['entry_id'] = existing_entry_ids[0]  # Update the first duplicate found
+                                update_mappings.append(db_mapping)
+                            except Exception as e:
+                                logger.error(f"Error preparing duplicate record for update: {e}")
+                                if new_index < len(self._temp_raw_records):
+                                    record_data = self._temp_raw_records[new_index]
+                                    logger.error(f"Record URL: {record_data.get('url', 'N/A')}")
+                                continue
+                    
+                    # Perform bulk update
+                    if update_mappings:
+                        try:
+                            db.bulk_update_mappings(models.SentimentData, update_mappings)
+                            db.commit()
+                            update_count = len(update_mappings)
+                            logger.info(f"Successfully updated {update_count} existing records in database")
+                        except Exception as e:
+                            logger.error(f"Error during bulk update: {e}", exc_info=True)
+                            db.rollback()
                 
                 # Insert unique records into database using bulk insert
-                if self._unique_records:
-                    logger.info(f"Inserting {len(self._unique_records)} unique records into database")
+                if unique_records:
+                    logger.info(f"Inserting {len(unique_records)} unique records into database")
                     
                     # Prepare data for bulk insert
                     bulk_data = []
-                    current_timestamp = datetime.utcnow()
                     
-                    for record_data in self._unique_records:
+                    for record_data in unique_records:
                         try:
-                            # Handle JSON fields properly
-                            issue_keywords_val = record_data.get('issue_keywords')
-                            if issue_keywords_val and not isinstance(issue_keywords_val, (list, dict)):
-                                try:
-                                    issue_keywords_val = json.loads(issue_keywords_val) if issue_keywords_val else None
-                                except:
-                                    issue_keywords_val = None
-                            
-                            # Map CSV columns to database columns
-                            # Note: CSV has 'location' but DB has 'user_location'
-                            # CSV has 'username' but DB has 'user_name'
-                            user_location_val = record_data.get('user_location') or record_data.get('location', '')
-                            # Validate and clean location data
-                            user_location_val = self._validate_and_clean_location(user_location_val)
-                            
-                            user_name_val = record_data.get('user_name') or record_data.get('username', '')
-                            user_display_val = record_data.get('user_display_name', '')
-                            if user_display_val and not user_name_val:
-                                user_name_val = user_display_val
-                            
-                            # Build the mapping dictionary
-                            db_mapping = {
-                                'run_timestamp': current_timestamp,
-                                'user_id': user_id,
-                                'platform': record_data.get('platform', ''),
-                                'text': record_data.get('text', ''),
-                                'content': record_data.get('content', ''),
-                                'title': record_data.get('title', ''),
-                                'description': record_data.get('description', ''),
-                                'url': record_data.get('url', ''),
-                                'published_date': self._parse_date_string(record_data.get('published_date')),
-                                'source': record_data.get('source', ''),
-                                'source_url': record_data.get('source_url', ''),
-                                'query': record_data.get('query', ''),
-                                'language': record_data.get('language', ''),
-                                'date': self._parse_date_string(record_data.get('date')),
-                                'file_source': record_data.get('file_source', ''),
-                                'original_id': record_data.get('id', ''),
-                                'alert_id': safe_int(record_data.get('alert_id')),
-                                'published_at': self._parse_date_string(record_data.get('published_at')),
-                                'source_type': record_data.get('source_type', ''),
-                                'country': record_data.get('country', ''),
-                                'favorite': record_data.get('favorite'),
-                                'tone': record_data.get('tone', ''),
-                                'source_name': record_data.get('source_name', ''),
-                                'parent_url': record_data.get('parent_url', ''),
-                                'parent_id': record_data.get('parent_id', ''),
-                                'children': safe_int(record_data.get('children')),
-                                'direct_reach': safe_int(record_data.get('direct_reach')),
-                                'cumulative_reach': safe_int(record_data.get('cumulative_reach')),
-                                'domain_reach': safe_int(record_data.get('domain_reach')),
-                                'tags': record_data.get('tags', ''),
-                                'score': safe_float(record_data.get('score')),
-                                'alert_name': record_data.get('alert_name', ''),
-                                'type': record_data.get('type', ''),
-                                'post_id': record_data.get('post_id', ''),
-                                'retweets': safe_int(record_data.get('retweets')),
-                                'likes': safe_int(record_data.get('likes')),
-                                'user_location': user_location_val,
-                                'comments': safe_int(record_data.get('comments')),
-                                'user_name': user_name_val,
-                                'user_handle': record_data.get('user_handle', ''),
-                                'user_avatar': record_data.get('user_avatar', ''),
-                                'sentiment_label': record_data.get('sentiment_label'),
-                                'sentiment_score': safe_float(record_data.get('sentiment_score')),
-                                'sentiment_justification': record_data.get('sentiment_justification'),
-                                'location_label': record_data.get('location_label'),
-                                'location_confidence': safe_float(record_data.get('location_confidence')),
-                                'issue_label': record_data.get('issue_label'),
-                                'issue_slug': record_data.get('issue_slug'),
-                                'issue_confidence': safe_float(record_data.get('issue_confidence')),
-                                'issue_keywords': issue_keywords_val,
-                                'ministry_hint': record_data.get('ministry_hint')
-                            }
-                            
+                            db_mapping = self._prepare_record_mapping(record_data, user_id, current_timestamp)
                             bulk_data.append(db_mapping)
-                            
                         except Exception as e:
                             logger.error(f"Error preparing record for bulk insert: {e}")
                             logger.error(f"Record URL: {record_data.get('url', 'N/A')}")
@@ -2547,11 +2581,31 @@ class SentimentAnalysisAgent:
                     
                     # Use bulk_insert_mappings for better performance and explicit column mapping
                     if bulk_data:
-                        db.bulk_insert_mappings(models.SentimentData, bulk_data)
-                        db.commit()
-                        logger.info(f"Successfully inserted {len(bulk_data)} unique records into database")
-                else:
-                    logger.info("No unique records to insert after deduplication")
+                        try:
+                            db.bulk_insert_mappings(models.SentimentData, bulk_data)
+                            db.commit()
+                            insert_count = len(bulk_data)
+                            logger.info(f"Successfully inserted {insert_count} unique records into database")
+                        except Exception as e:
+                            logger.error(f"Error during bulk insert: {e}", exc_info=True)
+                            db.rollback()
+                
+                # Update stats for logging
+                self._dedup_stats = {
+                    'total': len(self._temp_raw_records),
+                    'unique': insert_count,
+                    'duplicates': len(duplicate_records),
+                    'updated': update_count
+                }
+                
+                # Log summary
+                logger.info(f"Deduplication/Update completed: {insert_count} inserted, {update_count} updated, {len(duplicate_records)} duplicates found")
+                
+                # Store unique records for potential use in sentiment analysis
+                self._unique_records = unique_records
+                
+                if not unique_records and not update_mappings:
+                    logger.info("No records to insert or update")
                 
                 # Clean up raw CSV files after successful processing
                 raw_data_path = self.base_path / 'data' / 'raw'

@@ -3,7 +3,7 @@
 # Smart script that waits for each cycle to FULLY complete before starting the next
 
 USER_ID="6440da7fe6304b2f884ea8721cc9a9c0"  # getrajaram user
-INTERVAL_MINUTES=30  # Wait X minutes AFTER cycle completes
+INTERVAL_MINUTES=1380  # Wait X minutes AFTER cycle completes (23 hours)
 LOG_FILE="logs/automatic_scheduling.log"
 
 echo "======================================"
