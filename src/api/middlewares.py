@@ -74,8 +74,14 @@ class UsageTrackingMiddleware(BaseHTTPMiddleware):
             if not secret_key:
                 # Try to load from config/.env if not already loaded
                 from dotenv import load_dotenv
-                from pathlib import Path
-                config_env_path = Path(__file__).parent.parent.parent / "config" / ".env"
+                try:
+                    from src.config.path_manager import PathManager
+                    path_manager = PathManager()
+                    config_env_path = path_manager.config_dir / ".env"
+                except Exception:
+                    from pathlib import Path
+                    config_env_path = Path(__file__).parent.parent.parent / "config" / ".env"
+                
                 if config_env_path.exists():
                     load_dotenv(dotenv_path=config_env_path)
                     secret_key = os.getenv("SUPABASE_JWT_SECRET")

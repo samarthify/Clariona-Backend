@@ -4,10 +4,11 @@ import json
 import time
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from dotenv import load_dotenv
 from apify_client import ApifyClient
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from src.config.config_manager import ConfigManager
 
 # Define actor configurations
 ACTOR_CONFIGS: List[Dict] = [
@@ -27,7 +28,7 @@ ACTOR_CONFIGS: List[Dict] = [
     }
 ]
 
-def collect_twitter_apify(queries: List[str], output_file=None, max_items=100, query_type="Latest", language="en", **kwargs):
+def collect_twitter_apify(queries: List[str], output_file=None, max_items=None, query_type="Latest", language="en", **kwargs):
     """
     Collect Twitter/X data using the Apify API for the given queries, trying multiple actors.
     
@@ -50,21 +51,65 @@ def collect_twitter_apify(queries: List[str], output_file=None, max_items=100, q
     # Initialize the ApifyClient
     client = ApifyClient(api_token)
     
+    # Get default max_items from ConfigManager if not provided
+    if max_items is None:
+        from src.config.config_manager import ConfigManager
+        config = ConfigManager()
+        max_items = config.get_int("collectors.twitter.default_max_items", 100)
+    
+    # Get keywords from ConfigManager (enables DB editing)
+    # Priority: 1) ConfigManager default, 2) queries parameter, 3) hardcoded defaults
+    from src.config.config_manager import ConfigManager
+    config = ConfigManager()
+    
+    # Try to get target name from queries if available (for target-specific keywords)
+    target_name = None
+    if queries and len(queries) > 0:
+        # First element might be target name
+        target_name = queries[0].lower().replace(" ", "_") if queries else None
+    
+    # Priority 1: Target-specific keywords from ConfigManager (if target name available)
+    if target_name:
+        target_key = f"collectors.keywords.{target_name}.twitter"
+        target_keywords = config.get_list(target_key, None)
+        if target_keywords:
+            print(f"[Twitter Apify] Using target-specific keywords from ConfigManager: {target_keywords}")
+            queries = target_keywords
+    
+    # Priority 2: Default keywords from ConfigManager (enables DB editing)
+    if not queries:
+        default_keywords = config.get_list("collectors.keywords.default.twitter", None)
+        if default_keywords:
+            print(f"[Twitter Apify] Using default keywords from ConfigManager: {default_keywords}")
+            queries = default_keywords
+    
+    # Priority 3: Use queries parameter as-is (if provided)
+    # Priority 4: Hardcoded fallback (last resort)
+    if not queries:
+        print("[Twitter Apify] Using hardcoded default keywords - consider configuring in ConfigManager/DB")
+        queries = ["qatar", "nigeria", "india", "politics", "news"]
+    
     # Ensure output directory exists
     if output_file is None:
+        from src.config.path_manager import PathManager
+        path_manager = PathManager()
         today = datetime.now().strftime("%Y%m%d")
-        output_file = str(Path(__file__).parent.parent.parent / "data" / "raw" / f"twitter_apify_data_{today}.csv")
+        output_file = str(path_manager.data_raw / f"twitter_apify_data_{today}.csv")
     
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     
     # Date range for search - Can be overridden for incremental collection
-    # Default: Last 7 days to reduce API credit waste
+    # Get defaults from ConfigManager
+    config = ConfigManager()
+    default_date_range_days = config.get_int("collectors.apify.default_date_range_days", 7)
+    default_since_date = config.get("collectors.apify.default_since_date", "2021-01-01_00:00:00_UTC")
+    
     if 'since_date' not in kwargs and 'until_date' not in kwargs:
-        # Default to last 7 days if not specified
-        since_date = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d_%H:%M:%S_UTC")
+        # Default to configured number of days if not specified
+        since_date = (datetime.now(timezone.utc) - timedelta(days=default_date_range_days)).strftime("%Y-%m-%d_%H:%M:%S_UTC")
         until_date = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H:%M:%S_UTC")
     else:
-        since_date = kwargs.get('since_date', "2021-01-01_00:00:00_UTC")
+        since_date = kwargs.get('since_date', default_since_date)
         until_date = kwargs.get('until_date', datetime.now(timezone.utc).strftime("%Y-%m-%d_%H:%M:%S_UTC"))
     
     all_data = []
@@ -116,21 +161,23 @@ def collect_twitter_apify(queries: List[str], output_file=None, max_items=100, q
                     print(f"[Twitter Apify - {actor_name}] Using date parameters: start={start_date_formatted}, end={end_date_formatted}")
                 else:
                     # For original actor: use "since" and "until" parameters
+                    # Get filter defaults from ConfigManager
+                    config = ConfigManager()
                     run_input.update({
                         "since": since_date,
                         "until": until_date,
-                        "filter:verified": False,
-                        "filter:blue_verified": False,
-                        "filter:nativeretweets": False,
-                        "include:nativeretweets": False,
-                        "filter:replies": False,
-                        "filter:quote": False,
-                        "min_retweets": 0,
-                        "min_faves": 0,
-                        "min_replies": 0,
-                        "filter:media": False,
-                        "filter:images": False,
-                        "filter:videos": False,
+                        "filter:verified": config.get_bool("collectors.apify.twitter.filter_verified", False),
+                        "filter:blue_verified": config.get_bool("collectors.apify.twitter.filter_blue_verified", False),
+                        "filter:nativeretweets": config.get_bool("collectors.apify.twitter.filter_nativeretweets", False),
+                        "include:nativeretweets": config.get_bool("collectors.apify.twitter.include_nativeretweets", False),
+                        "filter:replies": config.get_bool("collectors.apify.twitter.filter_replies", False),
+                        "filter:quote": config.get_bool("collectors.apify.twitter.filter_quote", False),
+                        "min_retweets": config.get_int("collectors.apify.twitter.min_retweets", 0),
+                        "min_faves": config.get_int("collectors.apify.twitter.min_faves", 0),
+                        "min_replies": config.get_int("collectors.apify.twitter.min_replies", 0),
+                        "filter:media": config.get_bool("collectors.apify.twitter.filter_media", False),
+                        "filter:images": config.get_bool("collectors.apify.twitter.filter_images", False),
+                        "filter:videos": config.get_bool("collectors.apify.twitter.filter_videos", False),
                     })
                     # Update search terms for actors supporting date filters
                     run_input["searchTerms"] = [f"{query} since:{since_date} until:{until_date}"]
@@ -140,7 +187,11 @@ def collect_twitter_apify(queries: List[str], output_file=None, max_items=100, q
             run = thread_client.actor(actor_id).call(run_input=run_input)
             
             # Fetch results from the Actor's dataset
-            dataset_id = run["defaultDatasetId"]
+            if run is None:
+                return query_data, items_count
+            dataset_id = run.get("defaultDatasetId")
+            if dataset_id is None:
+                return query_data, items_count
             print(f"[Twitter Apify - {actor_name}] Actor run completed for query '{query}'. Dataset ID: {dataset_id}")
             
             # Collect items from the dataset
@@ -326,16 +377,18 @@ def main(target_and_variations: List[str]):
     print(f"[Twitter Apify] Received Target: {target_name}, Queries: {queries}")
 
     # Construct output file name using target name
+    from src.config.path_manager import PathManager
+    path_manager = PathManager()
     today = datetime.now().strftime("%Y%m%d")
     safe_target_name = target_name.replace(" ", "_").lower()
-    output_path = Path(__file__).parent.parent.parent / "data" / "raw" / f"twitter_apify_{safe_target_name}_{today}.csv"
+    output_path = path_manager.data_raw / f"twitter_apify_{safe_target_name}_{today}.csv"
 
     # Call the collection function with the queries
     collect_twitter_apify(queries=queries, output_file=str(output_path))
 
-def collect_twitter_apify_with_dates(queries: List[str], output_file=None, max_items=100, 
-                                     query_type="Latest", language="en",
-                                     since_date: str = None, until_date: str = None) -> int:
+def collect_twitter_apify_with_dates(queries: List[str], output_file: Optional[str] = None, max_items: int = 100, 
+                                     query_type: str = "Latest", language: str = "en",
+                                     since_date: Optional[str] = None, until_date: Optional[str] = None) -> int:
     """
     Wrapper function that explicitly accepts date parameters for incremental collection.
     

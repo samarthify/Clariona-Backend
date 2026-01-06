@@ -5,7 +5,7 @@ import json
 import time
 from pathlib import Path
 from datetime import datetime
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from urllib.parse import urlparse
 from dotenv import load_dotenv
 from apify_client import ApifyClient
@@ -84,10 +84,44 @@ def collect_news_apify(queries: List[str], output_file=None, language="US:en", s
     # Initialize the ApifyClient
     client = ApifyClient(api_token)
     
+    # Get keywords from ConfigManager (enables DB editing)
+    # Priority: 1) ConfigManager default, 2) queries parameter, 3) hardcoded defaults
+    from config.config_manager import ConfigManager
+    config = ConfigManager()
+    
+    # Try to get target name from queries if available (for target-specific keywords)
+    target_name = None
+    if queries and len(queries) > 0:
+        # First element might be target name
+        target_name = queries[0].lower().replace(" ", "_") if queries else None
+    
+    # Priority 1: Target-specific keywords from ConfigManager (if target name available)
+    if target_name:
+        target_key = f"collectors.keywords.{target_name}.news_apify"
+        target_keywords = config.get_list(target_key, None)
+        if target_keywords:
+            print(f"[News Apify] Using target-specific keywords from ConfigManager: {target_keywords}")
+            queries = target_keywords
+    
+    # Priority 2: Default keywords from ConfigManager (enables DB editing)
+    if not queries:
+        default_keywords = config.get_list("collectors.keywords.default.news_apify", None)
+        if default_keywords:
+            print(f"[News Apify] Using default keywords from ConfigManager: {default_keywords}")
+            queries = default_keywords
+    
+    # Priority 3: Use queries parameter as-is (if provided)
+    # Priority 4: Hardcoded fallback (last resort)
+    if not queries:
+        print("[News Apify] Using hardcoded default keywords - consider configuring in ConfigManager/DB")
+        queries = ["qatar", "nigeria", "india", "politics", "news", "government"]
+    
     # Ensure output directory exists
     if output_file is None:
+        from src.config.path_manager import PathManager
+        path_manager = PathManager()
         today = datetime.now().strftime("%Y%m%d")
-        output_file = str(Path(__file__).parent.parent.parent / "data" / "raw" / f"news_apify_data_{today}.csv")
+        output_file = str(path_manager.data_raw / f"news_apify_data_{today}.csv")
     
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     
@@ -114,9 +148,13 @@ def collect_news_apify(queries: List[str], output_file=None, language="US:en", s
                 try:
                     print(f"[News Apify - {actor_name}] Running for query: '{query}'")
                     run = client.actor(actor_id).call(run_input=run_input)
-                    runs_to_process.append({"run": run, "query": query})
+                    if run is not None:
+                        runs_to_process.append({"run": run, "query": query})
                     print(f"[News Apify - {actor_name}] Run initiated for query '{query}'. Dataset ID: {run['defaultDatasetId']}")
-                    time.sleep(2) # Delay between individual query runs for this actor
+                    from config.config_manager import ConfigManager
+                    config = ConfigManager()
+                    delay = config.get_int("collectors.news_apify.delay_between_queries_seconds", 2)
+                    time.sleep(delay) # Delay between individual query runs for this actor
                 except Exception as e:
                     print(f"[News Apify - {actor_name}] Error running actor for query '{query}': {e}")
         else:
@@ -131,7 +169,8 @@ def collect_news_apify(queries: List[str], output_file=None, language="US:en", s
             try:
                 print(f"[News Apify - {actor_name}] Running for all queries: {queries}")
                 run = client.actor(actor_id).call(run_input=run_input)
-                runs_to_process.append({"run": run, "query": "all"}) # Mark as run for all queries
+                if run is not None:
+                    runs_to_process.append({"run": run, "query": "all"}) # Mark as run for all queries
                 print(f"[News Apify - {actor_name}] Run initiated for all queries. Dataset ID: {run['defaultDatasetId']}")
             except Exception as e:
                 print(f"[News Apify - {actor_name}] Error running actor for queries {queries}: {e}")
@@ -239,7 +278,10 @@ def collect_news_apify(queries: List[str], output_file=None, language="US:en", s
 
         print(f"--- [News Apify - {actor_name}] Finished collection. Collected {actor_collected_count} items from this actor. ---")
         total_collected_count += actor_collected_count
-        time.sleep(5) # Delay between actors
+        from config.config_manager import ConfigManager
+        config = ConfigManager()
+        delay = config.get_int("collectors.news_apify.delay_between_actors_seconds", 5)
+        time.sleep(delay) # Delay between actors
     
     # --- Save Collected Data --- 
     if all_data:
@@ -280,10 +322,12 @@ def main(target_and_variations: List[str]):
     print(f"[News Apify] Received Target: {target_name}, Queries: {queries}")
     
     # Construct output file name
+    from src.config.path_manager import PathManager
+    path_manager = PathManager()
     today = datetime.now().strftime("%Y%m%d")
     # Use target name in filename for clarity, replacing spaces
     safe_target_name = target_name.replace(" ", "_").lower()
-    output_path = Path(__file__).parent.parent.parent / "data" / "raw" / f"news_apify_{safe_target_name}_{today}.csv"
+    output_path = path_manager.data_raw / f"news_apify_{safe_target_name}_{today}.csv"
     
     # Call the collection function with the queries
     collect_news_apify(queries=queries, output_file=str(output_path))

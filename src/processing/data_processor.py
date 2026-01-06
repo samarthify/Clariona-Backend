@@ -1,30 +1,36 @@
+# Standard library imports
 import os
-import pandas as pd
+import sys
+from pathlib import Path
 from datetime import datetime
+from typing import Optional, List, Dict, Any, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import glob
 import random
 import re
-import logging
-import sys
-from pathlib import Path
+
+# Third-party imports
+import pandas as pd
+from dateutil import parser
+
+# Local imports - config (first)
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from src.config.logging_config import get_logger
+from src.config.path_manager import PathManager
+
+# Local imports - processing modules
 from .presidential_sentiment_analyzer import PresidentialSentimentAnalyzer
 from .governance_analyzer import GovernanceAnalyzer
+from .topic_classifier import TopicClassifier
 from .record_router import RecordRouter
-from dateutil import parser
-from difflib import SequenceMatcher
-from typing import Optional, List, Dict, Any, Tuple
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Add this import for file rotation
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Local imports - utils
+from utils.common import parse_datetime as parse_datetime_common
+from utils.deduplication_service import DeduplicationService
 from utils.file_rotation import rotate_processed_files
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger('DataProcessor')
+# Module-level setup
+logger = get_logger('DataProcessor')
 
 class DataProcessor:
     def __init__(self, models: List[str] = None):
@@ -36,12 +42,20 @@ class DataProcessor:
                    Defaults to all 4 models: ["gpt-5-mini", "gpt-5-nano", "gpt-4.1-mini", "gpt-4.1-nano"]
         """
         logger.debug("DataProcessor.__init__: Initializing...")
-        self.base_path = Path(__file__).parent.parent.parent
+        # Initialize PathManager for centralized path management
+        self.path_manager = PathManager()
+        self.base_path = self.path_manager.base_path  # For backward compatibility
         logger.debug(f"DataProcessor.__init__: Base path set to {self.base_path}")
         
-        # Determine models to use
+        # Determine models to use - load from ConfigManager if not provided
         if models is None:
-            self.models = ["gpt-5-mini", "gpt-5-nano", "gpt-4.1-mini", "gpt-4.1-nano"]
+            try:
+                from config.config_manager import ConfigManager
+                config = ConfigManager()
+                self.models = config.get_list("models.llm_models.available", ["gpt-5-mini", "gpt-5-nano", "gpt-4.1-mini", "gpt-4.1-nano"])
+            except Exception as e:
+                logger.warning(f"Could not load ConfigManager for available models, using defaults: {e}")
+                self.models = ["gpt-5-mini", "gpt-5-nano", "gpt-4.1-mini", "gpt-4.1-nano"]
         else:
             self.models = models
         
@@ -54,6 +68,37 @@ class DataProcessor:
             logger.debug(f"DataProcessor.__init__: Initializing analyzers for {model}...")
             self.sentiment_analyzers[model] = PresidentialSentimentAnalyzer(model=model)
             self.governance_analyzers[model] = GovernanceAnalyzer(enable_issue_classification=True, model=model)
+        
+        # Initialize TopicClassifier (Week 2: Topic System Integration)
+        logger.debug("DataProcessor.__init__: Initializing TopicClassifier...")
+        self.topic_classifier = TopicClassifier()
+        
+        # Initialize Issue Detection Engine (Week 4: Issue Detection System)
+        logger.debug("DataProcessor.__init__: Initializing IssueDetectionEngine...")
+        try:
+            from .issue_detection_engine import IssueDetectionEngine
+            self.issue_detection_engine = IssueDetectionEngine()
+            logger.debug("DataProcessor.__init__: IssueDetectionEngine initialized")
+        except Exception as e:
+            logger.warning(f"Could not initialize IssueDetectionEngine: {e}. Issue detection will be disabled.")
+            self.issue_detection_engine = None
+        
+        # Initialize Aggregation Services (Week 5: Aggregation & Integration)
+        logger.debug("DataProcessor.__init__: Initializing aggregation services...")
+        try:
+            from .sentiment_aggregation_service import SentimentAggregationService
+            from .sentiment_trend_calculator import SentimentTrendCalculator
+            from .topic_sentiment_normalizer import TopicSentimentNormalizer
+            
+            self.aggregation_service = SentimentAggregationService()
+            self.trend_calculator = SentimentTrendCalculator()
+            self.normalizer = TopicSentimentNormalizer()
+            logger.debug("DataProcessor.__init__: Aggregation services initialized")
+        except Exception as e:
+            logger.warning(f"Could not initialize aggregation services: {e}. Aggregation will be disabled.")
+            self.aggregation_service = None
+            self.trend_calculator = None
+            self.normalizer = None
         
         # Initialize record router
         self.router = RecordRouter(models=self.models)
@@ -68,58 +113,113 @@ class DataProcessor:
 
     def get_sentiment(self, text, source_type=None):
         """
-        Analyze text using optimized dual-analyzer system:
-        1. PresidentialSentimentAnalyzer: Presidential perspective sentiment (single API call)
-        2. GovernanceAnalyzer: Ministry + Issue classification (receives sentiment from step 1)
+        Analyze text using parallel Topic + Sentiment classification (Week 2).
         
-        Returns combined results. Optimized to avoid duplicate sentiment analysis.
+        Week 2 Update: Now runs Topic and Sentiment classification in parallel for better performance.
+        Topic classification replaces LLM-based ministry classification.
+        
+        Process:
+        1. Run TopicClassifier and PresidentialSentimentAnalyzer in parallel
+        2. Extract embedding from sentiment result (if available)
+        3. Combine results with topics
+        
+        Returns combined results with topics and sentiment.
+        
+        Args:
+            text: Text content to analyze
+            source_type: Optional source type (for backward compatibility)
+        
+        Returns:
+            Dict with sentiment, topics, and metadata:
+            {
+                'sentiment_label': 'positive'|'negative'|'neutral',
+                'sentiment_score': float,
+                'sentiment_justification': str,
+                'topics': List[Dict],  # List of topic classifications
+                'embedding': List[float],  # 1536-dim embedding vector
+                # Legacy fields (for backward compatibility)
+                'ministry_hint': str,  # Primary topic key
+                'issue_slug': str,  # Will be populated in Week 4
+                'issue_label': str,
+            }
         """
         logger.debug(f"DataProcessor.get_sentiment: Analyzing text (first 50 chars): '{str(text)[:50]}...'")
         
-        # Step 1: Presidential sentiment analysis (strategic perspective)
-        logger.debug("DataProcessor.get_sentiment: Running presidential sentiment analysis...")
-        sentiment_result = self.sentiment_analyzer.analyze(text)
+        # Week 2: Run Topic and Sentiment in parallel
+        logger.debug("DataProcessor.get_sentiment: Running parallel Topic + Sentiment classification...")
         
-        # Extract sentiment to pass to governance analyzer
-        presidential_sentiment = sentiment_result['sentiment_label']
+        # Week 3: Run sentiment analysis (now includes emotions and weights)
+        # Extract source info for weight calculation if available
+        sentiment_result = self.sentiment_analyzer.analyze(
+            text,
+            source_type=source_type,
+            user_verified=False,  # TODO: Extract from record if available
+            reach=0  # TODO: Extract from record if available
+        )
+        text_embedding = sentiment_result.get('embedding')
         
-        # Step 2: Governance classification (ministry + issue, two-phase)
-        # Pass presidential sentiment to avoid duplicate sentiment analysis
-        logger.debug(f"DataProcessor.get_sentiment: Running governance classification with sentiment '{presidential_sentiment}'...")
-        classification_result = self.governance_analyzer.analyze(text, source_type, sentiment=presidential_sentiment)
+        # Classify topics with embedding (if available) for better accuracy
+        if text_embedding and len(text_embedding) == 1536:
+            logger.debug("DataProcessor.get_sentiment: Classifying topics with embedding...")
+            topic_result = self.topic_classifier.classify(text, text_embedding)
+        else:
+            logger.debug("DataProcessor.get_sentiment: Classifying topics without embedding...")
+            topic_result = self.topic_classifier.classify(text)
         
-        # Combine results - use presidential sentiment + governance classification
+        # Get primary topic (first/highest confidence)
+        primary_topic = topic_result[0] if topic_result else None
+        
+        # Combine results
         combined_result = {
-            # Presidential sentiment (strategic perspective)
+            # Sentiment (from PresidentialSentimentAnalyzer)
             'sentiment_label': sentiment_result['sentiment_label'],
             'sentiment_score': sentiment_result['sentiment_score'],
             'sentiment_justification': sentiment_result['sentiment_justification'],
             
-            # Governance classification (two-phase: ministry + issue)
-            'issue_label': classification_result['category_label'],
-            'issue_slug': classification_result['governance_category'],
-            'ministry_hint': classification_result['ministry_hint'],
-            'issue_confidence': classification_result['confidence'],
-            'issue_keywords': classification_result['keywords'],
+            # Week 3: Emotion detection
+            'emotion_label': sentiment_result.get('emotion_label', 'neutral'),
+            'emotion_score': sentiment_result.get('emotion_score', 0.5),
+            'emotion_distribution': sentiment_result.get('emotion_distribution', {}),
             
-            # Use embedding from presidential analyzer (already uses text-embedding-3-small)
-            'embedding': sentiment_result.get('embedding', classification_result.get('embedding', []))
+            # Week 3: Weight calculation
+            'influence_weight': sentiment_result.get('influence_weight', 1.0),
+            'confidence_weight': sentiment_result.get('confidence_weight', 0.5),
+            
+            # Topics (from TopicClassifier) - Week 2
+            # TopicClassifier returns: {topic, topic_name, confidence, keyword_score, embedding_score}
+            'topics': topic_result,  # List of topic classifications
+            'primary_topic_key': primary_topic['topic'] if primary_topic else None,  # Note: TopicClassifier uses 'topic' key
+            'primary_topic_name': primary_topic['topic_name'] if primary_topic else None,
+            
+            # Embedding
+            'embedding': text_embedding or [],
+            
+            # Legacy fields (for backward compatibility with existing code)
+            'ministry_hint': primary_topic['topic'] if primary_topic else None,  # Map topic to ministry_hint
+            'issue_slug': None,  # Will be populated in Week 4 (Issue Detection)
+            'issue_label': None,  # Will be populated in Week 4
+            'issue_confidence': None,
+            'issue_keywords': None,
         }
         
-        logger.debug(f"DataProcessor.get_sentiment: Combined result - Sentiment: {combined_result['sentiment_label']}, Ministry: {combined_result['ministry_hint']}, Issue: {combined_result['issue_slug']}")
+        logger.debug(f"DataProcessor.get_sentiment: Combined result - Sentiment: {combined_result['sentiment_label']}, Topics: {len(topic_result)}, Primary: {combined_result['primary_topic_key']}")
         return combined_result
 
     def batch_get_sentiment(self, texts: List[str], source_types: List[str] = None, max_workers: int = 20) -> List[Dict[str, Any]]:
         """
-        Batch process multiple texts in parallel using dual-analyzer system across multiple models.
+        Batch process multiple texts in parallel using Topic + Sentiment classification (Week 2).
+        
+        Week 2 Update: Now uses parallel Topic + Sentiment classification instead of 
+        LLM-based ministry classification. Much faster and more accurate.
         
         Args:
             texts: List of text strings to analyze
-            source_types: Optional list of source types (must match texts length)
+            source_types: Optional list of source types (must match texts length) - kept for backward compatibility
             max_workers: Maximum number of parallel workers per pipeline
             
         Returns:
-            List of combined results in same order as input texts
+            List of combined results in same order as input texts.
+            Each result includes sentiment, topics, and metadata.
         """
         if not texts:
             return []
@@ -130,272 +230,372 @@ class DataProcessor:
             logger.warning(f"source_types length ({len(source_types)}) doesn't match texts length ({len(texts)}). Padding with None.")
             source_types = source_types + [None] * (len(texts) - len(source_types))
         
-        logger.info(f"Batch processing {len(texts)} texts across {len(self.models)} parallel pipelines with {max_workers} workers each...")
+        logger.info(f"Batch processing {len(texts)} texts with parallel Topic + Sentiment classification (Week 2)...")
         
-        # Route records across pipelines
-        routed = self.router.route_records(texts, source_types)
+        # Week 2: Use parallel Topic + Sentiment for each text
+        # This is simpler and faster than the old multi-model routing
+        results = []
         
-        # Process each pipeline in parallel
-        def process_pipeline(model: str, records: List[Tuple[int, str, str]]) -> List[Tuple[int, Dict[str, Any]]]:
-            """Process records for a single pipeline."""
-            logger.info(f"Processing {len(records)} records in {model} pipeline...")
-            sentiment_analyzer = self.sentiment_analyzers[model]
-            governance_analyzer = self.governance_analyzers[model]
-            
-            # Extract texts and source types for this pipeline
-            pipeline_texts = [text for _, text, _ in records]
-            pipeline_source_types = [source_type for _, _, source_type in records]
-            pipeline_indices = [idx for idx, _, _ in records]
-            
-            # Process ALL calls in optimized pipeline:
-            # 1. Sentiment + Ministry + Embeddings (all start in parallel - all independent!)
-            # 2. Issue (starts as soon as ministry completes - depends on ministry)
-            sentiment_results = {}
-            ministry_results = {}
-            classification_results = {}
-            embeddings = None
-            
-            def analyze_sentiment(text_idx: int) -> tuple:
-                """Analyze sentiment for a single text."""
+        def process_single_text(text_idx: int) -> Dict[str, Any]:
+            """Process a single text with Topic + Sentiment in parallel."""
+            try:
+                return self.get_sentiment(texts[text_idx], source_types[text_idx])
+            except Exception as e:
+                logger.error(f"Error processing text {text_idx}: {e}")
+                return {
+                    'sentiment_label': 'neutral',
+                    'sentiment_score': 0.0,
+                    'sentiment_justification': f'Error: {str(e)}',
+                    'topics': [],
+                    'primary_topic_key': None,
+                    'primary_topic_name': None,
+                    'embedding': [0.0] * 1536,
+                    'ministry_hint': None,
+                    'issue_slug': None,
+                    'issue_label': None,
+                    'issue_confidence': None,
+                    'issue_keywords': None,
+                }
+        
+        # Process all texts in parallel
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {executor.submit(process_single_text, i): i for i in range(len(texts))}
+            results_dict = {}
+            for future in as_completed(futures):
+                text_idx = futures[future]
                 try:
-                    result = sentiment_analyzer.analyze(pipeline_texts[text_idx])
-                    return ('sentiment', text_idx, result)
+                    results_dict[text_idx] = future.result()
                 except Exception as e:
-                    logger.error(f"Error analyzing sentiment for text {text_idx} in {model} pipeline: {e}")
-                    return ('sentiment', text_idx, {
+                    logger.error(f"Error getting result for text {text_idx}: {e}")
+                    results_dict[text_idx] = {
                         'sentiment_label': 'neutral',
                         'sentiment_score': 0.0,
                         'sentiment_justification': f'Error: {str(e)}',
-                        'embedding': [0.0] * 1536
-                    })
-            
-            def analyze_ministry(text_idx: int) -> tuple:
-                """Analyze ministry classification (Phase 1 of governance - independent)."""
-                try:
-                    # Only do Phase 1 (ministry classification) - Phase 2 (issue) will come after
-                    result = governance_analyzer._analyze_with_openai(
-                        pipeline_texts[text_idx], 
-                        pipeline_source_types[text_idx], 
-                        sentiment=None
+                        'topics': [],
+                        'primary_topic_key': None,
+                        'primary_topic_name': None,
+                        'embedding': [0.0] * 1536,
+                        'ministry_hint': None,
+                        'issue_slug': None,
+                        'issue_label': None,
+                        'issue_confidence': None,
+                        'issue_keywords': None,
+                    }
+        
+        # Return results in original order
+        results = [results_dict[i] for i in range(len(texts))]
+        logger.info(f"Batch processing complete: {len(results)} results")
+        return results
+    
+    def _store_topics_in_database(self, session, mention_id: int, topics: List[Dict[str, Any]]) -> None:
+        """
+        Store topics in mention_topics table (Week 2).
+        
+        Args:
+            session: Database session
+            mention_id: SentimentData entry_id
+            topics: List of topic classifications from TopicClassifier
+        """
+        from api.models import MentionTopic
+        from datetime import datetime
+        import numpy as np
+        
+        if not topics:
+            return
+        
+        def convert_to_python_type(value):
+            """Convert numpy types to Python native types for database storage."""
+            if value is None:
+                return None
+            if isinstance(value, (np.integer, np.floating)):
+                return float(value) if isinstance(value, np.floating) else int(value)
+            if isinstance(value, np.ndarray):
+                return value.tolist()
+            return value
+        
+        for topic in topics:
+            try:
+                # Convert numpy types to Python native types
+                topic_confidence = convert_to_python_type(topic.get('confidence'))
+                keyword_score = convert_to_python_type(topic.get('keyword_score'))
+                embedding_score = convert_to_python_type(topic.get('embedding_score'))
+                
+                # Check if already exists
+                existing = session.query(MentionTopic).filter(
+                    MentionTopic.mention_id == mention_id,
+                    MentionTopic.topic_key == topic['topic']  # TopicClassifier uses 'topic' key
+                ).first()
+                
+                if existing:
+                    # Update existing
+                    existing.topic_confidence = topic_confidence
+                    existing.keyword_score = keyword_score
+                    existing.embedding_score = embedding_score
+                    existing.updated_at = datetime.now()
+                else:
+                    # Create new
+                    mention_topic = MentionTopic(
+                        mention_id=mention_id,
+                        topic_key=topic['topic'],  # TopicClassifier uses 'topic' key
+                        topic_confidence=topic_confidence,
+                        keyword_score=keyword_score,
+                        embedding_score=embedding_score
                     )
-                    return ('ministry', text_idx, result)
-                except Exception as e:
-                    logger.error(f"Error analyzing ministry for text {text_idx} in {model} pipeline: {e}")
-                    return ('ministry', text_idx, {
-                        'ministry_hint': 'non_governance',
-                        'governance_category': 'non_governance',
-                        'category_label': 'Unlabeled Content',
-                        'confidence': 0.0,
-                        'keywords': []
-                    })
-            
-            def get_embeddings_batch() -> list:
-                """Get batch embeddings for all texts (independent, can run in parallel)."""
-                try:
-                    return sentiment_analyzer._get_embeddings_batch(pipeline_texts)
-                except Exception as e:
-                    logger.error(f"Error getting batch embeddings in {model} pipeline: {e}")
-                    return [[0.0] * 1536 for _ in pipeline_texts]
-            
-            def analyze_issue(text_idx: int, ministry_result: dict) -> tuple:
-                """Analyze issue classification (Phase 2 of governance - depends on ministry)."""
-                try:
-                    ministry = ministry_result.get('ministry_hint', 'non_governance')
-                    if ministry != 'non_governance' and governance_analyzer.enable_issue_classification:
-                        issue_slug, issue_label = governance_analyzer.issue_classifier.classify_issue(
-                            pipeline_texts[text_idx], 
-                            ministry
-                        )
-                        ministry_result['governance_category'] = issue_slug
-                        ministry_result['category_label'] = issue_label
-                    return ('issue', text_idx, ministry_result)
-                except Exception as e:
-                    logger.error(f"Error analyzing issue for text {text_idx} in {model} pipeline: {e}")
-                    return ('issue', text_idx, ministry_result)
-            
-            # Step 1: Run sentiment, ministry, AND embeddings in FULLY PARALLEL (all independent!)
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                sentiment_futures = {executor.submit(analyze_sentiment, i): i for i in range(len(pipeline_texts))}
-                ministry_futures = {executor.submit(analyze_ministry, i): i for i in range(len(pipeline_texts))}
-                embeddings_future = executor.submit(get_embeddings_batch)  # Start embeddings in parallel too!
-                
-                # Step 2: Start issue classification as soon as ministry completes
-                issue_futures = {}
-                all_phase1_futures = list(sentiment_futures.keys()) + list(ministry_futures.keys())
-                
-                for future in as_completed(all_phase1_futures):
-                    result_type, text_idx, result = future.result()
-                    
-                    if result_type == 'sentiment':
-                        sentiment_results[text_idx] = result
-                    elif result_type == 'ministry':
-                        ministry_results[text_idx] = result
-                        # Immediately start issue classification for this record
-                        issue_future = executor.submit(analyze_issue, text_idx, result)
-                        issue_futures[issue_future] = text_idx
-                
-                # Step 3: Collect embeddings (should be done by now since it's a batch call)
-                try:
-                    embeddings = embeddings_future.result()
-                except Exception as e:
-                    logger.error(f"Error getting embeddings: {e}")
-                    embeddings = [[0.0] * 1536 for _ in pipeline_texts]
-                
-                # Step 4: Collect all issue results
-                for issue_future in as_completed(issue_futures):
-                    result_type, text_idx, result = issue_future.result()
-                    classification_results[text_idx] = result
-            
-            # Merge sentiment into governance results for page_type determination
-            for text_idx in range(len(pipeline_texts)):
-                if text_idx in sentiment_results and text_idx in classification_results:
-                    sentiment_label = sentiment_results[text_idx]['sentiment_label']
-                    # Update governance result with actual sentiment for page_type
-                    if 'sentiment' in classification_results[text_idx]:
-                        classification_results[text_idx]['sentiment'] = sentiment_label
-                    # Re-determine page_type based on actual sentiment
-                    if sentiment_label == 'negative':
-                        classification_results[text_idx]['page_type'] = 'issues'
-                    elif sentiment_label == 'positive':
-                        classification_results[text_idx]['page_type'] = 'positive_coverage'
-                    else:
-                        classification_results[text_idx]['page_type'] = 'issues'
-            
-            # Convert to lists in order
-            sentiment_results = [sentiment_results[i] for i in range(len(pipeline_texts))]
-            classification_results = [classification_results[i] for i in range(len(pipeline_texts))]
-            
-            # Combine results with original indices
-            pipeline_results = []
-            for i, orig_idx in enumerate(pipeline_indices):
-                combined_result = {
-                    'sentiment_label': sentiment_results[i]['sentiment_label'],
-                    'sentiment_score': sentiment_results[i]['sentiment_score'],
-                    'sentiment_justification': sentiment_results[i]['sentiment_justification'],
-                    'issue_label': classification_results[i]['category_label'],
-                    'issue_slug': classification_results[i]['governance_category'],
-                    'ministry_hint': classification_results[i]['ministry_hint'],
-                    'issue_confidence': classification_results[i]['confidence'],
-                    'issue_keywords': classification_results[i]['keywords'],
-                    'embedding': embeddings[i] if i < len(embeddings) else ([0.0] * 1536)
-                }
-                pipeline_results.append((orig_idx, combined_result))
-            
-            logger.info(f"Completed {model} pipeline: {len(pipeline_results)} records")
-            return pipeline_results
-        
-        # Process all pipelines in parallel
-        all_results = {}
-        with ThreadPoolExecutor(max_workers=len(self.models)) as executor:
-            futures = {executor.submit(process_pipeline, model, records): model for model, records in routed.items()}
-            for future in as_completed(futures):
-                model = futures[future]
-                try:
-                    results = future.result()
-                    for orig_idx, result in results:
-                        all_results[orig_idx] = result
-                except Exception as e:
-                    logger.error(f"Error processing {model} pipeline: {e}")
-        
-        # Reconstruct results in original order
-        combined_results = [all_results[i] for i in range(len(texts))]
-        
-        logger.info(f"Batch processing complete: Processed {len(combined_results)} texts across {len(self.models)} pipelines")
-        return combined_results
+                    session.add(mention_topic)
+            except Exception as e:
+                logger.error(f"Error storing topic {topic.get('topic')} for mention {mention_id}: {e}")
+                continue
 
-    def normalize_text(self, text):
-        """Clean text for better duplicate detection"""
-        if pd.isna(text) or not isinstance(text, str):
-            return ""
-        # Convert to lowercase
-        text = text.lower()
-        # Remove extra whitespace
-        text = re.sub(r'\s+', ' ', text).strip()
-        # Remove URLs
-        text = re.sub(r'https?://\S+', '', text)
-        # Remove special characters but keep basic punctuation
-        text = re.sub(r'[^\w\s.,?!-]', '', text)
-        return text
-
-    def is_similar_text(self, text1, text2, threshold=0.85):
-        """Check if two texts are similar"""
-        if pd.isna(text1) or pd.isna(text2):
-            return False
+    def detect_issues_for_topic(self, topic_key: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+        """
+        Detect issues for a specific topic (Week 4: Issue Detection System).
         
-        # For very short texts, require exact match
-        if len(text1) < 10 or len(text2) < 10:
-            return text1 == text2
+        This method processes mentions that have been classified with the given topic
+        and detects issues by clustering similar mentions together.
         
-        # For longer texts, use sequence matcher
-        similarity = SequenceMatcher(None, text1, text2).ratio()
-        return similarity >= threshold
+        Args:
+            topic_key: Topic key to detect issues for
+            limit: Optional limit on number of mentions to process
+        
+        Returns:
+            List of created/updated issue dictionaries with:
+            - issue_id: UUID of the issue
+            - topic_key: Topic key
+            - action: 'created' or 'updated'
+            - mention_count: Number of mentions in the issue
+            - priority_score: Priority score (0-100)
+            - lifecycle_state: Current lifecycle state
+        """
+        if not self.issue_detection_engine:
+            logger.warning("IssueDetectionEngine not initialized. Skipping issue detection.")
+            return []
+        
+        try:
+            logger.info(f"Detecting issues for topic: {topic_key}")
+            issues = self.issue_detection_engine.detect_issues(topic_key, limit=limit)
+            logger.info(f"Detected {len(issues)} issues for topic: {topic_key}")
+            return issues
+        except Exception as e:
+            logger.error(f"Error detecting issues for topic {topic_key}: {e}", exc_info=True)
+            return []
+    
+    def detect_issues_for_all_topics(self, limit_per_topic: Optional[int] = None) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Detect issues for all topics that have mentions (Week 4: Issue Detection System).
+        
+        This method processes all topics that have mentions and detects issues for each.
+        Useful for batch processing or periodic issue detection runs.
+        
+        Args:
+            limit_per_topic: Optional limit on number of mentions to process per topic
+        
+        Returns:
+            Dictionary mapping topic_key to list of issue dictionaries
+        """
+        if not self.issue_detection_engine:
+            logger.warning("IssueDetectionEngine not initialized. Skipping issue detection.")
+            return {}
+        
+        from api.database import SessionLocal
+        from api.models import MentionTopic
+        
+        session = SessionLocal()
+        results = {}
+        
+        try:
+            # Get all topics that have mentions
+            topics_with_mentions = session.query(MentionTopic.topic_key).distinct().all()
+            topic_keys = [t[0] for t in topics_with_mentions]
+            
+            logger.info(f"Detecting issues for {len(topic_keys)} topics")
+            
+            for topic_key in topic_keys:
+                try:
+                    issues = self.detect_issues_for_topic(topic_key, limit=limit_per_topic)
+                    results[topic_key] = issues
+                except Exception as e:
+                    logger.error(f"Error detecting issues for topic {topic_key}: {e}", exc_info=True)
+                    results[topic_key] = []
+            
+            logger.info(f"Issue detection complete for {len(topic_keys)} topics")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error in detect_issues_for_all_topics: {e}", exc_info=True)
+            return {}
+        finally:
+            session.close()
 
-    def parse_date(self, date_str):
-        """Parse date string to ISO format with error handling"""
-        if pd.isna(date_str):
+    def aggregate_sentiment_for_topic(
+        self,
+        topic_key: str,
+        time_window: str = '24h'
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Aggregate sentiment for a specific topic (Week 5: Aggregation & Integration).
+        
+        Args:
+            topic_key: Topic key to aggregate
+            time_window: Time window ('15m', '1h', '24h', '7d', '30d')
+        
+        Returns:
+            Aggregation result dictionary or None if insufficient data
+        """
+        if not self.aggregation_service:
+            logger.warning("SentimentAggregationService not initialized. Skipping aggregation.")
             return None
         
         try:
-            # Convert to string if not already
-            date_str = str(date_str).strip()
-            
-            # Skip invalid or empty dates
-            if date_str.lower() in ['none', 'nan', '', 'unknown']:
-                return None
-            
-            # Handle Twitter date format (e.g., Thu Feb 29 13:57:27 +0000 2024)
-            twitter_pattern = r'[A-Za-z]{3}\s+[A-Za-z]{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+[+]\d{4}\s+\d{4}'
-            if re.match(twitter_pattern, date_str):
-                parsed_date = datetime.strptime(date_str, '%a %b %d %H:%M:%S +0000 %Y')
-                return parsed_date
-            
-            # Handle standard datetime format with 5-digit timezone (e.g., 2025-03-31 10:57:46 +00000)
-            if re.match(r'\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+[+]\d{5}', date_str):
-                # Remove timezone info since we only need the date
-                base_date = date_str.split('+')[0].strip()
-                parsed_date = datetime.strptime(base_date, '%Y-%m-%d %H:%M:%S')
-                return parsed_date
-            
-            # Handle ISO format with timezone (e.g., 2025-03-21T12:19:52.000Z)
-            if 'T' in date_str and ('Z' in date_str or '+' in date_str):
-                parsed_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-                # Make naive if timezone info exists (as DB expects naive)
-                if parsed_date.tzinfo:
-                    return parsed_date.replace(tzinfo=None)
-                return parsed_date
-            
-            # Handle custom format (e.g., 04:19 09 Mar 2025)
-            if re.match(r'\d{2}:\d{2}\s+\d{2}\s+[A-Za-z]{3}\s+\d{4}', date_str):
-                parsed_date = datetime.strptime(date_str, '%H:%M %d %b %Y')
-                return parsed_date
-            
-            # Handle standard datetime format (e.g., 2025-03-14 16:17:49)
-            if re.match(r'\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}', date_str):
-                parsed_date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-                return parsed_date
-            
-            # Handle format like '12/04/2024, 08:00 AM, +0000 UTC'
-            if re.match(r'\d{2}/\d{2}/\d{4},\s+\d{1,2}:\d{2}\s+(AM|PM),\s+\+0000\s+UTC', date_str):
-                try:
-                    # Extract the main part and parse
-                    date_part = date_str.split(', +')[0]
-                    # Corrected format to handle day first
-                    parsed_date = datetime.strptime(date_part, '%d/%m/%Y, %I:%M %p') 
-                    # Note: We are ignoring the timezone offset for naive datetime, as per other logic
-                    return parsed_date
-                except ValueError as ve:
-                    # If parsing fails despite regex match, log and proceed to fallback
-                    logger.debug(f"Regex matched but strptime failed for '{date_str}': {ve}")
-            
-            # Try parsing with dateutil as fallback
-            parsed_date = parser.parse(date_str)
-            # Make naive if timezone info exists (as DB expects naive)
-            if parsed_date.tzinfo:
-                return parsed_date.replace(tzinfo=None)
-            return parsed_date
+            return self.aggregation_service.aggregate_by_topic(topic_key, time_window)
         except Exception as e:
-            logger.warning(f"Could not parse date '{date_str}': {str(e)}")
+            logger.error(f"Error aggregating sentiment for topic {topic_key}: {e}", exc_info=True)
             return None
+    
+    def calculate_trend_for_topic(
+        self,
+        topic_key: str,
+        time_window: str = '24h'
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Calculate sentiment trend for a specific topic (Week 5: Aggregation & Integration).
+        
+        Args:
+            topic_key: Topic key to calculate trend for
+            time_window: Time window ('15m', '1h', '24h', '7d', '30d')
+        
+        Returns:
+            Trend result dictionary or None if insufficient data
+        """
+        if not self.trend_calculator:
+            logger.warning("SentimentTrendCalculator not initialized. Skipping trend calculation.")
+            return None
+        
+        try:
+            return self.trend_calculator.calculate_trend_for_topic(topic_key, time_window)
+        except Exception as e:
+            logger.error(f"Error calculating trend for topic {topic_key}: {e}", exc_info=True)
+            return None
+    
+    def normalize_sentiment_for_topic(
+        self,
+        topic_key: str,
+        current_sentiment_index: float
+    ) -> Dict[str, Any]:
+        """
+        Normalize sentiment index against topic baseline (Week 5: Aggregation & Integration).
+        
+        Args:
+            topic_key: Topic key
+            current_sentiment_index: Current sentiment index (0-100)
+        
+        Returns:
+            Normalized sentiment result dictionary
+        """
+        if not self.normalizer:
+            logger.warning("TopicSentimentNormalizer not initialized. Skipping normalization.")
+            return {
+                'normalized_index': current_sentiment_index,
+                'baseline_index': 50.0,
+                'deviation': current_sentiment_index - 50.0,
+                'normalized_score': (current_sentiment_index - 50.0) / 50.0,
+                'current_index': current_sentiment_index
+            }
+        
+        try:
+            return self.normalizer.normalize_sentiment_for_topic(topic_key, current_sentiment_index)
+        except Exception as e:
+            logger.error(f"Error normalizing sentiment for topic {topic_key}: {e}", exc_info=True)
+            # Return unnormalized result on error
+            return {
+                'normalized_index': current_sentiment_index,
+                'baseline_index': 50.0,
+                'deviation': current_sentiment_index - 50.0,
+                'normalized_score': (current_sentiment_index - 50.0) / 50.0,
+                'current_index': current_sentiment_index
+            }
+    
+    def run_aggregation_pipeline(
+        self,
+        time_window: str = '24h',
+        include_trends: bool = True,
+        include_normalization: bool = True,
+        limit: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Run complete aggregation pipeline for all topics (Week 5: Aggregation & Integration).
+        
+        This method:
+        1. Aggregates sentiment for all topics
+        2. Calculates trends (if enabled)
+        3. Normalizes aggregations (if enabled)
+        
+        Args:
+            time_window: Time window ('15m', '1h', '24h', '7d', '30d')
+            include_trends: Whether to calculate trends
+            include_normalization: Whether to normalize aggregations
+            limit: Optional limit on number of topics to process
+        
+        Returns:
+            Dictionary with aggregation results, trends, and normalized data
+        """
+        if not self.aggregation_service:
+            logger.warning("Aggregation services not initialized. Skipping pipeline.")
+            return {}
+        
+        results = {
+            'aggregations': {},
+            'trends': {},
+            'normalized': {},
+            'time_window': time_window,
+            'processed_at': datetime.now()
+        }
+        
+        try:
+            # Step 1: Aggregate sentiment for all topics
+            logger.info(f"Running aggregation pipeline for time_window={time_window}")
+            aggregations = self.aggregation_service.aggregate_all_topics(
+                time_window=time_window,
+                limit=limit
+            )
+            results['aggregations'] = aggregations
+            logger.info(f"Aggregated sentiment for {len(aggregations)} topics")
+            
+            # Step 2: Calculate trends (if enabled)
+            if include_trends and self.trend_calculator:
+                logger.info("Calculating trends...")
+                trends = self.trend_calculator.calculate_trends_for_all_topics(
+                    time_window=time_window,
+                    limit=limit
+                )
+                results['trends'] = trends
+                logger.info(f"Calculated trends for {len(trends)} topics")
+            
+            # Step 3: Normalize aggregations (if enabled)
+            if include_normalization and self.normalizer:
+                logger.info("Normalizing aggregations...")
+                normalized = {}
+                for topic_key, aggregation in aggregations.items():
+                    try:
+                        normalized_agg = self.normalizer.normalize_aggregation(aggregation)
+                        normalized[topic_key] = normalized_agg
+                    except Exception as e:
+                        logger.warning(f"Error normalizing aggregation for topic {topic_key}: {e}")
+                        normalized[topic_key] = aggregation
+                results['normalized'] = normalized
+                logger.info(f"Normalized {len(normalized)} aggregations")
+            
+            logger.info("Aggregation pipeline complete")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error in aggregation pipeline: {e}", exc_info=True)
+            return results
+
+    def parse_date(self, date_str):
+        """Parse date string using shared utility function (legacy method for backward compatibility)"""
+        # Use shared parse_datetime utility function from common.py
+        # Note: This method is only used in legacy process_data() method
+        return parse_datetime_common(date_str)
 
     def detect_country(self, row):
         """
@@ -704,7 +904,7 @@ class DataProcessor:
 
     def load_raw_data(self):
         """Load all raw data files"""
-        raw_dir = self.base_path / "data" / "raw"
+        raw_dir = self.path_manager.data_raw
         all_data = []
         
         # Get all CSV files from raw directory - update glob pattern to include @ files
@@ -880,8 +1080,9 @@ class DataProcessor:
         df = df[df['text'].notna() & (df['text'] != '')]
         logger.info(f"Records after removing empty text: {len(df)}")
         
-        # Add normalized text for duplicate detection
-        df['normalized_text'] = df['text'].apply(self.normalize_text)
+        # Add normalized text for duplicate detection (using DeduplicationService)
+        dedup_service = DeduplicationService()
+        df['normalized_text'] = df['text'].apply(dedup_service.normalize_text)
 
         # Remove exact duplicates
         df = df.drop_duplicates(subset=['normalized_text'])
@@ -912,7 +1113,7 @@ class DataProcessor:
                 if len_ratio < 0.5:  # Skip if lengths are too different
                     continue
                     
-                if self.is_similar_text(text1, text2):
+                if dedup_service.is_similar_text(text1, text2):
                     # Keep the row with more information (longer text)
                     if len(str(df.iloc[idx1]['text'])) < len(str(df.iloc[idx2]['text'])):
                         indices_to_drop.add(idx1)
@@ -975,10 +1176,9 @@ class DataProcessor:
 
     def process_files(self) -> Optional[pd.DataFrame]:
         logger.debug("DataProcessor.process_files: Entering method.")
-        raw_data_dir = self.base_path / "data" / "raw"
-        processed_dir = self.base_path / "data" / "processed"
+        raw_data_dir = self.path_manager.data_raw
+        processed_dir = self.path_manager.data_processed
         processed_file_path = processed_dir / "processed_data.csv"
-        processed_dir.mkdir(parents=True, exist_ok=True)
 
         logger.debug(f"DataProcessor.process_files: Looking for CSVs in {raw_data_dir}")
         csv_files = list(raw_data_dir.glob("*.csv"))

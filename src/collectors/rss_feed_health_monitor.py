@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 import requests
 import feedparser
 import ssl
@@ -18,8 +18,10 @@ class RSSFeedHealthMonitor:
     """
     
     def __init__(self, health_data_file: str = "rss_feed_health.json"):
-        self.base_path = Path(__file__).parent.parent.parent
-        self.health_data_file = self.base_path / "data" / health_data_file
+        from src.config.path_manager import PathManager
+        self.path_manager = PathManager()
+        self.base_path = self.path_manager.base_path
+        self.health_data_file = self.path_manager.data_raw.parent / health_data_file
         self.health_data_file.parent.mkdir(parents=True, exist_ok=True)
         
         # Health thresholds
@@ -107,15 +109,15 @@ class RSSFeedHealthMonitor:
                 success_rate *= 0.8  # 20% penalty for recent failures
         
         # Penalize feeds with high error rates
-        error_penalty = 0
-        if health['ssl_issues'] > health['success_count']:
+        error_penalty: float = 0.0
+        if health.get('ssl_issues', 0) > health.get('success_count', 0):
             error_penalty += 0.2
-        if health['timeout_issues'] > health['success_count']:
+        if health.get('timeout_issues', 0) > health.get('success_count', 0):
             error_penalty += 0.2
-        if health['xml_issues'] > health['success_count']:
+        if health.get('xml_issues', 0) > health.get('success_count', 0):
             error_penalty += 0.1
         
-        return max(0.0, success_rate - error_penalty)
+        return max(0.0, success_rate - error_penalty)  # type: ignore[no-any-return]
     
     def _get_health_status(self, health_score: float) -> str:
         """Get health status based on score."""
@@ -130,13 +132,19 @@ class RSSFeedHealthMonitor:
         else:
             return 'critical'
     
-    def validate_feed(self, feed_url: str, timeout: int = 10) -> Tuple[bool, str, float]:
+    def validate_feed(self, feed_url: str, timeout: Optional[int] = None) -> Tuple[bool, str, float]:
         """
         Validate a single RSS feed.
         
         Returns:
             Tuple of (is_valid, error_message, response_time)
         """
+        # Get timeout from ConfigManager if not provided
+        if timeout is None:
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            timeout = config.get_int("collectors.rss_health_monitor.timeout_seconds", 10)
+        
         start_time = time.time()
         health = self._get_feed_health(feed_url)
         
@@ -196,7 +204,8 @@ class RSSFeedHealthMonitor:
                 raise ValueError("No feed data received")
             
             if hasattr(feed, 'status') and feed.status >= 400:
-                raise HTTPError(feed_url, feed.status, f"HTTP Error: {feed.status}", {}, None)
+                from http.client import HTTPMessage
+                raise HTTPError(feed_url, feed.status, f"HTTP Error: {feed.status}", HTTPMessage(), None)
             
             if feed.get('bozo', 0) == 1:
                 if hasattr(feed, 'bozo_exception'):
@@ -303,12 +312,12 @@ class RSSFeedHealthMonitor:
         
         return healthy_feeds
     
-    def get_feed_health_report(self, feed_urls: List[str] = None) -> Dict:
+    def get_feed_health_report(self, feed_urls: Optional[List[str]] = None) -> Dict[str, Any]:
         """Generate comprehensive health report for feeds."""
         if feed_urls is None:
             feed_urls = list(self.health_data['feeds'].keys())
         
-        report = {
+        report: Dict[str, Any] = {
             'total_feeds': len(feed_urls),
             'health_distribution': {
                 'excellent': 0,

@@ -1,14 +1,22 @@
+# Standard library imports
 import os
-import time
-import logging
-from datetime import datetime, timedelta
-import pandas as pd
-import numpy as np
-from typing import Dict, List, Any, Callable, Optional
-import json
-from pathlib import Path
-import subprocess
 import sys
+import json
+import time
+import glob
+import re
+import uuid
+import logging
+import subprocess
+import threading
+import queue
+import asyncio
+import multiprocessing
+from pathlib import Path
+from datetime import datetime, timedelta
+from typing import Dict, List, Any, Callable, Optional
+from uuid import UUID
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 
 # Enable UTF-8 mode on Windows to support emoji characters in logs
 if sys.platform == 'win32':
@@ -18,26 +26,45 @@ if sys.platform == 'win32':
             os.environ['PYTHONIOENCODING'] = 'utf-8'
     except Exception:
         pass
-import glob
-import threading
-import queue
-import asyncio
-import re
+
+# Third-party imports
+import pandas as pd
+import numpy as np
 import requests
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
-import multiprocessing
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import or_
+
+# Local imports - config
+from src.config.path_manager import PathManager
+from src.config.config_manager import ConfigManager
+from src.config.logging_config import setup_logging, get_logger
+
+# Local imports - exceptions
+# Add src to path for imports (needed for exceptions module)
+if str(Path(__file__).parent.parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+from exceptions import NetworkError, FileError, CollectionError
+
+# Local imports - utils
 from src.utils.mail_config import NOTIFY_ON_ANALYSIS
 from src.utils.notification_service import send_analysis_report, send_processing_notification, send_collection_notification
-from src.processing.presidential_sentiment_analyzer import PresidentialSentimentAnalyzer
-from src.processing.data_processor import DataProcessor
-from uuid import UUID
-# Add necessary DB imports
-from sqlalchemy.orm import sessionmaker, Session 
-from src.api.models import TargetIndividualConfiguration, EmailConfiguration
-import src.api.models as models # Added for location classification update
-from sqlalchemy import or_
-# Add deduplication service import
 from src.utils.deduplication_service import DeduplicationService
+from src.utils.common import parse_datetime, safe_int, safe_float
+
+# Local imports - processing
+from src.processing.presidential_sentiment_analyzer import PresidentialSentimentAnalyzer
+# from src.processing.data_processor import DataProcessor
+from src.processing.topic_classifier import TopicClassifier
+from src.processing.issue_detection_engine import IssueDetectionEngine
+from src.processing.emotion_analyzer import EmotionAnalyzer
+
+# Local imports - API models
+from src.api.models import TargetIndividualConfiguration, EmailConfiguration
+from src.api.models import MentionTopic, TopicIssue, IssueMention # Needed for type hinting/data saving helpers
+import src.api.models as models  # Added for location classification update
+
+# Initialize PathManager at module level for logging setup
+_path_manager = PathManager()
 
 # Configure logging
 # Configure handlers with UTF-8 encoding to support emoji characters
@@ -58,19 +85,28 @@ except Exception as e:
 
 # FileHandler with UTF-8 encoding
 try:
+    # Use PathManager for log file path
+    log_file_path = _path_manager.logs_agent
     # Ensure logs directory exists
-    os.makedirs('logs', exist_ok=True)
-    file_handler = logging.FileHandler('logs/agent.log', encoding='utf-8')
+    log_file_path.parent.mkdir(parents=True, exist_ok=True)
+    file_handler = logging.FileHandler(str(log_file_path), encoding='utf-8')
     handlers.append(file_handler)
 except Exception as e:
     print(f"Warning: Could not create logs directory: {e}")
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=handlers
-)
-logger = logging.getLogger('AgentCore')
+# Use centralized logging configuration if available
+try:
+    from src.config.logging_config import setup_logging, get_logger
+    setup_logging(config_manager=ConfigManager(), path_manager=_path_manager)
+    logger = get_logger('agent.core')
+except ImportError:
+    # Fallback to basic config if logging_config not available
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=handlers
+    )
+    logger = logging.getLogger('agent.core')
 
 # Create dedicated logger for automatic scheduling with separate log file
 def setup_auto_schedule_logger():
@@ -89,9 +125,12 @@ def setup_auto_schedule_logger():
     
     # File handler for automatic scheduling logs
     try:
-        os.makedirs('logs', exist_ok=True)
+        # Use PathManager for log file path
+        log_file_path = _path_manager.logs_scheduling
+        # Ensure logs directory exists
+        log_file_path.parent.mkdir(parents=True, exist_ok=True)
         auto_schedule_file_handler = logging.FileHandler(
-            'logs/automatic_scheduling.log', 
+            str(log_file_path), 
             encoding='utf-8'
         )
         auto_schedule_file_handler.setLevel(logging.INFO)
@@ -103,12 +142,12 @@ def setup_auto_schedule_logger():
     
     return auto_schedule_logger
 
-# Initialize automatic scheduling logger
+# Initialize automatic scheduling logger (still used by run_single_cycle_parallel for logging)
 auto_schedule_logger = setup_auto_schedule_logger()
 
 # Define API endpoint URL (Best practice: move to config or env var)
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000") # Default for local dev
-DATA_UPDATE_ENDPOINT = f"{API_BASE_URL}/data/update"
+# DATA_UPDATE_ENDPOINT removed - /data/update endpoint removed
 
 
 def convert_uuid_to_str(obj):
@@ -121,54 +160,30 @@ def convert_uuid_to_str(obj):
         return str(obj)  # Convert UUID to string
     return obj
 
-def safe_float(value):
-    """Safely convert a value to float, returning None if conversion fails."""
-    if value is None:
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value or value.lower() in ('none', 'null', 'nan', ''):
-            return None
-        try:
-            return float(value)
-        except (ValueError, TypeError):
-            return None
-    return None
-
-def safe_int(value):
-    """Safely convert a value to int, returning None if conversion fails."""
-    if value is None:
-        return None
-    if isinstance(value, (int, float)):
-        return int(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value or value.lower() in ('none', 'null', 'nan', ''):
-            return None
-        try:
-            return int(float(value))  # Convert via float to handle "1.0" strings
-        except (ValueError, TypeError):
-            return None
-    return None
-
-
 class SentimentAnalysisAgent:
     """Core agent responsible for data collection, processing, analysis, and scheduling."""
 
-    def __init__(self, db_factory: sessionmaker, config_path="config/agent_config.json"):
+    def __init__(self, db_factory: sessionmaker, config_path=None):
         """
         Initialize the agent.
 
         Args:
             db_factory (sessionmaker): SQLAlchemy session factory.
-            config_path (str): Path to the agent's configuration file.
+            config_path (str): Path to the agent's configuration file. If None, uses PathManager default.
         """
         self.db_factory = db_factory
+        # Initialize PathManager for centralized path management
+        self.path_manager = PathManager()
+        self.base_path = self.path_manager.base_path  # For backward compatibility
+        
+        # Initialize ConfigManager for centralized configuration
+        self.config_manager = ConfigManager()
+        
+        # Use PathManager for default config path if not provided
+        if config_path is None:
+            config_path = str(self.path_manager.config_agent)
         self.config_path = Path(config_path)
-        self.base_path = Path(__file__).parent.parent.parent  # Project root directory
-        from utils.deduplication_service import DeduplicationService
+        from src.utils.deduplication_service import DeduplicationService
         self.deduplication_service = DeduplicationService()
         logger.debug(f"SentimentAnalysisAgent.__init__ started. db_factory: {db_factory}, config_path: {config_path}")
         self.config = self.load_config() # Load config from file (excluding target)
@@ -183,499 +198,68 @@ class SentimentAnalysisAgent:
             "system_health": []
         }
         
-        # Parallel processing configuration
-        parallel_config = self.config.get('parallel_processing', {})
-        self.max_collector_workers = parallel_config.get('max_collector_workers', 3)
-        self.max_sentiment_workers = parallel_config.get('max_sentiment_workers', 4)
-        self.max_location_workers = parallel_config.get('max_location_workers', 2)
-        self.sentiment_batch_size = parallel_config.get('sentiment_batch_size', 50)
-        self.location_batch_size = parallel_config.get('location_batch_size', 100)
-        self.collector_timeout = parallel_config.get('collector_timeout_seconds', 1000)  # NEW: Default 180s
-        self.batch_timeout = parallel_config.get('batch_timeout_seconds', None)  # No timeout by default
-        self.apify_timeout = parallel_config.get('apify_timeout_seconds', 180)  # NEW: Apify actor timeout
-        self.apify_wait = parallel_config.get('apify_wait_seconds', 180)  # NEW: Apify wait timeout
-        self.lock_max_age = parallel_config.get('lock_max_age_seconds', 300)  # NEW: Auto-unlock threshold
-        self.parallel_enabled = parallel_config.get('enabled', True)
-
-        # OpenAI logging configuration
-        self.openai_logging_config = self.config.get('openai_logging', {})
-        self.enable_openai_logging = self.openai_logging_config.get('enabled', False)
-
-        logger.info(f"Timeout Configuration: collector={self.collector_timeout}s, apify={self.apify_timeout}s, lock_max_age={self.lock_max_age}s")
+        # Legacy parallel processing configuration removed - not used by AnalysisWorker
+        # Legacy scheduler configuration removed - not used by AnalysisWorker
+        # Legacy task status tracking removed - not used by AnalysisWorker
         
-        # Automatic scheduling configuration
-        auto_scheduling_config = self.config.get('auto_scheduling', {})
-        self.auto_scheduling_enabled = auto_scheduling_config.get('enabled', False)
-        
-        # Enabled user IDs whitelist - only these users will run automatic scheduling
-        self.enabled_user_ids = auto_scheduling_config.get('enabled_user_ids', [])
-        if self.enabled_user_ids:
-            logger.info(f"Auto-scheduling enabled for {len(self.enabled_user_ids)} whitelisted user(s): {self.enabled_user_ids}")
-        else:
-            logger.info("Auto-scheduling enabled for ALL users (no whitelist specified)")
-        
-        # Use cycle_interval_minutes from auto_scheduling if available, otherwise fall back to root collection_interval_minutes
-        self.cycle_interval_minutes = auto_scheduling_config.get('cycle_interval_minutes', 
-                                                                  self.config.get('collection_interval_minutes', 60))
-        self.collection_interval_minutes = self.cycle_interval_minutes  # Keep for backward compatibility
-        
-        # Continuous mode: if true, cycles run continuously without waiting for interval
-        self.continuous_mode = auto_scheduling_config.get('continuous_mode', False)
-        # Stop after a single batch of cycles if enabled
-        self.stop_after_first_cycle = auto_scheduling_config.get('stop_after_first_cycle', False)
-        
-        # Max consecutive cycles: 0 means unlimited, >0 means limit consecutive cycles
-        self.max_consecutive_cycles = auto_scheduling_config.get('max_consecutive_cycles', 0)
-        
-        self.processing_interval_minutes = self.config.get('processing_interval_minutes', 120)
-        self.cleanup_interval_hours = self.config.get('cleanup_interval_hours', 24)
-        
-        # Background job management
-        self.scheduler_thread = None
-        self.stop_event = threading.Event()
-        self.is_running = False
-        self.active_users = set()  # Track users with active schedules
-        
-        # Track consecutive cycles per user for max_consecutive_cycles limit
-        self.user_consecutive_cycles = {}  # {user_id: count}
-        
-        # Task status tracking
-        self.task_status = {
-            'is_busy': False,
-            'current_task': None,
-            'lock_time': None,           # NEW: Track when lock was acquired
-            'last_run': {},
-            'suggestions': []
-        }
-        self.active_collection_threads = {}  # NEW: Track running collection threads
-        
-        # Initialize processor with dual-analyzer system
-        # DataProcessor now includes both PresidentialSentimentAnalyzer + GovernanceAnalyzer (two-phase)
-        logger.debug("Initializing DataProcessor with dual-analyzer system...")
-        self.data_processor = DataProcessor()
         
         # Keep reference to sentiment analyzer for backward compatibility
         self.sentiment_analyzer = PresidentialSentimentAnalyzer()
         
+        # --- Restore Critical Components (Topic, Issue, Emotion) ---
+        # These were previously hidden in DataProcessor. We now init them directly.
+        # Initialize lazily or with error handling to avoid startup crashes if models missing.
+        
+        try:
+            logger.debug("Initializing EmotionAnalyzer...")
+            self.emotion_analyzer = EmotionAnalyzer()
+        except Exception as e:
+            logger.warning(f"Failed to initialize EmotionAnalyzer: {e}")
+            self.emotion_analyzer = None
+
+        try:
+            logger.debug("Initializing TopicClassifier...")
+            self.topic_classifier = TopicClassifier()
+        except Exception as e:
+            logger.warning(f"Failed to initialize TopicClassifier: {e}")
+            self.topic_classifier = None
+
+        try:
+            logger.debug("Initializing IssueDetectionEngine...")
+            self.issue_detection_engine = IssueDetectionEngine()
+        except Exception as e:
+            logger.warning(f"Failed to initialize IssueDetectionEngine: {e}")
+            self.issue_detection_engine = None
+            
+        # -------------------------------------------------------------
+        
         # Initialize enhanced location classifier
         self.location_classifier = self._init_location_classifier()
         
-        # Log useful configuration information
-        logger.info("=" * 60)
-        logger.info("Agent Configuration Summary")
-        logger.info("=" * 60)
-        logger.info(f"Parallel Processing: {'ENABLED' if self.parallel_enabled else 'DISABLED'}")
-        if self.parallel_enabled:
-            logger.info(f"Worker Configuration:")
-            logger.info(f"  - Collector Workers: {self.max_collector_workers}")
-            logger.info(f"  - Sentiment Workers: {self.max_sentiment_workers}")
-            logger.info(f"  - Location Workers: {self.max_location_workers}")
-            logger.info(f"  - Total Max Workers: {self.max_collector_workers + self.max_sentiment_workers + self.max_location_workers}")
-            logger.info(f"Batch Sizes:")
-            logger.info(f"  - Sentiment Batch: {self.sentiment_batch_size} records")
-            logger.info(f"  - Location Batch: {self.location_batch_size} records")
-            if self.collector_timeout:
-                logger.info(f"  - Collector Timeout: {self.collector_timeout}s")
-            if self.batch_timeout:
-                logger.info(f"  - Batch Timeout: {self.batch_timeout}s")
-        logger.info(f"Auto Scheduling: {'ENABLED' if self.auto_scheduling_enabled else 'DISABLED'}")
-        if self.auto_scheduling_enabled:
-            logger.info(f"  - Cycle Interval: {self.cycle_interval_minutes} minutes")
-            logger.info(f"  - Continuous Mode: {self.continuous_mode}")
-            logger.info(f"  - Max Consecutive Cycles: {self.max_consecutive_cycles if self.max_consecutive_cycles > 0 else 'Unlimited'}")
-        logger.info(f"OpenAI Logging: {'ENABLED' if self.enable_openai_logging else 'DISABLED'}")
-        logger.info("=" * 60)
+        # Legacy configuration logging removed
         
-        logger.debug("Agent initialization complete with dual-analyzer system")
-
-        # Initialize OpenAI call logging if enabled
-        if self.enable_openai_logging:
-            try:
-                from src.utils.openai_logging import install_openai_logging
-
-                log_path = self.openai_logging_config.get('log_path', 'logs/openai_calls.csv')
-                max_chars = self.openai_logging_config.get('max_chars', 2000)
-                redact_prompts = self.openai_logging_config.get('redact_prompts', False)
-                log_to_console = self.openai_logging_config.get('log_to_console', False)
-                install_openai_logging(True, log_path, max_chars=max_chars, redact_prompts=redact_prompts, log_to_console=log_to_console)
-                logger.info(f"OpenAI logging initialized. Output: {log_path}")
-            except Exception as e:
-                logger.error(f"Failed to initialize OpenAI logging: {e}")
+        logger.debug("Agent initialization complete")
         
-    def start_automatic_scheduling(self):
-        """Start automatic scheduling for all configured users."""
-        if not self.auto_scheduling_enabled:
-            logger.warning("Automatic scheduling is disabled in configuration")
-            auto_schedule_logger.warning("AUTOMATIC SCHEDULING DISABLED - Cannot start scheduler")
-            return False
-        
-        if self.scheduler_thread and self.scheduler_thread.is_alive():
-            logger.warning("Scheduler is already running")
-            auto_schedule_logger.warning("Scheduler is already running")
-            return True
-        
-        try:
-            self.stop_event.clear()
-            self.is_running = True
-            self.scheduler_thread = threading.Thread(target=self._run_scheduler_loop)
-            self.scheduler_thread.daemon = True
-            self.scheduler_thread.start()
-            logger.info("Automatic scheduling started successfully")
-            auto_schedule_logger.info("=" * 80)
-            auto_schedule_logger.info("AUTOMATIC SCHEDULING STARTED")
-            auto_schedule_logger.info(f"Configuration: cycle_interval={self.cycle_interval_minutes}min, continuous_mode={self.continuous_mode}, max_consecutive_cycles={self.max_consecutive_cycles}")
-            auto_schedule_logger.info("=" * 80)
-            return True
-        except Exception as e:
-            logger.error(f"Failed to start automatic scheduling: {e}", exc_info=True)
-            auto_schedule_logger.error(f"FAILED TO START AUTOMATIC SCHEDULING: {e}")
-            return False
+    # Scheduler methods removed - scheduler not used (we use run_cycles.sh instead)
+    # Removed: start_automatic_scheduling, stop_automatic_scheduling, get_scheduler_status,
+    #          _run_scheduler_loop, _get_active_users, _is_user_auto_scheduling_enabled,
+    #          _should_run_collection, _run_automatic_collection_tracked
     
-    def stop_automatic_scheduling(self, graceful: bool = False):
-        """Stop scheduler and optionally allow in-flight cycles to finish."""
-        logger.info(f"Stopping automatic scheduling (graceful={graceful})...")
-
-        # Signal scheduler loop to stop scheduling new work
-        if self.scheduler_thread and self.scheduler_thread.is_alive():
-            self.stop_event.set()
-            self.is_running = False
-
-        if graceful:
-            # Do not force-stop active collection threads; let them finish
-            active_count = len(self.active_collection_threads)
-            if active_count > 0:
-                logger.info(f"Graceful stop requested: allowing {active_count} active collection thread(s) to finish.")
-            else:
-                logger.info("Graceful stop requested: no active collection threads.")
-
-            # Join scheduler thread briefly just to tidy up
-            if self.scheduler_thread and self.scheduler_thread.is_alive():
-                self.scheduler_thread.join(timeout=10)
-                logger.info("Scheduler thread stopped (graceful).")
-            logger.info("Graceful stop: scheduler halted; active cycles will complete naturally.")
-            return
-
-        # Hard stop path (existing behavior)
-        if self.scheduler_thread and self.scheduler_thread.is_alive():
-            self.scheduler_thread.join(timeout=10)
-            logger.info("Scheduler thread stopped")
-
-        active_count = len(self.active_collection_threads)
-        if active_count > 0:
-            logger.warning(f"Force-stopping {active_count} active collection threads...")
-
-            for user_id, thread in list(self.active_collection_threads.items()):
-                if thread.is_alive():
-                    logger.warning(f"Collection thread for user {user_id} still running - marking for termination")
-                    # Note: Python threads can't be force-killed safely
-                    # We rely on subprocess timeouts to eventually complete
-
-            # Wait up to 30 seconds for threads to finish
-            timeout = 30
-            start = time.time()
-            while self.active_collection_threads and (time.time() - start) < timeout:
-                time.sleep(1)
-                logger.debug(f"Waiting for {len(self.active_collection_threads)} threads...")
-
-            if self.active_collection_threads:
-                logger.error(f"⚠️ {len(self.active_collection_threads)} threads did not stop gracefully")
-                # Force-clear the dict
-                self.active_collection_threads.clear()
-
-        # Force-release the lock (critical fix!)
-        if self.task_status['is_busy']:
-            logger.warning("🔓 FORCE-RELEASING LOCK on stop API call")
-            self.task_status['is_busy'] = False
-            self.task_status['current_task'] = None
-            self.task_status['lock_time'] = None
-
-        logger.info("=" * 80)
-        logger.info("AUTOMATIC SCHEDULING STOPPED")
-        logger.info(f"Threads cleared: {active_count}")
-        logger.info(f"Lock released: Yes")
-        logger.info("=" * 80)
-
-        auto_schedule_logger.info("=" * 80)
-        auto_schedule_logger.info("AUTOMATIC SCHEDULING STOPPED")
-        auto_schedule_logger.info(f"Active threads terminated: {active_count}")
-        auto_schedule_logger.info(f"Lock force-released: {'Yes' if active_count > 0 or self.task_status.get('is_busy') else 'Not needed'}")
-        auto_schedule_logger.info("=" * 80)
-    
-    def _run_scheduler_loop(self):
-        """Main scheduler loop for automatic data collection."""
-        logger.info(f"Starting automatic scheduler loop (continuous_mode={self.continuous_mode}, cycle_interval={self.cycle_interval_minutes}min, max_cycles={self.max_consecutive_cycles})")
-        auto_schedule_logger.info(f"Scheduler loop started | continuous_mode={self.continuous_mode} | cycle_interval={self.cycle_interval_minutes}min | max_consecutive_cycles={self.max_consecutive_cycles}")
-        
-        while self.is_running and not self.stop_event.is_set():
-            try:
-                check_time = datetime.now()
-                # Get all users with active configurations
-                active_users = self._get_active_users()
-                
-                if not active_users:
-                    logger.info("No active users found, sleeping for 5 minutes")
-                    auto_schedule_logger.debug(f"[SCHEDULER CHECK] Timestamp: {check_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Active users: 0 | Action: Sleeping for 5 minutes")
-                    time.sleep(300)  # Sleep for 5 minutes
-                    continue
-                
-                auto_schedule_logger.debug(f"[SCHEDULER CHECK] Timestamp: {check_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Active users: {len(active_users)} | Users: {', '.join(active_users)}")
-                
-                # Schedule collection for each user
-                for user_id in active_users:
-                    if self.stop_event.is_set():
-                        break
-                    
-                    # Check if it's time to run collection for this user
-                    if self._should_run_collection(user_id):
-                        logger.info(f"Scheduling automatic collection for user {user_id}")
-                        auto_schedule_logger.info(f"[SCHEDULER DECISION] User: {user_id} | Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Decision: SCHEDULE CYCLE")
-                        
-                        # Run collection in background thread to avoid blocking
-                        collection_thread = threading.Thread(
-                            target=self._run_automatic_collection_tracked,
-                            args=(user_id,),
-                            name=f"collection_{user_id}"
-                        )
-                        collection_thread.daemon = True
-                        self.active_collection_threads[user_id] = collection_thread
-                        collection_thread.start()
-                        logger.debug(f"Started collection thread for user {user_id}")
-                    else:
-                        # Reset consecutive cycles when max is reached and enough time has passed
-                        if self.max_consecutive_cycles > 0 and user_id in self.user_consecutive_cycles:
-                            consecutive_count = self.user_consecutive_cycles.get(user_id, 0)
-                            if consecutive_count >= self.max_consecutive_cycles:
-                                # Check if enough time has passed since last run to reset counter
-                                last_run_key = f'collect_user_{user_id}'
-                                last_run_info = self.task_status['last_run'].get(last_run_key)
-                                if last_run_info:
-                                    try:
-                                        last_run_time = datetime.fromisoformat(last_run_info['time'])
-                                        time_since_last_run = datetime.now() - last_run_time
-                                        # Reset counter after one full interval has passed
-                                        if time_since_last_run.total_seconds() >= (self.cycle_interval_minutes * 60):
-                                            self.user_consecutive_cycles[user_id] = 0
-                                            logger.info(f"Reset consecutive cycles for user {user_id} after max cycles limit")
-                                            auto_schedule_logger.info(f"[SCHEDULER RESET] User: {user_id} | Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Consecutive cycles reset (max limit reached)")
-                                    except Exception:
-                                        pass
-                        else:
-                            # Log why cycle is not scheduled
-                            last_run_key = f'collect_user_{user_id}'
-                            last_run_info = self.task_status['last_run'].get(last_run_key)
-                            if last_run_info:
-                                try:
-                                    last_run_time = datetime.fromisoformat(last_run_info['time'])
-                                    time_since_last_run = datetime.now() - last_run_time
-                                    time_until_next = (self.cycle_interval_minutes * 60) - time_since_last_run.total_seconds()
-                                    if time_until_next > 0:
-                                        auto_schedule_logger.debug(f"[SCHEDULER DECISION] User: {user_id} | Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Decision: SKIP (next run in {time_until_next/60:.1f}min)")
-                                except Exception:
-                                    pass
-
-                # If configured to stop after the first scheduling pass, exit loop gracefully
-                if self.stop_after_first_cycle:
-                    logger.info("stop_after_first_cycle enabled: exiting scheduler after initial cycle dispatch.")
-                    auto_schedule_logger.info(f"[SCHEDULER] stop_after_first_cycle enabled - stopping after first dispatch at {datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}")
-
-                    # Wait for any active collection threads to finish (up to 60s) before ending
-                    wait_start = time.time()
-                    while self.active_collection_threads and (time.time() - wait_start) < 60:
-                        time.sleep(1)
-                        logger.debug(f"Waiting for active collection threads to finish: {len(self.active_collection_threads)} remaining")
-
-                    if self.active_collection_threads:
-                        logger.warning(f"{len(self.active_collection_threads)} collection threads still running after wait; exiting scheduler loop.")
-
-                    self.is_running = False
-                    self.stop_event.set()
-                    break
-                
-                # In continuous mode, sleep shorter to check more frequently
-                # In interval mode, sleep for 1 minute before next check
-                # Increased continuous mode sleep to 30s to allow collectors to finish
-                sleep_time = 30 if self.continuous_mode else 60
-                time.sleep(sleep_time)
-                
-            except Exception as e:
-                logger.error(f"Error in scheduler loop: {e}", exc_info=True)
-                auto_schedule_logger.error(f"[SCHEDULER ERROR] Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Error: {str(e)}")
-                time.sleep(60)  # Sleep on error
-        
-        logger.info("Scheduler loop ended")
-        auto_schedule_logger.info(f"Scheduler loop ended | Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}")
-    
-    def _get_active_users(self) -> List[str]:
-        """Get list of users with active configurations."""
-        try:
-            with self.db_factory() as db:
-                # Get users with target configurations
-                configs = db.query(models.TargetIndividualConfiguration).all()
-                user_ids = [str(config.user_id) for config in configs if config.user_id]
-                
-                # Filter out users who have disabled automatic scheduling
-                active_users = []
-                for user_id in user_ids:
-                    if self._is_user_auto_scheduling_enabled(user_id):
-                        active_users.append(user_id)
-                
-                return active_users
-        except Exception as e:
-            logger.error(f"Error getting active users: {e}")
-            return []
-    
-    def _is_user_auto_scheduling_enabled(self, user_id: str) -> bool:
-        """Check if automatic scheduling is enabled for a specific user."""
-        try:
-            # If whitelist is specified, only allow whitelisted users
-            if self.enabled_user_ids:
-                # Remove hyphens from user_id for comparison (DB stores without hyphens)
-                user_id_normalized = user_id.replace('-', '')
-                is_enabled = user_id_normalized in self.enabled_user_ids
-                
-                if not is_enabled:
-                    logger.debug(f"User {user_id} not in whitelist - skipping automatic scheduling")
-                
-                return is_enabled
-            
-            # If no whitelist, enable for all users (backward compatibility)
-            return True
-        except Exception as e:
-            logger.error(f"Error checking user auto-scheduling setting: {e}")
-            return True  # Default to enabled on error
-    
-    def _should_run_collection(self, user_id: str) -> bool:
-        """Check if it's time to run collection for a user."""
-        try:
-            # Check max consecutive cycles limit
-            if self.max_consecutive_cycles > 0:
-                consecutive_count = self.user_consecutive_cycles.get(user_id, 0)
-                if consecutive_count >= self.max_consecutive_cycles:
-                    logger.info(f"User {user_id} reached max consecutive cycles ({self.max_consecutive_cycles}), skipping")
-                    return False
-            
-            # In continuous mode, always run if under max cycles limit
-            if self.continuous_mode:
-                logger.debug(f"Continuous mode enabled for user {user_id}, scheduling collection")
-                return True
-            
-            # Get last run time for this user
-            last_run_key = f'collect_user_{user_id}'
-            last_run_info = self.task_status['last_run'].get(last_run_key)
-            
-            if not last_run_info:
-                logger.info(f"No previous run found for user {user_id}, scheduling collection")
-                return True
-            
-            # Check if a cycle is currently running for this user
-            if last_run_info.get('status') == 'running':
-                logger.debug(f"Collection already running for user {user_id}, skipping")
-                return False
-            
-            # Check if enough time has passed
-            last_run_time = datetime.fromisoformat(last_run_info['time'])
-            time_since_last_run = datetime.now() - last_run_time
-            interval_minutes = self.cycle_interval_minutes
-            
-            if time_since_last_run.total_seconds() >= (interval_minutes * 60):
-                logger.info(f"Interval reached for user {user_id}, scheduling collection")
-                return True
-            
-            logger.debug(f"Interval not reached for user {user_id} ({time_since_last_run.total_seconds()/60:.1f}/{interval_minutes} min)")
-            return False
-            
-        except Exception as e:
-            logger.error(f"Error checking collection schedule for user {user_id}: {e}")
-            return False
-
-    def _run_automatic_collection_tracked(self, user_id: str):
-        """Wrapper that tracks thread lifecycle."""
-        try:
-            self._run_automatic_collection(user_id)
-        finally:
-            # Remove from active threads when done
-            if user_id in self.active_collection_threads:
-                del self.active_collection_threads[user_id]
-                logger.debug(f"Removed collection thread for user {user_id}")
-
     def _run_automatic_collection(self, user_id: str):
-        """Run automatic collection for a specific user."""
-        cycle_start_time = datetime.now()
-        try:
-            logger.info(f"Starting automatic collection for user {user_id}")
-            auto_schedule_logger.info("-" * 80)
-            auto_schedule_logger.info(f"[CYCLE START] User: {user_id} | Timestamp: {cycle_start_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}")
-            auto_schedule_logger.info(f"Processing mode: {'PARALLEL' if self.parallel_enabled else 'SEQUENTIAL'}")
-            if self.parallel_enabled:
-                auto_schedule_logger.info(f"Worker Configuration: Collector={self.max_collector_workers} | Sentiment={self.max_sentiment_workers} | Location={self.max_location_workers}")
-                auto_schedule_logger.info(f"Batch Sizes: Sentiment={self.sentiment_batch_size} | Location={self.location_batch_size}")
-            
-            # Use parallel processing if enabled, otherwise fallback to single-cycle wrapper
-            if self.parallel_enabled:
-                self.run_single_cycle_parallel(user_id)
-            else:
-                self.run_single_cycle(user_id)
-            
-            # Track successful consecutive cycle
-            if user_id not in self.user_consecutive_cycles:
-                self.user_consecutive_cycles[user_id] = 0
-            self.user_consecutive_cycles[user_id] += 1
-            
-            cycle_end_time = datetime.now()
-            cycle_duration = (cycle_end_time - cycle_start_time).total_seconds()
-            logger.info(f"Completed automatic collection for user {user_id} (consecutive cycles: {self.user_consecutive_cycles.get(user_id, 0)})")
-            auto_schedule_logger.info(f"[CYCLE END] User: {user_id} | Timestamp: {cycle_end_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {cycle_duration:.2f}s")
-            auto_schedule_logger.info(f"Consecutive cycles: {self.user_consecutive_cycles.get(user_id, 0)}")
-            auto_schedule_logger.info("-" * 80)
-            
-        except Exception as e:
-            # Reset consecutive cycles on error
-            if user_id in self.user_consecutive_cycles:
-                self.user_consecutive_cycles[user_id] = 0
-            cycle_end_time = datetime.now()
-            cycle_duration = (cycle_end_time - cycle_start_time).total_seconds()
-            logger.error(f"Error in automatic collection for user {user_id}: {e}", exc_info=True)
-            auto_schedule_logger.error(f"[CYCLE ERROR] User: {user_id} | Timestamp: {cycle_end_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {cycle_duration:.2f}s")
-            auto_schedule_logger.error(f"Error: {str(e)}")
-            auto_schedule_logger.info("-" * 80)
-    
-    def get_scheduler_status(self) -> Dict[str, Any]:
-        """Get current scheduler status."""
-        return {
-            'is_running': self.is_running,
-            'auto_scheduling_enabled': self.auto_scheduling_enabled,
-            'cycle_interval_minutes': self.cycle_interval_minutes,
-            'collection_interval_minutes': self.collection_interval_minutes,  # Backward compatibility
-            'continuous_mode': self.continuous_mode,
-            'stop_after_first_cycle': self.stop_after_first_cycle,
-            'max_consecutive_cycles': self.max_consecutive_cycles,
-            'processing_interval_minutes': self.processing_interval_minutes,
-            'active_users_count': len(self.active_users),
-            'scheduler_thread_alive': self.scheduler_thread.is_alive() if self.scheduler_thread else False,
-            'last_run_times': self.task_status['last_run'],
-            'user_consecutive_cycles': self.user_consecutive_cycles.copy(),
-            'active_collection_threads': len(self.active_collection_threads)
-        }
+        """Run automatic collection for a specific user (used by /agent/test-cycle-no-auth endpoint)."""
+        logger.info(f"Starting collection cycle for user {user_id}")
+        # Use parallel processing
+        self.run_single_cycle_parallel(user_id)
+        logger.info(f"Completed collection cycle for user {user_id}")
 
         logger.info(f"Agent initialized. Config loaded from {self.config_path}. Base path: {self.base_path}")
         logger.info(f"Database session factory provided: {db_factory}")
         logger.debug(f"SentimentAnalysisAgent.__init__ finished. Initial config: {self.config}")
 
     def _parse_date_string(self, date_str):
-        """Parse date string to datetime object using DataProcessor's robust parser, return None if invalid"""
-        if not date_str or pd.isna(date_str):
-            return None
-        try:
-            # If already a datetime object, return as-is
-            if isinstance(date_str, datetime):
-                return date_str
-            # Use DataProcessor's robust parse_date method which handles Twitter dates and multiple formats
-            if isinstance(date_str, str):
-                return self.data_processor.parse_date(date_str)
-            return None
-        except (ValueError, TypeError) as e:
-            logger.debug(f"Error parsing date string '{date_str}': {e}")
-            return None
+        """Parse date string to datetime object using shared utility function, return None if invalid"""
+        # Use shared parse_datetime utility function from common.py
+        return parse_datetime(date_str)
     
     def _validate_and_clean_location(self, location):
         """
@@ -743,9 +327,11 @@ class SentimentAnalysisAgent:
         return location if location else None
 
     def load_config(self) -> Dict[str, Any]:
-        """Load agent configuration from JSON file, excluding the 'target' key."""
-        logger.debug(f"load_config: Attempting to load config from {self.config_path}")
-        default_config = {
+        """Load agent configuration using ConfigManager, excluding the 'target' key."""
+        logger.debug(f"load_config: Loading config using ConfigManager")
+        
+        # Agent-specific default config (keys not in ConfigManager defaults)
+        agent_defaults = {
             "collection_interval_minutes": 60,
             "processing_interval_minutes": 120,
             "data_retention_days": 30,
@@ -758,33 +344,37 @@ class SentimentAnalysisAgent:
             "rate_limits": {"twitter": 100, "news": 50},
             "openai_logging": {
                 "enabled": False,
-                "log_path": "logs/openai_calls.csv",
+                "log_path": str(self.path_manager.logs_openai),
                 "max_chars": 2000,
                 "redact_prompts": False
+            },
+            "auto_scheduling": {
+                "enabled": False,
+                "enabled_user_ids": [],
+                "cycle_interval_minutes": 60
             }
             # 'target' key is intentionally omitted - fetched from DB
         }
-        try:
-            if self.config_path.exists():
-                with open(self.config_path, 'r') as f:
-                    loaded_conf = json.load(f)
-                    # Explicitly remove 'target' if it exists from old file
-                    loaded_conf.pop('target', None) 
-                    # Merge with defaults, loaded keys take precedence
-                    # We should ensure defaults cover all *expected* keys now
-                    merged_config = default_config.copy()
-                    merged_config.update(loaded_conf)
-                    logger.debug(f"load_config: Loaded config: {merged_config}")
-                    return merged_config
-            else:
-                logger.warning(f"Config file {self.config_path} not found. Using default configuration.")
-                # Save default config if file doesn't exist
-                with open(self.config_path, 'w') as f:
-                    json.dump(default_config, f, indent=4)
-                return default_config
-        except Exception as e:
-            logger.error(f"Error loading config from {self.config_path}: {e}. Using default configuration.", exc_info=True)
-            return default_config
+        
+        # Get config from ConfigManager (already loads agent_config.json)
+        # ConfigManager merges agent_config.json into top-level config
+        config_manager_config = self.config_manager._config.copy()
+        
+        # Remove 'target' key if it exists (shouldn't be in config anymore, but safety check)
+        config_manager_config.pop('target', None)
+        
+        # Merge agent defaults with ConfigManager config
+        # Agent defaults take precedence for missing keys, but ConfigManager values override
+        merged_config = agent_defaults.copy()
+        merged_config.update(config_manager_config)
+        
+        # Ensure parallel_processing is accessible (ConfigManager maps it to processing.parallel)
+        # For backward compatibility, also add it at top level if processing.parallel exists
+        if 'processing' in config_manager_config and 'parallel' in config_manager_config['processing']:
+            merged_config['parallel_processing'] = config_manager_config['processing']['parallel']
+        
+        logger.debug(f"load_config: Loaded config using ConfigManager with {len(merged_config)} top-level keys")
+        return merged_config
 
     def _get_latest_target_config(self, db: Session, user_id: str) -> Optional[TargetIndividualConfiguration]:
         """Fetches the latest target config model object from DB for a specific user."""
@@ -948,8 +538,7 @@ class SentimentAnalysisAgent:
         tracker = get_collection_tracker()
         
         # Create logs/collectors directory if it doesn't exist
-        collector_logs_dir = self.base_path / 'logs' / 'collectors'
-        collector_logs_dir.mkdir(parents=True, exist_ok=True)
+        collector_logs_dir = self.path_manager.logs_collectors
         
         # Create separate log file for each collector in its own subfolder
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1202,15 +791,16 @@ class SentimentAnalysisAgent:
                 if 'user_id' not in params:
                     return {"success": False, "message": "run_processing command requires 'user_id' parameter."}
                 # Similar thread/async consideration for processing
-                self._run_task(lambda: self.run_single_cycle(params['user_id']), f"process_cmd_{params['user_id']}") 
+                self._run_task(lambda: self.run_single_cycle_parallel(params['user_id']), f"process_cmd_{params['user_id']}") 
                 return {"success": True, "message": f"Processing task triggered for user {params['user_id']}."}
             elif command == "update_locations":
                 # --- Requires user_id now ---
                 if 'user_id' not in params:
                     return {"success": False, "message": "update_locations command requires 'user_id' parameter."}
-                batch_size = params.get('batch_size', 100)
+                # If batch_size not provided, None will use config default
+                batch_size = params.get('batch_size', None)
                 self._run_task(lambda: self.update_location_classifications(params['user_id'], batch_size), f"location_update_cmd_{params['user_id']}") 
-                return {"success": True, "message": f"Location classification update triggered for user {params['user_id']} with batch size {batch_size}."}
+                return {"success": True, "message": f"Location classification update triggered for user {params['user_id']} with batch size {batch_size or 'config default'}."}
             # Add other commands as needed
             else:
                 return {"success": False, "message": f"Unknown command: {command}"}
@@ -1306,87 +896,6 @@ class SentimentAnalysisAgent:
         # Lock is valid
         logger.debug(f"Lock age: {lock_age:.1f}s (max: {self.lock_max_age}s) - valid")
         return False
-
-    def _run_task(self, task_func: Callable, task_name: str) -> bool:
-        """Runs a given task function, updates status, and handles basic timing/errors."""
-        logger.debug(f"_run_task: Preparing to run task '{task_name}'. Current busy status: {self.task_status['is_busy']}")
-
-        # Check for stuck locks before rejecting the task
-        if self.task_status['is_busy']:
-            # Try to auto-unlock if stuck
-            was_released = self._check_and_release_stuck_lock(task_name)
-
-            if was_released:
-                logger.warning(f"Stuck lock was released. Proceeding with task '{task_name}'.")
-            else:
-                # Lock is valid and active
-                lock_age = None
-                if self.task_status.get('lock_time'):
-                    lock_time = datetime.fromisoformat(self.task_status['lock_time'])
-                    lock_age = (datetime.now() - lock_time).total_seconds()
-
-                logger.warning(
-                    f"Agent is already busy with task: {self.task_status['current_task']} "
-                    f"(locked for {lock_age:.1f}s). Cannot start '{task_name}'."
-                )
-                return False # Indicate task did not run
-            
-        logger.debug(f"_run_task: Starting task '{task_name}'...")
-        self.task_status['is_busy'] = True
-        self.task_status['current_task'] = task_name
-        start_time = datetime.now()
-        self.task_status['lock_time'] = start_time.isoformat()  # NEW: Track lock time
-        
-        # Record task start in last_run immediately (prevents scheduler from re-scheduling)
-        self.task_status['last_run'][task_name] = {
-            'time': start_time.isoformat(),
-            'success': None,  # Will be updated in finally block
-            'duration': 0,
-            'error': None,
-            'status': 'running'  # Indicates task is currently running
-        }
-        
-        try:
-            # Run the task function
-            result = task_func() 
-            # We assume the task function returns True on success, False or raises Exception on failure
-            if isinstance(result, bool):
-                success = result
-            else:
-                # Non-boolean return is treated as success (None or other values)
-                success = True
-            
-            duration = (datetime.now() - start_time).total_seconds()
-            logger.info(f"_run_task: Task '{task_name}' completed successfully in {duration:.2f}s")
-            
-            # Update status
-            self.task_status['last_run'][task_name].update({
-                'success': success,
-                'duration': duration,
-                'status': 'completed'
-            })
-            
-            return success
-        except Exception as e:
-            duration = (datetime.now() - start_time).total_seconds()
-            error_msg = str(e)
-            logger.error(f"_run_task: Task '{task_name}' failed after {duration:.2f}s: {error_msg}", exc_info=True)
-            
-            # Update status
-            self.task_status['last_run'][task_name].update({
-                'success': False,
-                'duration': duration,
-                'error': error_msg,
-                'status': 'failed'
-            })
-            
-            return False
-        finally:
-            # Always release lock
-            self.task_status['is_busy'] = False
-            self.task_status['current_task'] = None
-            self.task_status['lock_time'] = None
-            logger.debug(f"_run_task: Lock released for task '{task_name}'")
 
     def _check_and_release_stuck_lock(self, task_name: str) -> bool:
         try:
@@ -1689,9 +1198,17 @@ class SentimentAnalysisAgent:
         api_call_successful = False # Flag to track success
         api_message = "Unknown API status"
         try:
+            # Get HTTP request timeout from config
+            try:
+                config_manager = ConfigManager()
+                http_timeout = config_manager.get_int("processing.timeouts.http_request_timeout", 120)
+            except Exception as e:
+                logger.warning(f"Could not load ConfigManager for HTTP timeout, using default 120s: {e}")
+                http_timeout = 120
+            
             logger.info(f"Sending {len(data_list)} records to API endpoint: {DATA_UPDATE_ENDPOINT}")
             # response = requests.post(DATA_UPDATE_ENDPOINT, json=payload, timeout=120) 
-            response = requests.post(DATA_UPDATE_ENDPOINT, json=convert_uuid_to_str(payload), timeout=120)
+            response = requests.post(DATA_UPDATE_ENDPOINT, json=convert_uuid_to_str(payload), timeout=http_timeout)
             # response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
 
             # Check HTTP status code first
@@ -1954,82 +1471,84 @@ class SentimentAnalysisAgent:
         logger.debug(f"_run_task: Task '{task_name}' finished with status: {success}")
         return success # Return the success status of the task
 
-    # --- Added method for user-triggered runs --- 
-    def run_single_cycle(self, user_id: str):
-        """Backward-compatible single-cycle runner. Currently delegates to parallel pipeline."""
-        return self.run_single_cycle_parallel(user_id)
-
-    def run_single_cycle_parallel(self, user_id: str):
-        """Runs a single collection and processing cycle for a specific user with parallel processing."""
+    def run_single_cycle_parallel(self, user_id: str, use_existing_data: bool = False, skip_collection_only: bool = False):
+        """
+        Runs a single collection and processing cycle for a specific user with parallel processing.
+        
+        Args:
+            user_id: User ID to process
+            use_existing_data: If True, skips data collection, loading, and deduplication phases,
+                             and uses existing embeddings/sentiment from database (skips OpenAI calls when both exist)
+            skip_collection_only: If True, skips collection/loading/deduplication but processes ALL existing records
+                                in database normally (with OpenAI calls for missing embeddings/sentiment)
+        """
         if not user_id:
             logger.error("run_single_cycle_parallel: Called without user_id. Aborting.")
             return
 
         try:
-            # 1. Parallel Data Collection (collect raw data, no analysis)
+            collection_duration = 0.0
+            load_duration = 0.0
+            dedup_duration = 0.0
             collection_start = datetime.now()
-            logger.info(f"Starting parallel data collection for user {user_id}...")
             
-            auto_schedule_logger.info(f"[PHASE 1: COLLECTION START] User: {user_id} | Timestamp: {collection_start.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}")
-            
-            collect_success = self._run_task(lambda: self.collect_data_parallel(user_id), f'collect_user_{user_id}')
-            collection_end = datetime.now()
-            collection_duration = (collection_end - collection_start).total_seconds()
-            if collect_success:
-                auto_schedule_logger.info(f"[PHASE 1: COLLECTION END] User: {user_id} | Timestamp: {collection_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {collection_duration:.2f}s | Max Workers: {self.max_collector_workers} | Status: SUCCESS")
+            if use_existing_data:
+                # Skip collection, loading, and deduplication - use existing data in database
+                logger.info(f"Using existing data mode: Skipping collection, loading, and deduplication for user {user_id}")
+                auto_schedule_logger.info(f"[PHASE 1-3: SKIPPED] User: {user_id} | Mode: Use Existing Data | Skipping: Collection, Loading, Deduplication")
+                collect_success = True
+                load_success = True
+                dedup_success = True
+            elif skip_collection_only:
+                # Skip collection, loading, and deduplication - but process ALL existing records normally
+                logger.info(f"Skip collection mode: Skipping collection, loading, and deduplication for user {user_id}. Will process ALL existing records normally.")
+                auto_schedule_logger.info(f"[PHASE 1-3: SKIPPED] User: {user_id} | Mode: Skip Collection Only | Skipping: Collection, Loading, Deduplication | Will process all existing records with OpenAI calls")
+                collect_success = True
+                load_success = True
+                dedup_success = True
+            if skip_collection_only:
+                # Streaming Mode: Collection/Loading done by background service.
+                # We just verify if deduplication/cleanup is needed, though DataIngestor handles most of it.
+                logger.info(f"Streaming Mode: Skipping batch collection/loading for user {user_id}. Proceeding to analysis.")
+                auto_schedule_logger.info(f"[PHASE 1-2: SKIPPED] User: {user_id} | Mode: Streaming | Background service handles ingestion")
+                collect_success = True
+                load_success = True
+                
+                # 3. Quick Deduplication (Safety Check)
+                # Ideally DataIngestor handles this, but a quick sweep before analysis doesn't hurt
+                dedup_start = datetime.now()
+                # logger.info(f"Running safety deduplication for user {user_id}...")
+                # dedup_success = self._run_task(lambda: self._run_deduplication(user_id), f'dedup_{user_id}')
+                dedup_success = True # Skip explicit dedup for now, rely on strict constraints
             else:
-                auto_schedule_logger.error(f"[PHASE 1: COLLECTION END] User: {user_id} | Timestamp: {collection_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {collection_duration:.2f}s | Max Workers: {self.max_collector_workers} | Status: FAILED")
-            
-            if collect_success:
-                # 2. Load raw data from CSV files
-                load_start = datetime.now()
-                logger.info(f"Loading raw data from CSV files for user {user_id}...")
-                auto_schedule_logger.info(f"[PHASE 2: DATA LOADING START] User: {user_id} | Timestamp: {load_start.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}")
-                load_success = self._run_task(
-                    lambda: self._push_raw_data_to_db(user_id), 
-                    f'load_raw_{user_id}'
-                )
-                load_end = datetime.now()
-                load_duration = (load_end - load_start).total_seconds()
-                if load_success:
-                    # Get mention count after collection
-                    mention_count = len(self._temp_raw_records) if hasattr(self, '_temp_raw_records') and self._temp_raw_records else 0
-                    auto_schedule_logger.info(f"[PHASE 2: DATA LOADING END] User: {user_id} | Timestamp: {load_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {load_duration:.2f}s | Status: SUCCESS | Mentions Collected: {mention_count}")
-                else:
-                    auto_schedule_logger.error(f"[PHASE 2: DATA LOADING END] User: {user_id} | Timestamp: {load_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {load_duration:.2f}s | Status: FAILED")
+                # LEGACY BATCH MODE (Deprecated but kept for manual runs if needed)
+                # 1. Parallel Data Collection
+                collection_start = datetime.now()
+                logger.info(f"Starting parallel data collection for user {user_id}...")
+                collect_success = self._run_task(lambda: self.collect_data_parallel(user_id), f'collect_user_{user_id}')
                 
-                if load_success:
-                    # 3. Run deduplication and insert unique records to DB
-                    dedup_start = datetime.now()
-                    logger.info(f"Running deduplication and inserting unique records for user {user_id}...")
-                    auto_schedule_logger.info(f"[PHASE 3: DEDUPLICATION START] User: {user_id} | Timestamp: {dedup_start.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}")
-                    dedup_success = self._run_task(
-                        lambda: self._run_deduplication(user_id), 
-                        f'dedup_{user_id}'
-                    )
-                    dedup_end = datetime.now()
-                    dedup_duration = (dedup_end - dedup_start).total_seconds()
-                    if dedup_success:
-                        # Get deduplication stats if available
-                        if hasattr(self, '_dedup_stats') and self._dedup_stats:
-                            before_count = self._dedup_stats.get('total', 0)
-                            after_count = self._dedup_stats.get('unique', 0)
-                            auto_schedule_logger.info(f"[PHASE 3: DEDUPLICATION END] User: {user_id} | Timestamp: {dedup_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {dedup_duration:.2f}s | Status: SUCCESS | Records: {before_count} -> {after_count}")
-                        else:
-                            auto_schedule_logger.info(f"[PHASE 3: DEDUPLICATION END] User: {user_id} | Timestamp: {dedup_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {dedup_duration:.2f}s | Status: SUCCESS")
+                if collect_success:
+                    # 2. Load raw data
+                    load_start = datetime.now()
+                    load_success = self._run_task(lambda: self._push_raw_data_to_db(user_id), f'load_raw_{user_id}')
+                    if load_success:
+                        # 3. Deduplication
+                        dedup_success = self._run_task(lambda: self._run_deduplication(user_id), f'dedup_{user_id}')
                     else:
-                        auto_schedule_logger.error(f"[PHASE 3: DEDUPLICATION END] User: {user_id} | Timestamp: {dedup_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {dedup_duration:.2f}s | Status: FAILED")
+                        dedup_success = False
                 else:
+                    load_success = False
                     dedup_success = False
-                
-                if dedup_success:
+
+            
+            if dedup_success:
                     # 4. Parallel sentiment analysis (configurable batch size)
                     sentiment_start = datetime.now()
                     logger.info(f"Starting parallel sentiment analysis for user {user_id}...")
                     auto_schedule_logger.info(f"[PHASE 4: SENTIMENT ANALYSIS START] User: {user_id} | Timestamp: {sentiment_start.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}")
                     auto_schedule_logger.info(f"[PHASE 4: SENTIMENT] Max Workers: {self.max_sentiment_workers} | Batch Size: {self.sentiment_batch_size}")
                     sentiment_success = self._run_task(
-                        lambda: self._run_sentiment_batch_update_parallel(user_id), 
+                        lambda: self._run_sentiment_batch_update_parallel(user_id, use_existing_data=use_existing_data, skip_collection_only=skip_collection_only), 
                         f'sentiment_batch_{user_id}'
                     )
                     sentiment_end = datetime.now()
@@ -2055,15 +1574,51 @@ class SentimentAnalysisAgent:
                     else:
                         auto_schedule_logger.error(f"[PHASE 5: LOCATION CLASSIFICATION END] User: {user_id} | Timestamp: {location_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {location_duration:.2f}s | Max Workers: {self.max_location_workers} | Status: FAILED")
                     
-                    logger.info(f"Parallel cycle completed for user {user_id}: Collection ✅, Deduplication ✅, Sentiment ✅, Location ✅")
-                    total_duration = (location_end - collection_start).total_seconds()
-                    auto_schedule_logger.info(f"[CYCLE SUMMARY] User: {user_id} | Total Duration: {total_duration:.2f}s | Collection: {collection_duration:.2f}s | Loading: {load_duration:.2f}s | Dedup: {dedup_duration:.2f}s | Sentiment: {sentiment_duration:.2f}s | Location: {location_duration:.2f}s")
-                else:
-                    logger.warning(f"Deduplication failed for user {user_id}, skipping analysis steps")
-                    auto_schedule_logger.warning(f"[CYCLE ABORTED] User: {user_id} | Reason: Deduplication failed")
+                    if location_success:
+                        # 6. Issue Detection (clustering-based)
+                        issue_start = datetime.now()
+                        logger.info(f"Starting issue detection for user {user_id}...")
+                        auto_schedule_logger.info(f"[PHASE 6: ISSUE DETECTION START] User: {user_id} | Timestamp: {issue_start.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}")
+                        issue_success = self._run_task(
+                            lambda: self._run_issue_detection(user_id, recalculate_existing=use_existing_data), 
+                            f'issue_detection_{user_id}'
+                        )
+                        issue_end = datetime.now()
+                        issue_duration = (issue_end - issue_start).total_seconds()
+                        if issue_success:
+                            auto_schedule_logger.info(f"[PHASE 6: ISSUE DETECTION END] User: {user_id} | Timestamp: {issue_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {issue_duration:.2f}s | Status: SUCCESS")
+                            
+                            # 7. Aggregation (Week 5)
+                            agg_start = datetime.now()
+                            logger.info(f"Starting aggregation for user {user_id}...")
+                            auto_schedule_logger.info(f"[PHASE 7: AGGREGATION START] User: {user_id} | Timestamp: {agg_start.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}")
+                            agg_success = self._run_task(
+                                lambda: self._run_aggregation(user_id),
+                                f'aggregation_{user_id}'
+                            )
+                            agg_end = datetime.now()
+                            agg_duration = (agg_end - agg_start).total_seconds()
+                            
+                            if agg_success:
+                                auto_schedule_logger.info(f"[PHASE 7: AGGREGATION END] User: {user_id} | Timestamp: {agg_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {agg_duration:.2f}s | Status: SUCCESS")
+                            else:
+                                auto_schedule_logger.error(f"[PHASE 7: AGGREGATION END] User: {user_id} | Timestamp: {agg_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {agg_duration:.2f}s | Status: FAILED")
+                                
+                        else:
+                            auto_schedule_logger.error(f"[PHASE 6: ISSUE DETECTION END] User: {user_id} | Timestamp: {issue_end.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} | Duration: {issue_duration:.2f}s | Status: FAILED")
+                            agg_duration = 0.0 # Didn't run
+                    else:
+                        issue_success = False
+                        issue_duration = 0.0
+                        agg_duration = 0.0
+                        issue_end = location_end
+                    
+                    logger.info(f"Parallel cycle completed for user {user_id}: Collection ✅, Deduplication ✅, Sentiment ✅, Location ✅, Issue Detection ✅, Aggregation ✅")
+                    total_duration = (datetime.now() - collection_start).total_seconds()
+                    auto_schedule_logger.info(f"[CYCLE SUMMARY] User: {user_id} | Total Duration: {total_duration:.2f}s | Collection: {collection_duration:.2f}s | Loading: {load_duration:.2f}s | Dedup: {dedup_duration:.2f}s | Sentiment: {sentiment_duration:.2f}s | Location: {location_duration:.2f}s | Issue Detection: {issue_duration:.2f}s | Aggregation: {agg_duration:.2f}s")
             else:
-                logger.warning(f"Parallel data collection failed for user {user_id}, skipping subsequent steps")
-                auto_schedule_logger.warning(f"[CYCLE ABORTED] User: {user_id} | Reason: Collection failed")
+                logger.warning(f"Deduplication failed for user {user_id}, skipping analysis steps")
+                auto_schedule_logger.warning(f"[CYCLE ABORTED] User: {user_id} | Reason: Deduplication failed")
 
         except Exception as e:
             logger.error(f"Unexpected error during run_single_cycle_parallel for user {user_id}: {e}", exc_info=True)
@@ -2184,18 +1739,26 @@ class SentimentAnalysisAgent:
             logger.error(f"Failed to initialize location classifier: {e}")
             return None
 
-    def update_location_classifications(self, user_id: str, batch_size: int = 100) -> Dict[str, Any]:
+    def update_location_classifications(self, user_id: str, batch_size: int = None) -> Dict[str, Any]:
         """
         Update location classifications for existing records in the database.
         This is similar to the batch location classification script functionality.
         
         Args:
             user_id (str): The user ID to process records for
-            batch_size (int): Number of records to process in each batch
+            batch_size (int): Number of records to process in each batch. If None, uses config value.
             
         Returns:
             Dict containing update statistics
         """
+        # Get batch_size from config if not provided
+        if batch_size is None:
+            try:
+                config_manager = ConfigManager()
+                batch_size = config_manager.get_int("processing.parallel.location_batch_size", 300)
+            except Exception as e:
+                logger.warning(f"Could not load ConfigManager for batch_size, using default 300: {e}")
+                batch_size = 300
         if not self.location_classifier:
             logger.error("Location classifier not initialized. Cannot update classifications.")
             return {"error": "Location classifier not initialized"}
@@ -2320,6 +1883,50 @@ class SentimentAnalysisAgent:
         except Exception as e:
             logger.error(f"Error during location classification update: {e}", exc_info=True)
             return {'error': str(e)}
+    def _run_aggregation(self, user_id: str) -> Dict[str, Any]:
+        """
+        Run sentiment aggregation pipeline (Week 5).
+        
+        Args:
+            user_id: User ID
+            
+        Returns:
+            Dictionary with aggregation stats
+        """
+        logger.info(f"Running aggregation pipeline for user {user_id}...")
+        
+        if not self.data_processor or not self.data_processor.aggregation_service:
+            logger.warning("Aggregation service not available, skipping aggregation")
+            return {'status': 'skipped', 'reason': 'service_unavailable'}
+        
+        try:
+            # Run aggregation for 24h window
+            results_24h = self.data_processor.run_aggregation_pipeline(
+                time_window='24h',
+                include_trends=True,
+                include_normalization=True
+            )
+            
+            # Run aggregation for 1h window (for rapid updates)
+            results_1h = self.data_processor.run_aggregation_pipeline(
+                time_window='1h',
+                include_trends=False, # Trends need more data points
+                include_normalization=False
+            )
+            
+            # Combine stats
+            stats = {
+                '24h_topics': len(results_24h.get('aggregations', {})),
+                '1h_topics': len(results_1h.get('aggregations', {})),
+                'trends_calculated': len(results_24h.get('trends', {})),
+                'status': 'success'
+            }
+            
+            return stats
+            
+        except Exception as e:
+            logger.error(f"Error running aggregation pipeline: {e}", exc_info=True)
+            return {'status': 'failed', 'error': str(e)}
 
     def get_status(self) -> Dict[str, Any]:
         """Get current agent status and task information."""
@@ -2348,7 +1955,7 @@ class SentimentAnalysisAgent:
         try:
             logger.info(f"🔍 DEBUG: Starting _push_raw_data_to_db for user {user_id}")
             
-            raw_data_path = self.base_path / 'data' / 'raw'
+            raw_data_path = self.path_manager.data_raw
             logger.info(f"🔍 DEBUG: Raw data path: {raw_data_path}")
             logger.info(f"🔍 DEBUG: Path exists: {raw_data_path.exists()}")
             
@@ -2554,7 +2161,7 @@ class SentimentAnalysisAgent:
                     logger.info("No unique records to insert after deduplication")
                 
                 # Clean up raw CSV files after successful processing
-                raw_data_path = self.base_path / 'data' / 'raw'
+                raw_data_path = self.path_manager.data_raw
                 if raw_data_path.exists():
                     raw_files = list(raw_data_path.glob('*.csv'))
                     if raw_files:
@@ -2580,15 +2187,29 @@ class SentimentAnalysisAgent:
             logger.error(f"Error during deduplication: {e}", exc_info=True)
             return False
 
-    def _run_sentiment_batch_update_parallel(self, user_id: str):
-        """Run sentiment analysis in parallel batches for newly inserted unique records or existing unanalyzed records"""
+    def _run_sentiment_batch_update_parallel(self, user_id: str, use_existing_data: bool = False, skip_collection_only: bool = False):
+        """
+        Run sentiment analysis in parallel batches for newly inserted unique records or existing unanalyzed records.
+        
+        Args:
+            user_id: User ID to process records for
+            use_existing_data: If True, uses existing embeddings and sentiment from database, skipping OpenAI calls when both exist
+            skip_collection_only: If True, processes ALL existing records for the user (calls OpenAI for missing embeddings/sentiment)
+        """
         try:
-            logger.info(f"Starting parallel batch sentiment analysis for user {user_id}")
+            logger.info(f"Starting parallel batch sentiment analysis for user {user_id} (use_existing_data={use_existing_data}, skip_collection_only={skip_collection_only})")
+            
+            # Convert string user_id to UUID if needed
+            from uuid import UUID
+            if isinstance(user_id, str):
+                user_id_uuid = UUID(user_id)
+            else:
+                user_id_uuid = user_id
             
             # Get the database records that need sentiment analysis
             with self.db_factory() as db:
                 # If we have unique records from deduplication, filter to just those
-                if hasattr(self, '_unique_records') and self._unique_records:
+                if hasattr(self, '_unique_records') and self._unique_records and not use_existing_data and not skip_collection_only:
                     logger.info(f"Using unique records from deduplication for sentiment analysis")
                     # Query for the records that were just inserted (they won't have sentiment analysis yet)
                     unique_texts = []
@@ -2603,23 +2224,109 @@ class SentimentAnalysisAgent:
                     
                     # Query database for the records that were just inserted
                     records_to_update = db.query(models.SentimentData).filter(
-                        models.SentimentData.user_id == user_id,
+                        models.SentimentData.user_id == user_id_uuid,
                         models.SentimentData.sentiment_label.is_(None),  # Records without sentiment analysis
                         models.SentimentData.text.in_(unique_texts)  # Only the newly inserted records
                     ).all()
+                elif skip_collection_only:
+                    # Process ALL existing records for the user (will call OpenAI for missing embeddings/sentiment)
+                    logger.info(f"Skip collection mode: Processing ALL existing records for user {user_id} (will call OpenAI for missing embeddings/sentiment)")
+                    max_records = self.config_manager.get_int("processing.limits.max_records_per_batch", 5000)
+                    
+                    # Query for ALL records for this user (regardless of whether they have embeddings/sentiment)
+                    records_to_update = db.query(models.SentimentData).filter(
+                        models.SentimentData.user_id == user_id_uuid
+                    ).limit(max_records).all()
+                    
+                    logger.info(f"Found {len(records_to_update)} total records for user {user_id} (will process normally with OpenAI calls)")
+                elif use_existing_data:
+                    # Process ONLY records that have BOTH embedding and sentiment (skip OpenAI entirely)
+                    logger.info(f"Processing records with existing embeddings AND sentiment for user {user_id}")
+                    max_records = self.config_manager.get_int("processing.limits.max_records_per_batch", 5000)
+                    
+                    # Debug: Check total records for this user
+                    total_records = db.query(models.SentimentData).filter(
+                        models.SentimentData.user_id == user_id_uuid
+                    ).count()
+                    logger.info(f"DEBUG: Total records for user {user_id}: {total_records}")
+                    
+                    # Debug: Check records with sentiment
+                    records_with_sentiment = db.query(models.SentimentData).filter(
+                        models.SentimentData.user_id == user_id_uuid,
+                        models.SentimentData.sentiment_label.isnot(None)
+                    ).count()
+                    logger.info(f"DEBUG: Records with sentiment_label: {records_with_sentiment}")
+                    
+                    # Debug: Check records with embeddings
+                    records_with_embeddings = db.query(models.SentimentEmbedding).join(
+                        models.SentimentData,
+                        models.SentimentEmbedding.entry_id == models.SentimentData.entry_id
+                    ).filter(
+                        models.SentimentData.user_id == user_id_uuid,
+                        models.SentimentEmbedding.embedding.isnot(None)
+                    ).count()
+                    logger.info(f"DEBUG: Records with embeddings: {records_with_embeddings}")
+                    
+                    # Debug: Check a sample record to see user_id format
+                    sample = db.query(models.SentimentData).filter(
+                        models.SentimentData.user_id == user_id_uuid
+                    ).first()
+                    if sample:
+                        logger.info(f"DEBUG: Sample record user_id type: {type(sample.user_id)}, value: {sample.user_id}")
+                    else:
+                        logger.warning(f"DEBUG: No records found for user_id_uuid: {user_id_uuid} (type: {type(user_id_uuid)})")
+                        
+                        # Check if records exist with NULL user_id or different user_ids
+                        total_all_records = db.query(models.SentimentData).count()
+                        records_with_null_user = db.query(models.SentimentData).filter(
+                            models.SentimentData.user_id.is_(None)
+                        ).count()
+                        
+                        # Get distinct user_ids
+                        distinct_user_ids = db.query(models.SentimentData.user_id).distinct().limit(10).all()
+                        logger.info(f"DEBUG: Total records in DB: {total_all_records}")
+                        logger.info(f"DEBUG: Records with NULL user_id: {records_with_null_user}")
+                        logger.info(f"DEBUG: Sample user_ids in DB: {[str(uid[0]) if uid[0] else 'NULL' for uid in distinct_user_ids]}")
+                        
+                        # Try querying without user_id filter to see if records exist
+                        if records_with_null_user > 0:
+                            logger.warning(f"DEBUG: Found {records_with_null_user} records with NULL user_id - these might be the records we need!")
+                            # Try querying records with NULL user_id that have both embedding and sentiment
+                            records_null_user = db.query(models.SentimentData).join(
+                                models.SentimentEmbedding,
+                                models.SentimentData.entry_id == models.SentimentEmbedding.entry_id
+                            ).filter(
+                                models.SentimentData.user_id.is_(None),
+                                models.SentimentData.sentiment_label.isnot(None),
+                                models.SentimentEmbedding.embedding.isnot(None)
+                            ).limit(10).all()
+                            logger.info(f"DEBUG: Records with NULL user_id + embedding + sentiment: {len(records_null_user)}")
+                    
+                    # Query for records that have both embedding and sentiment
+                    records_to_update = db.query(models.SentimentData).join(
+                        models.SentimentEmbedding,
+                        models.SentimentData.entry_id == models.SentimentEmbedding.entry_id
+                    ).filter(
+                        models.SentimentData.user_id == user_id_uuid,
+                        models.SentimentData.sentiment_label.isnot(None),
+                        models.SentimentEmbedding.embedding.isnot(None)
+                    ).limit(max_records).all()
+                    
+                    logger.info(f"Found {len(records_to_update)} records with both embedding and sentiment (will skip OpenAI calls)")
                 else:
                     # No deduplication records, query for all unanalyzed records for this user
                     logger.info(f"No deduplication records, querying database for all unanalyzed records")
+                    max_records = self.config_manager.get_int("processing.limits.max_records_per_batch", 500)
                     records_to_update = db.query(models.SentimentData).filter(
                         models.SentimentData.user_id == user_id,
                         models.SentimentData.sentiment_label.is_(None)  # Records without sentiment analysis
-                    ).limit(10000).all()  # Process up to 10k records at a time
+                    ).limit(max_records).all()  # Process up to max_records_per_batch records at a time
                 
                 if not records_to_update:
-                    logger.info(f"No newly inserted records found for sentiment analysis for user {user_id}")
+                    logger.info(f"No records found for sentiment analysis for user {user_id}")
                     return True
                 
-                logger.info(f"Found {len(records_to_update)} newly inserted records for parallel sentiment analysis")
+                logger.info(f"Found {len(records_to_update)} records for parallel sentiment analysis")
                 
                 # Process in parallel batches
                 batch_size = self.sentiment_batch_size
@@ -2633,10 +2340,11 @@ class SentimentAnalysisAgent:
                 
                 actual_sentiment_workers = min(self.max_sentiment_workers, len(batches))
                 logger.info(f"Processing {len(batches)} sentiment batches in parallel with {self.max_sentiment_workers} workers (actual: {actual_sentiment_workers})")
-                auto_schedule_logger.info(f"[PHASE 4: SENTIMENT] Batches: {len(batches)} | Max Workers: {self.max_sentiment_workers} | Actual Workers: {actual_sentiment_workers} | Records: {len(records_to_update)}")
+                mode_str = "Skip Collection" if skip_collection_only else ("Use Existing" if use_existing_data else "Normal")
+                auto_schedule_logger.info(f"[PHASE 4: SENTIMENT] Batches: {len(batches)} | Max Workers: {self.max_sentiment_workers} | Actual Workers: {actual_sentiment_workers} | Records: {len(records_to_update)} | Mode: {mode_str}")
                 
                 # Process batches in parallel
-                batch_results = self._process_sentiment_batches_parallel(batches, user_id)
+                batch_results = self._process_sentiment_batches_parallel(batches, user_id, use_existing_data=use_existing_data, skip_collection_only=skip_collection_only)
                 
                 # Count successful processing
                 processed_count = sum(batch_results.values())
@@ -2649,14 +2357,23 @@ class SentimentAnalysisAgent:
             logger.error(f"Error during parallel sentiment batch update: {e}", exc_info=True)
             return False
     
-    def _process_sentiment_batches_parallel(self, batches: List[List], user_id: str) -> Dict[int, int]:
-        """Process sentiment analysis batches in parallel using ThreadPoolExecutor."""
+    def _process_sentiment_batches_parallel(self, batches: List[List], user_id: str, use_existing_data: bool = False, skip_collection_only: bool = False) -> Dict[int, int]:
+        """
+        Process sentiment analysis batches in parallel using ThreadPoolExecutor.
+        
+        Args:
+            batches: List of record batches to process
+            user_id: User ID
+            use_existing_data: If True, uses existing embeddings and sentiment from database, skipping OpenAI calls when both exist
+            skip_collection_only: If True, processes ALL records normally (with OpenAI calls for missing embeddings/sentiment)
+        """
         results = {}
         
         def process_single_batch(batch_data: tuple) -> int:
             """Process a single batch of records and return count of processed records."""
             batch_idx, batch = batch_data
             processed_in_batch = 0
+            skipped_with_existing = 0
             
             try:
                 logger.info(f"Processing sentiment batch {batch_idx + 1}/{len(batches)} ({len(batch)} records)")
@@ -2667,6 +2384,8 @@ class SentimentAnalysisAgent:
                     records_list = []
                     texts_list = []
                     source_types_list = []
+                    records_needing_analysis = []  # Records that need OpenAI calls
+                    records_with_existing_data = []  # Records with existing embeddings/sentiment
                     
                     for record in batch:
                         # CRITICAL FIX: Merge record into this thread's session
@@ -2674,14 +2393,216 @@ class SentimentAnalysisAgent:
                         records_list.append(record)
                         
                         text_content = record.text or record.content or record.title or record.description
-                        if text_content:
-                            texts_list.append(text_content)
-                            source_types_list.append(record.source_type)
-                        else:
-                            texts_list.append("")  # Empty text placeholder
-                            source_types_list.append(record.source_type)
+                        if not text_content:
+                            continue
+                        
+                        # Check if we should use existing data (skip_collection_only processes normally)
+                        if use_existing_data and not skip_collection_only:
+                            # Check for existing embedding and sentiment
+                            existing_embedding = db.query(models.SentimentEmbedding).filter(
+                                models.SentimentEmbedding.entry_id == record.entry_id
+                            ).first()
+                            
+                            has_sentiment = record.sentiment_label is not None
+                            has_embedding = existing_embedding is not None and existing_embedding.embedding is not None
+                            has_emotion = record.emotion_label is not None
+                            has_topics = False  # Check if topics exist in mention_topics table
+                            try:
+                                from api.models import MentionTopic
+                                topic_count = db.query(MentionTopic).filter(
+                                    MentionTopic.mention_id == record.entry_id
+                                ).count()
+                                has_topics = topic_count > 0
+                            except:
+                                pass
+                            
+                            # When use_existing_data=True, we only process records with BOTH embedding and sentiment
+                            # Skip records that already have everything (emotion + topics)
+                            if has_sentiment and has_embedding and has_emotion and has_topics:
+                                # All fields exist, skip processing entirely
+                                records_with_existing_data.append((record, existing_embedding))
+                                skipped_with_existing += 1
+                                continue
+                            
+                            # Has embedding and sentiment, but missing emotion/topics - process to fill those
+                            # We'll use existing embedding/sentiment and skip OpenAI
+                            if has_sentiment and has_embedding:
+                                # Add to list for processing without OpenAI
+                                records_needing_analysis.append((record, existing_embedding))
+                                continue
+                        
+                        # For skip_collection_only mode: Check if embedding is zero vector and treat as missing
+                        if skip_collection_only:
+                            existing_embedding = db.query(models.SentimentEmbedding).filter(
+                                models.SentimentEmbedding.entry_id == record.entry_id
+                            ).first()
+                            
+                            # Check if embedding exists and is valid (not zero vector)
+                            has_valid_embedding = False
+                            if existing_embedding and existing_embedding.embedding is not None:
+                                try:
+                                    import numpy as np
+                                    embedding_data = None
+                                    if isinstance(existing_embedding.embedding, str):
+                                        embedding_data = json.loads(existing_embedding.embedding)
+                                    else:
+                                        embedding_data = existing_embedding.embedding
+                                    
+                                    if embedding_data and len(embedding_data) == 1536:
+                                        embedding_array = np.array(embedding_data, dtype=np.float64)
+                                        embedding_norm = np.linalg.norm(embedding_array)
+                                        # Consider zero vector as invalid (needs regeneration)
+                                        has_valid_embedding = embedding_norm > 1e-10
+                                        if not has_valid_embedding:
+                                            logger.debug(f"Record {record.entry_id} has zero vector embedding - will regenerate via OpenAI")
+                                except Exception as e:
+                                    logger.debug(f"Error checking embedding for record {record.entry_id}: {e}")
+                            
+                            # If record has valid embedding AND sentiment, we can skip OpenAI for sentiment/embedding
+                            # but still need to process emotion/topics if missing
+                            has_sentiment = record.sentiment_label is not None
+                            has_emotion = record.emotion_label is not None
+                            has_topics = False
+                            try:
+                                from api.models import MentionTopic
+                                topic_count = db.query(MentionTopic).filter(
+                                    MentionTopic.mention_id == record.entry_id
+                                ).count()
+                                has_topics = topic_count > 0
+                            except:
+                                pass
+                            
+                            # If has valid embedding AND sentiment AND emotion AND topics, skip entirely
+                            if has_valid_embedding and has_sentiment and has_emotion and has_topics:
+                                records_with_existing_data.append((record, existing_embedding))
+                                skipped_with_existing += 1
+                                continue
+                            
+                            # If has valid embedding AND sentiment but missing emotion/topics, process locally
+                            if has_valid_embedding and has_sentiment and (not has_emotion or not has_topics):
+                                records_needing_analysis.append((record, existing_embedding))
+                                continue
+                            
+                            # Otherwise, process via OpenAI (missing embedding, zero vector, or missing sentiment)
+                            # This includes records with zero vectors - they will be regenerated
+                        
+                        # If we reach here and use_existing_data=True (and not skip_collection_only), skip this record
+                        # (it doesn't have both embedding and sentiment)
+                        if use_existing_data and not skip_collection_only:
+                            continue
+                        
+                        # Need to call OpenAI for this record (normal mode or skip_collection_only mode)
+                        # This includes records with zero vectors in skip_collection_only mode
+                        texts_list.append(text_content)
+                        source_types_list.append(record.source_type)
+                        records_needing_analysis.append(record)
                     
-                    if texts_list:
+                    # Process records with existing data (all fields already populated - skip entirely)
+                    for record, existing_embedding in records_with_existing_data:
+                        try:
+                            # Record already has all fields populated:
+                            # - sentiment_label, sentiment_score, sentiment_justification
+                            # - emotion_label, emotion_score, emotion_distribution
+                            # - embedding (in sentiment_embeddings table)
+                            # - topics (in mention_topics table)
+                            # - influence_weight, confidence_weight
+                            # No processing needed - just count as processed
+                            processed_in_batch += 1
+                        except Exception as e:
+                            logger.warning(f"Error processing existing data for record {record.entry_id}: {e}")
+                    
+                    # Process records that have embedding/sentiment but need emotion/topics (no OpenAI)
+                    # Only do this if use_existing_data=True AND skip_collection_only=False
+                    if use_existing_data and not skip_collection_only and records_needing_analysis:
+                        # These records have embedding and sentiment, but need emotion/topics filled in
+                        # We'll use existing data and only call emotion detection (HuggingFace) and topic classification
+                        logger.info(f"Processing {len(records_needing_analysis)} records with existing embedding/sentiment (filling emotion/topics without OpenAI)")
+                        
+                        for record_data in records_needing_analysis:
+                            try:
+                                # Handle tuple format (record, embedding) or just record
+                                if isinstance(record_data, tuple):
+                                    record, existing_embedding_obj = record_data
+                                else:
+                                    record = record_data
+                                    existing_embedding_obj = db.query(models.SentimentEmbedding).filter(
+                                        models.SentimentEmbedding.entry_id == record.entry_id
+                                    ).first()
+                                
+                                text_content = record.text or record.content or record.title or record.description
+                                if not text_content:
+                                    continue
+                                
+                                # Get existing embedding
+                                embedding_data = None
+                                if existing_embedding_obj and existing_embedding_obj.embedding:
+                                    if isinstance(existing_embedding_obj.embedding, str):
+                                        embedding_data = json.loads(existing_embedding_obj.embedding)
+                                    else:
+                                        embedding_data = existing_embedding_obj.embedding
+                                
+                                # Validate embedding - check if it's a zero vector
+                                if embedding_data:
+                                    import numpy as np
+                                    embedding_array = np.array(embedding_data, dtype=np.float64)
+                                    embedding_norm = np.linalg.norm(embedding_array)
+                                    if embedding_norm == 0 or embedding_norm < 1e-10:
+                                        logger.debug(f"Record {record.entry_id} has zero vector embedding, skipping embedding-based topic classification")
+                                        embedding_data = None  # Skip embedding-based classification for zero vectors
+                                    elif len(embedding_data) != 1536:
+                                        logger.debug(f"Record {record.entry_id} has invalid embedding length {len(embedding_data)}, expected 1536")
+                                        embedding_data = None
+                                
+                                # Use existing sentiment (already in record - don't overwrite)
+                                # sentiment_label, sentiment_score, sentiment_justification already set
+                                
+                                # Only fill in missing fields: emotion and topics
+                                # Emotion detection uses HuggingFace (no OpenAI)
+                                from src.processing.emotion_analyzer import EmotionAnalyzer
+                                emotion_analyzer = EmotionAnalyzer()
+                                emotion_result = emotion_analyzer.analyze_emotion(text_content)
+                                
+                                # Update emotion fields if missing
+                                if not record.emotion_label:
+                                    record.emotion_label = emotion_result.get('emotion_label', 'neutral')
+                                if record.emotion_score is None:
+                                    record.emotion_score = emotion_result.get('emotion_score', 0.5)
+                                if not record.emotion_distribution and emotion_result.get('emotion_distribution'):
+                                    record.emotion_distribution = json.dumps(emotion_result['emotion_distribution'])
+                                
+                                # Topic classification (uses embedding if available and valid, no OpenAI)
+                                # If embedding is zero vector or invalid, topic classifier will use text-only mode
+                                topic_result = self.data_processor.topic_classifier.classify(
+                                    text_content, 
+                                    embedding_data if embedding_data and len(embedding_data) == 1536 else None
+                                )
+                                
+                                # Store topics in mention_topics table
+                                if topic_result:
+                                    try:
+                                        self.data_processor._store_topics_in_database(
+                                            db, 
+                                            record.entry_id, 
+                                            topic_result
+                                        )
+                                    except Exception as e:
+                                        logger.warning(f"Failed to store topics for record {record.entry_id}: {e}")
+                                
+                                # Set default weights if missing
+                                if record.influence_weight is None:
+                                    record.influence_weight = 1.0
+                                if record.confidence_weight is None:
+                                    record.confidence_weight = 0.5
+                                
+                                processed_in_batch += 1
+                                
+                            except Exception as e:
+                                logger.error(f"Error processing record with existing data: {e}")
+                                continue
+                    
+                    # Process records that need OpenAI analysis (normal mode or skip_collection_only mode)
+                    # Skip if use_existing_data=True (which processes records locally without OpenAI)
+                    if texts_list and (skip_collection_only or not use_existing_data):
                         # Batch process all texts at once
                         try:
                             analysis_results = self.data_processor.batch_get_sentiment(
@@ -2691,9 +2612,17 @@ class SentimentAnalysisAgent:
                             )
                             
                             # Update all records with batch results
-                            for i, record in enumerate(records_list):
+                            # Note: In use_existing_data mode, records_needing_analysis contains tuples (record, embedding)
+                            # In normal mode, it contains just records
+                            for i, record_data in enumerate(records_needing_analysis):
                                 if i < len(analysis_results):
                                     try:
+                                        # Handle tuple format (record, embedding) or just record
+                                        if isinstance(record_data, tuple):
+                                            record = record_data[0]  # Skip - already processed above
+                                            continue
+                                        
+                                        record = record_data
                                         analysis_result = analysis_results[i]
                                         
                                         # Update record with presidential sentiment analysis
@@ -2701,12 +2630,34 @@ class SentimentAnalysisAgent:
                                         record.sentiment_score = analysis_result['sentiment_score']
                                         record.sentiment_justification = analysis_result['sentiment_justification']
                                         
+                                        # Week 3: Store emotion detection results
+                                        record.emotion_label = analysis_result.get('emotion_label')
+                                        record.emotion_score = analysis_result.get('emotion_score')
+                                        if analysis_result.get('emotion_distribution'):
+                                            record.emotion_distribution = json.dumps(analysis_result['emotion_distribution'])
+                                        
+                                        # Week 3: Store weight calculations
+                                        record.influence_weight = analysis_result.get('influence_weight', 1.0)
+                                        record.confidence_weight = analysis_result.get('confidence_weight')
+                                        
                                         # Update record with governance classification (two-phase: ministry + issue)
                                         record.issue_label = analysis_result.get('issue_label')
                                         record.issue_slug = analysis_result.get('issue_slug')
                                         record.issue_confidence = analysis_result.get('issue_confidence')
                                         record.issue_keywords = json.dumps(analysis_result.get('issue_keywords', []))
                                         record.ministry_hint = analysis_result.get('ministry_hint')
+                                        
+                                        # Week 2: Store topics in mention_topics table
+                                        topics = analysis_result.get('topics', [])
+                                        if topics:
+                                            try:
+                                                self.data_processor._store_topics_in_database(
+                                                    db, 
+                                                    record.entry_id, 
+                                                    topics
+                                                )
+                                            except Exception as e:
+                                                logger.warning(f"Failed to store topics for record {record.entry_id}: {e}")
                                         
                                         # Store embedding in separate table
                                         embedding_data = analysis_result.get('embedding', [])
@@ -2749,11 +2700,35 @@ class SentimentAnalysisAgent:
                                         record.sentiment_label = analysis_result['sentiment_label']
                                         record.sentiment_score = analysis_result['sentiment_score']
                                         record.sentiment_justification = analysis_result['sentiment_justification']
+                                        
+                                        # Week 3: Store emotion detection results (fallback path)
+                                        record.emotion_label = analysis_result.get('emotion_label')
+                                        record.emotion_score = analysis_result.get('emotion_score')
+                                        if analysis_result.get('emotion_distribution'):
+                                            record.emotion_distribution = json.dumps(analysis_result['emotion_distribution'])
+                                        
+                                        # Week 3: Store weight calculations (fallback path)
+                                        record.influence_weight = analysis_result.get('influence_weight', 1.0)
+                                        record.confidence_weight = analysis_result.get('confidence_weight')
+                                        
                                         record.issue_label = analysis_result.get('issue_label')
                                         record.issue_slug = analysis_result.get('issue_slug')
                                         record.issue_confidence = analysis_result.get('issue_confidence')
                                         record.issue_keywords = json.dumps(analysis_result.get('issue_keywords', []))
                                         record.ministry_hint = analysis_result.get('ministry_hint')
+                                        
+                                        # Week 2: Store topics in mention_topics table (fallback path)
+                                        topics = analysis_result.get('topics', [])
+                                        if topics:
+                                            try:
+                                                self.data_processor._store_topics_in_database(
+                                                    db, 
+                                                    record.entry_id, 
+                                                    topics
+                                                )
+                                            except Exception as e:
+                                                logger.warning(f"Failed to store topics for record {record.entry_id}: {e}")
+                                        
                                         processed_in_batch += 1
                                 except Exception as e2:
                                     logger.error(f"Error in fallback processing for record {record.entry_id}: {e2}")
@@ -2761,7 +2736,10 @@ class SentimentAnalysisAgent:
                     
                     # Commit changes for this batch
                     db.commit()
-                    logger.info(f"✅ Committed sentiment batch {batch_idx + 1}/{len(batches)} ({processed_in_batch} records)")
+                    if use_existing_data and skipped_with_existing > 0:
+                        logger.info(f"✅ Committed sentiment batch {batch_idx + 1}/{len(batches)} ({processed_in_batch} records processed, {skipped_with_existing} skipped with existing data)")
+                    else:
+                        logger.info(f"✅ Committed sentiment batch {batch_idx + 1}/{len(batches)} ({processed_in_batch} records)")
                 
             except Exception as e:
                 logger.error(f"Error processing sentiment batch {batch_idx + 1}: {e}")
@@ -2819,13 +2797,14 @@ class SentimentAnalysisAgent:
                 else:
                     # No deduplication records, query for all unanalyzed records for this user
                     logger.info(f"No deduplication records, querying database for all records needing location updates")
+                    max_records = self.config_manager.get_int("processing.limits.max_records_per_batch", 500)
                     records_needing_location = db.query(models.SentimentData).filter(
                         models.SentimentData.user_id == user_id,
                         or_(
                             models.SentimentData.location_label.is_(None),
                             models.SentimentData.location_confidence < 0.7
                         )
-                    ).limit(10000).all()  # Process up to 10k records at a time
+                    ).limit(max_records).all()  # Process up to max_records_per_batch records at a time
                 
                 if not records_needing_location:
                     logger.info(f"No newly inserted records need location updates for user {user_id}")
@@ -2860,6 +2839,50 @@ class SentimentAnalysisAgent:
             logger.error(f"Error during parallel location batch update: {e}", exc_info=True)
             return False
     
+    def _run_issue_detection(self, user_id: str, recalculate_existing: bool = False) -> bool:
+        """
+        Run issue detection for all topics (Phase 6).
+        
+        This method detects issues by clustering mentions that have been classified with topics.
+        Issues are created in the topic_issues table and linked to mentions via issue_mentions.
+        
+        Args:
+            user_id: User ID for logging purposes
+            recalculate_existing: If True, also recalculates metrics for all existing issues
+            
+        Returns:
+            bool: True if issue detection completed successfully, False otherwise
+        """
+        try:
+            logger.info(f"Starting issue detection for user {user_id}...")
+            
+            # Detect issues for all topics
+            # This will process all mentions that have topics assigned and cluster them into issues
+            all_issues = self.data_processor.detect_issues_for_all_topics()
+            
+            # Count total issues created/updated
+            total_issues = sum(len(issues) for issues in all_issues.values())
+            
+            logger.info(f"Issue detection completed for user {user_id}: {total_issues} issues detected across {len(all_issues)} topics")
+            
+            # Log summary per topic
+            for topic_key, issues in all_issues.items():
+                if issues:
+                    logger.debug(f"Topic {topic_key}: {len(issues)} issues detected")
+            
+            # Recalculate all existing issues if requested (for processing existing data)
+            if recalculate_existing:
+                logger.info(f"Recalculating metrics for all existing issues...")
+                if self.data_processor.issue_detection_engine:
+                    recalculated_count = self.data_processor.issue_detection_engine.recalculate_all_issues()
+                    logger.info(f"Recalculated metrics for {recalculated_count} existing issues")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error during issue detection for user {user_id}: {e}", exc_info=True)
+            return False
+
     def _process_location_batches_parallel(self, batches: List[List], user_id: str) -> Dict[int, int]:
         """Process location classification batches in parallel using ThreadPoolExecutor."""
         results = {}

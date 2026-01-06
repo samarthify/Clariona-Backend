@@ -10,6 +10,7 @@ from pathlib import Path
 import inspect
 
 from src.utils.collection_tracker import get_collection_tracker
+from src.config.config_manager import ConfigManager
 
 logger = logging.getLogger(__name__)
 
@@ -22,55 +23,28 @@ class IncrementalCollector:
     
     def __init__(self):
         self.tracker = get_collection_tracker()
+        self.config = ConfigManager()
         
-        # Default settings per source type
-        self.source_config = {
-            'twitter': {
-                'default_lookback_days': 3,   # Twitter: 3 days default
-                'max_lookback_days': 14,       # Twitter: Max 2 weeks
-                'overlap_hours': 2,            # 2-hour overlap for safety
-            },
-            'news': {
-                'default_lookback_days': 7,   # News: 7 days default
-                'max_lookback_days': 30,       # News: Max 1 month
-                'overlap_hours': 6,            # 6-hour overlap for news
-            },
-            'facebook': {
-                'default_lookback_days': 3,   # Facebook: 3 days default
-                'max_lookback_days': 14,       # Facebook: Max 2 weeks
-                'overlap_hours': 2,
-            },
-            'instagram': {
-                'default_lookback_days': 3,   # Instagram: 3 days default
-                'max_lookback_days': 14,       # Instagram: Max 2 weeks
-                'overlap_hours': 2,
-            },
-            'tiktok': {
-                'default_lookback_days': 3,   # TikTok: 3 days default
-                'max_lookback_days': 14,       # TikTok: Max 2 weeks
-                'overlap_hours': 2,
-            },
-            'reddit': {
-                'default_lookback_days': 3,   # Reddit: 3 days default
-                'max_lookback_days': 14,       # Reddit: Max 2 weeks
-                'overlap_hours': 2,
-            },
-            'radio': {
-                'default_lookback_days': 7,   # Radio: 7 days default
-                'max_lookback_days': 30,       # Radio: Max 1 month
-                'overlap_hours': 6,
-            },
-            'youtube': {
-                'default_lookback_days': 7,   # YouTube: 7 days default
-                'max_lookback_days': 30,       # YouTube: Max 1 month
-                'overlap_hours': 6,
-            },
-            'rss': {
-                'default_lookback_days': 7,   # RSS: 7 days default
-                'max_lookback_days': 30,       # RSS: Max 1 month
-                'overlap_hours': 6,
+        # Load settings from ConfigManager (with hardcoded defaults as fallback)
+        # Default settings per source type - loaded from config
+        self.source_config = {}
+        sources = ['twitter', 'news', 'facebook', 'instagram', 'tiktok', 'reddit', 'radio', 'youtube', 'rss']
+        
+        for source in sources:
+            self.source_config[source] = {
+                'default_lookback_days': self.config.get_int(
+                    f"collectors.incremental.{source}.default_lookback_days",
+                    self.config.get_int("collectors.incremental.default.default_lookback_days", 7)
+                ),
+                'max_lookback_days': self.config.get_int(
+                    f"collectors.incremental.{source}.max_lookback_days",
+                    self.config.get_int("collectors.incremental.default.max_lookback_days", 30)
+                ),
+                'overlap_hours': self.config.get_int(
+                    f"collectors.incremental.{source}.overlap_hours",
+                    self.config.get_int("collectors.incremental.default.overlap_hours", 2)
+                ),
             }
-        }
     
     def get_date_range(self, user_id: str, source: str) -> Dict[str, str]:
         """
@@ -83,10 +57,11 @@ class IncrementalCollector:
         Returns:
             Dictionary with date range parameters
         """
+        # Get config for source, or use default from ConfigManager
         config = self.source_config.get(source, {
-            'default_lookback_days': 7,
-            'max_lookback_days': 30,
-            'overlap_hours': 2
+            'default_lookback_days': self.config.get_int("collectors.incremental.default.default_lookback_days", 7),
+            'max_lookback_days': self.config.get_int("collectors.incremental.default.max_lookback_days", 30),
+            'overlap_hours': self.config.get_int("collectors.incremental.default.overlap_hours", 2)
         })
         
         date_range = self.tracker.get_incremental_date_range(
@@ -147,7 +122,7 @@ class IncrementalCollector:
                 )
                 logger.info(f"✅ Twitter collection complete: {records_count} records")
             
-            return records_count
+            return records_count  # type: ignore[no-any-return]
             
         except Exception as e:
             logger.error(f"❌ Twitter incremental collection failed: {e}", exc_info=True)
@@ -203,7 +178,7 @@ class IncrementalCollector:
                 )
                 logger.info(f"✅ News collection complete: {records_count} records")
             
-            return records_count
+            return records_count  # type: ignore[no-any-return]
             
         except Exception as e:
             logger.error(f"❌ News incremental collection failed: {e}", exc_info=True)
@@ -233,7 +208,7 @@ class IncrementalCollector:
                 self.tracker.update_collection_time(user_id, 'facebook', datetime.utcnow(), records_count, 'success')
                 logger.info(f"✅ Facebook collection complete: {records_count} records")
             
-            return records_count
+            return records_count  # type: ignore[no-any-return]
         except Exception as e:
             logger.error(f"❌ Facebook collection failed: {e}", exc_info=True)
             self.tracker.update_collection_time(user_id, 'facebook', datetime.utcnow(), 0, 'failed')
@@ -255,7 +230,7 @@ class IncrementalCollector:
                 self.tracker.update_collection_time(user_id, 'instagram', datetime.utcnow(), records_count, 'success')
                 logger.info(f"✅ Instagram collection complete: {records_count} records")
             
-            return records_count
+            return records_count  # type: ignore[no-any-return]
         except Exception as e:
             logger.error(f"❌ Instagram collection failed: {e}", exc_info=True)
             self.tracker.update_collection_time(user_id, 'instagram', datetime.utcnow(), 0, 'failed')

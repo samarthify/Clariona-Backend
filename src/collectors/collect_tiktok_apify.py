@@ -123,7 +123,7 @@ def determine_country_from_username(username: str) -> str:
             country = "india"
     return country
 
-def collect_tiktok_apify(queries: List[str], output_file=None, max_results=100, search_type="hashtag", 
+def collect_tiktok_apify(queries: List[str], output_file=None, max_results=None, search_type="hashtag", 
                         include_comments=True, include_shares=True, download_subtitles=True, **kwargs):
     """
     Collect TikTok data using multiple Apify Actors for the given queries.
@@ -139,6 +139,44 @@ def collect_tiktok_apify(queries: List[str], output_file=None, max_results=100, 
         since_date: Optional start date in format "YYYY-MM-DD_HH:MM:SS_UTC" or ISO format (for filtering)
         until_date: Optional end date in format "YYYY-MM-DD_HH:MM:SS_UTC" or ISO format (for filtering)
     """
+    # Get default max_results from ConfigManager if not provided
+    if max_results is None:
+        from src.config.config_manager import ConfigManager
+        config = ConfigManager()
+        max_results = config.get_int("collectors.tiktok.default_max_results", 100)
+    
+    # Get keywords from ConfigManager (enables DB editing)
+    # Priority: 1) ConfigManager default, 2) queries parameter, 3) hardcoded defaults
+    from src.config.config_manager import ConfigManager
+    config = ConfigManager()
+    
+    # Try to get target name from queries if available (for target-specific keywords)
+    target_name = None
+    if queries and len(queries) > 0:
+        # First element might be target name
+        target_name = queries[0].lower().replace(" ", "_") if queries else None
+    
+    # Priority 1: Target-specific keywords from ConfigManager (if target name available)
+    if target_name:
+        target_key = f"collectors.keywords.{target_name}.tiktok"
+        target_keywords = config.get_list(target_key, None)
+        if target_keywords:
+            print(f"[TikTok Apify] Using target-specific keywords from ConfigManager: {target_keywords}")
+            queries = target_keywords
+    
+    # Priority 2: Default keywords from ConfigManager (enables DB editing)
+    if not queries:
+        default_keywords = config.get_list("collectors.keywords.default.tiktok", None)
+        if default_keywords:
+            print(f"[TikTok Apify] Using default keywords from ConfigManager: {default_keywords}")
+            queries = default_keywords
+    
+    # Priority 3: Use queries parameter as-is (if provided)
+    # Priority 4: Hardcoded fallback (last resort)
+    if not queries:
+        print("[TikTok Apify] Using hardcoded default keywords - consider configuring in ConfigManager/DB")
+        queries = ["nigeria", "tinubu", "lagos", "qatar", "doha"]
+    
     # Extract date parameters for post-collection filtering
     since_date = kwargs.get('since_date')
     until_date = kwargs.get('until_date')
@@ -195,8 +233,10 @@ def collect_tiktok_apify(queries: List[str], output_file=None, max_results=100, 
     
     # Ensure output directory exists
     if output_file is None:
+        from src.config.path_manager import PathManager
+        path_manager = PathManager()
         today = datetime.now().strftime("%Y%m%d")
-        output_file = str(Path(__file__).parent.parent.parent / "data" / "raw" / f"tiktok_apify_data_{today}.csv")
+        output_file = str(path_manager.data_raw / f"tiktok_apify_data_{today}.csv")
     
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     
@@ -242,9 +282,11 @@ def collect_tiktok_apify(queries: List[str], output_file=None, max_results=100, 
                         # Format: Must be date string (YYYY-MM-DD) OR number with unit (e.g., "1 day", "2 days", "1 week")
                         # Regex pattern: ^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])(T[0-2]\d:[0-5]\d(:[0-5]\d)?(\.\d+)?Z?)?$|^(\d+)\s*(minute|hour|day|week|month|year)s?$
                         
-                        # Use "1 day" format (not just "1") to match the required pattern
-                        # This means: scrape videos from the last 1 day (today)
-                        run_input["oldestPostDateUnified"] = "1 day"
+                        # Use configured default date range from ConfigManager
+                        from src.config.config_manager import ConfigManager
+                        config = ConfigManager()
+                        default_oldest_post_date = config.get("collectors.apify.tiktok.default_oldest_post_date", "1 day")
+                        run_input["oldestPostDateUnified"] = default_oldest_post_date
                         
                         if until_datetime:
                             # newestPostDate: scrape videos published before this date
@@ -280,7 +322,10 @@ def collect_tiktok_apify(queries: List[str], output_file=None, max_results=100, 
                     )
                     runs_to_process.append({"run": run, "query": query, "actor_type": actor_type})
                     print(f"[TikTok Apify - {actor_name}] Run initiated for query '{query}'. Dataset ID: {run['defaultDatasetId']}")
-                    time.sleep(3)  # Delay between runs
+                    from src.config.config_manager import ConfigManager
+                    config = ConfigManager()
+                    delay = config.get_int("collectors.tiktok.delay_between_runs_seconds", 3)
+                    time.sleep(delay)  # Delay between runs
 
                 except Exception as actor_error:
                     if "timeout" in str(actor_error).lower():
@@ -389,7 +434,10 @@ def collect_tiktok_apify(queries: List[str], output_file=None, max_results=100, 
 
         print(f"--- [TikTok Apify - {actor_name}] Finished collection. Collected {actor_collected_count} items. ---")
         total_collected_count += actor_collected_count
-        time.sleep(5)  # Delay between actors
+        from src.config.config_manager import ConfigManager
+        config = ConfigManager()
+        delay = config.get_int("collectors.tiktok.delay_between_actors_seconds", 5)
+        time.sleep(delay)  # Delay between actors
     
     # --- Save Collected Data --- 
     if all_data:
@@ -435,7 +483,10 @@ def _download_subtitle_content(subtitle_url: str) -> str:
         return ""
     
     try:
-        response = requests.get(subtitle_url, timeout=10)
+        from src.config.config_manager import ConfigManager
+        config = ConfigManager()
+        subtitle_timeout = config.get_int("collectors.tiktok.subtitle_timeout_seconds", 10)
+        response = requests.get(subtitle_url, timeout=subtitle_timeout)
         response.raise_for_status()
         
         # Parse WebVTT format
@@ -575,7 +626,7 @@ def _extract_tiktok_data(item: Dict, query: str, actor_id: str, actor_type: str,
         best_subtitle = english_asr or english_mt or any_subtitle
         
         if best_subtitle:
-            subtitle_url = best_subtitle.get("downloadLink", best_subtitle.get("tiktokLink", ""))
+            subtitle_url: Optional[str] = best_subtitle.get("downloadLink") or best_subtitle.get("tiktokLink") or ""
             subtitle_language = best_subtitle.get("language", "")
             subtitle_source = best_subtitle.get("source", "")
             
@@ -620,7 +671,7 @@ def _extract_tiktok_data(item: Dict, query: str, actor_id: str, actor_type: str,
         traceback.print_exc()
         return None
 
-def main(target_and_variations: List[str], user_id: str = None):
+def main(target_and_variations: List[str], user_id: Optional[str] = None):
     """Main function called by run_collectors. Accepts target/variations list."""
     if not target_and_variations:
         print("[TikTok Apify] Error: No target/query variations provided.")
@@ -631,9 +682,11 @@ def main(target_and_variations: List[str], user_id: str = None):
     print(f"[TikTok Apify] Received Target: {target_name}, Queries: {queries}")
     
     # Construct output file name
+    from src.config.path_manager import PathManager
+    path_manager = PathManager()
     today = datetime.now().strftime("%Y%m%d")
     safe_target_name = target_name.replace(" ", "_").lower()
-    output_path = Path(__file__).parent.parent.parent / "data" / "raw" / f"tiktok_apify_{safe_target_name}_{today}.csv"
+    output_path = path_manager.data_raw / f"tiktok_apify_{safe_target_name}_{today}.csv"
     
     # Call the collection function with the queries
     collect_tiktok_apify(queries=queries, output_file=str(output_path))

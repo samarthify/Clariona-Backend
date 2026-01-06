@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from pathlib import Path
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import time
 from urllib.parse import quote
 import re
@@ -25,6 +25,9 @@ import json
 from .rss_feed_health_monitor import RSSFeedHealthMonitor
 from .rss_feed_validator import RSSFeedValidator
 from .rss_ssl_handler import RSSSSLHandler
+from src.api.database import SessionLocal
+from src.services.data_ingestor import DataIngestor
+
 
 # Suppress SSL warnings for cleaner output
 warnings.filterwarnings('ignore', message='Unverified HTTPS request')
@@ -35,15 +38,23 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class NigerianQatarIndianRSSCollector:
-    def __init__(self, custom_queries=None):
-        self.base_path = Path(__file__).parent.parent.parent
+    def __init__(self, custom_queries=None, user_id: Optional[str] = None):
+        self.user_id = user_id
+        self.session_db = SessionLocal()
+        self.ingestor = DataIngestor(self.session_db, user_id=user_id)
+
+        from src.config.path_manager import PathManager
+        from src.config.config_manager import ConfigManager
+        self.path_manager = PathManager()
+        self.base_path = self.path_manager.base_path
+        self.config = ConfigManager()
         
         # Use provided queries or fall back to predefined query variations as keywords for filtering
         self.custom_queries = custom_queries or []
         
-        # Timeout settings
-        self.feed_timeout = 30  # Increased timeout for slower servers
-        self.max_retries = 3    # Increased retries
+        # Timeout settings from ConfigManager
+        self.feed_timeout = self.config.get_int("collectors.rss.feed_timeout_seconds", 30)
+        self.max_retries = self.config.get_int("collectors.rss.max_retries", 3)
         
         # Initialize new components
         self.health_monitor = RSSFeedHealthMonitor()
@@ -177,7 +188,7 @@ class NigerianQatarIndianRSSCollector:
         """Get list of healthy feeds using health monitoring with caching."""
         try:
             # Check if we have cached healthy feeds and they're recent
-            cache_file = self.base_path / "data" / "healthy_feeds_cache.json"
+            cache_file = self.path_manager.data_raw.parent / "healthy_feeds_cache.json"
             cache_valid = False
             cached_feeds = []
             
@@ -264,7 +275,7 @@ class NigerianQatarIndianRSSCollector:
             
         return False
 
-    def _clean_xml(self, xml_content: str) -> str:
+    def _clean_xml(self, xml_content: str) -> Optional[str]:
         """Clean problematic XML content"""
         if not xml_content:
             return None
@@ -471,6 +482,19 @@ class NigerianQatarIndianRSSCollector:
         else:
             return 'International'
 
+    def _ingest_batch(self, articles: List[Dict[str, Any]]) -> None:
+        """Helper to ingest a batch of articles into the database"""
+        if not articles:
+            return
+        try:
+            for article in articles:
+                self.ingestor.insert_record(article, commit=False)
+            self.ingestor.session.commit()
+            logger.info(f"Streamed {len(articles)} articles to DB")
+        except Exception as e:
+            logger.error(f"Error streaming batch to DB: {e}")
+
+
     def collect_from_feeds(self, query: str) -> List[Dict[Any, Any]]:
         """Collect news from healthy RSS feeds for a given query"""
         all_articles = []
@@ -480,8 +504,8 @@ class NigerianQatarIndianRSSCollector:
         
         logger.info(f"Collecting from {len(healthy_feeds)} healthy feeds for query: {query}")
         
-        # Add overall timeout for the entire collection process (10 minutes)
-        overall_timeout = 600  # 10 minutes
+        # Add overall timeout for the entire collection process from ConfigManager
+        overall_timeout = self.config.get_int("collectors.rss.overall_timeout_seconds", 600)
         start_time = time.time()
         
         for i, feed_url in enumerate(healthy_feeds):
@@ -500,8 +524,11 @@ class NigerianQatarIndianRSSCollector:
                 with ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(self._parse_feed, feed_url, query)
                     try:
-                        articles = future.result(timeout=self.feed_timeout + 5)  # Extra 5s buffer
+                        buffer_seconds = self.config.get_int("collectors.rss.feed_buffer_seconds", 5)
+                        articles = future.result(timeout=self.feed_timeout + buffer_seconds)
                         all_articles.extend(articles)
+                        self._ingest_batch(articles)
+
                         
                         # Record successful collection in health monitor
                         self.health_monitor.validate_feed(feed_url)
@@ -511,8 +538,9 @@ class NigerianQatarIndianRSSCollector:
                         self.failed_sources.add(feed_url)
                         continue
                 
-                # Be nice to the servers
-                time.sleep(1)
+                # Be nice to the servers - delay from ConfigManager
+                delay = self.config.get_int("collectors.rss.delay_between_feeds_seconds", 1)
+                time.sleep(delay)
             except Exception as e:
                 logger.error(f"Error collecting from {feed_url}: {str(e)}")
                 # Record failure in health monitor
@@ -593,14 +621,24 @@ class NigerianQatarIndianRSSCollector:
         if queries:
             search_queries.extend(queries)
         
-        # If no queries are available, use a default set of relevant keywords
+        # If no queries are available, use keywords from ConfigManager (enables DB editing)
         if not search_queries:
-            # Default keywords for Nigerian, Qatar, and Indian news
-            search_queries = [
-                "nigeria", "qatar", "india", "africa", "middle east", "gulf", 
-                "arab", "nigerian", "qatari", "indian", "politics", "business", 
-                "economy", "oil", "gas", "energy", "trade", "diplomacy"
-            ]
+            from src.config.config_manager import ConfigManager
+            config = ConfigManager()
+            
+            # Priority 1: Default keywords from ConfigManager (enables DB editing)
+            default_keywords = config.get_list("collectors.keywords.default.rss_nigerian_qatar_indian", None)
+            if default_keywords:
+                logger.info(f"Using default keywords from ConfigManager: {default_keywords}")
+                search_queries = default_keywords
+            else:
+                # Priority 2: Legacy key (backward compatibility)
+                search_queries = config.get_list("collectors.default_keywords.rss_nigerian_qatar_indian", [
+                    "nigeria", "qatar", "india", "africa", "middle east", "gulf", 
+                    "arab", "nigerian", "qatari", "indian", "politics", "business", 
+                    "economy", "oil", "gas", "energy", "trade", "diplomacy"
+                ])
+                logger.warning("Using legacy default_keywords - consider migrating to collectors.keywords.default.rss_nigerian_qatar_indian")
         
         # Remove duplicates while preserving order
         search_queries = list(dict.fromkeys(search_queries))
@@ -624,7 +662,7 @@ class NigerianQatarIndianRSSCollector:
             if output_file is None:
                 # Use target name in filename if provided
                 filename_prefix = f"nigerian_qatar_indian_rss_{target_name.replace(' ', '_').lower()}" if target_name else "nigerian_qatar_indian_rss"
-                output_file = self.base_path / 'data' / 'raw' / f"{filename_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+                output_file = self.path_manager.data_raw / f"{filename_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
             
             output_file = Path(output_file)
             output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -641,7 +679,7 @@ class NigerianQatarIndianRSSCollector:
         else:
             logger.warning("No articles found for any query")
 
-def main(target_and_variations: List[str] = None, user_id: str = None):
+def main(target_and_variations: Optional[List[str]] = None, user_id: Optional[str] = None):
     """
     Main function called by run_collectors. Accepts target/variations list.
     
@@ -658,12 +696,15 @@ def main(target_and_variations: List[str] = None, user_id: str = None):
     print(f"[Nigerian Qatar Indian RSS Collector] Received Target: {target_name}, Queries: {queries}")
     
     # Construct output file name
+    from src.config.path_manager import PathManager
+    path_manager = PathManager()
     today = datetime.now().strftime("%Y%m%d")
     safe_target_name = target_name.replace(" ", "_").lower()
-    output_path = Path(__file__).parent.parent.parent / "data" / "raw" / f"nigerian_qatar_indian_rss_{safe_target_name}_{today}.csv"
+    output_path = path_manager.data_raw / f"nigerian_qatar_indian_rss_{safe_target_name}_{today}.csv"
     
     # Initialize collector with the provided queries
-    collector = NigerianQatarIndianRSSCollector(custom_queries=queries)
+    collector = NigerianQatarIndianRSSCollector(custom_queries=queries, user_id=user_id)
+
     
     # Collect data using the provided queries
     collector.collect_all(queries=queries, output_file=output_path, target_name=target_name)
@@ -684,7 +725,11 @@ if __name__ == "__main__":
             # Parse the JSON string to get the list of queries
             queries_list = json.loads(args.queries)
             print(f"[Nigerian Qatar Indian RSS Collector] Parsed queries: {queries_list}")
-            main(queries_list)
+            
+            # Get user_id from environment if running via CLI
+            user_id = os.getenv('COLLECTOR_USER_ID')
+            main(queries_list, user_id=user_id)
+
         except json.JSONDecodeError as e:
             print(f"[Nigerian Qatar Indian RSS Collector] Error parsing queries JSON: {e}")
             main([])

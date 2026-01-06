@@ -39,6 +39,15 @@ class RSSSSLHandler:
         # Track SSL issues per domain
         self.ssl_issues = {}
         
+        # Load timeout from ConfigManager
+        try:
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            self.ssl_timeout = config.get_int("collectors.rss_validator.timeout_seconds", 10)
+        except Exception as e:
+            logger.warning(f"Could not load ConfigManager for SSL timeout, using default 10s: {e}")
+            self.ssl_timeout = 10
+        
         # Default headers
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -217,7 +226,7 @@ class RSSSSLHandler:
             
             for strategy_name, context in self.ssl_strategies.items():
                 try:
-                    with socket.create_connection((hostname, port), timeout=10) as sock:
+                    with socket.create_connection((hostname, port), timeout=self.ssl_timeout) as sock:
                         if parsed.scheme == 'https':
                             with context.wrap_socket(sock, server_hostname=hostname) as ssock:
                                 results[strategy_name] = {

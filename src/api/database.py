@@ -6,7 +6,14 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 # Load environment variables from .env file located in config directory (if exists)
-env_path = Path(__file__).parent.parent.parent / 'config' / '.env'
+try:
+    from src.config.path_manager import PathManager
+    path_manager = PathManager()
+    env_path = path_manager.config_dir / '.env'
+except Exception:
+    # Fallback if PathManager not available
+    env_path = Path(__file__).parent.parent.parent / 'config' / '.env'
+
 if env_path.exists():
     load_dotenv(dotenv_path=env_path)
 
@@ -19,6 +26,22 @@ if not DATABASE_URL:
     # Default to local SQLite for Railway
     DATABASE_URL = "sqlite:///./sentiment_analysis_local.db"
 
+# Load ConfigManager for database pool settings
+try:
+    from src.config.config_manager import ConfigManager
+    config_manager = ConfigManager()
+    pool_size = config_manager.get_int("database.pool_size", 30)
+    max_overflow = config_manager.get_int("database.max_overflow", 20)
+    pool_recycle = config_manager.get_int("database.pool_recycle_seconds", 3600)
+    pool_timeout = config_manager.get_int("database.pool_timeout_seconds", 60)
+except Exception as e:
+    # Fallback to defaults if ConfigManager not available
+    print(f"Warning: Could not load ConfigManager, using default database pool settings: {e}")
+    pool_size = 30
+    max_overflow = 20
+    pool_recycle = 3600
+    pool_timeout = 60
+
 # Configure the engine with optimized connection pool for 32 vCPU instance
 # Total workers: 12 (collectors) + 18 (sentiment) + 10 (location) = 40 workers max
 # Pool size should accommodate this + overhead for API requests
@@ -26,10 +49,10 @@ try:
     engine = create_engine(
         DATABASE_URL,
         pool_pre_ping=True,      # Check connections before use
-        pool_recycle=3600,       # Recycle connections every hour
-        pool_size=30,            # Base connection pool (accommodates most workers)
-        max_overflow=20,         # Extra connections for peak load (total 50 max)
-        pool_timeout=60,         # Wait up to 60s for connection
+        pool_recycle=pool_recycle,       # Recycle connections (configurable)
+        pool_size=pool_size,            # Base connection pool (configurable)
+        max_overflow=max_overflow,         # Extra connections for peak load (configurable)
+        pool_timeout=pool_timeout,         # Wait for connection (configurable)
         echo=False               # Disable SQL echo for performance
     )
 except Exception as e:

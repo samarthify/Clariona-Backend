@@ -1,0 +1,48 @@
+Slug,Label,Topic,State,Mentions,Priority,Start Time,Last Activity
+issue-fuel_pricing-0-1767539699524,Economy: New Policy,fuel_pricing,active,850,40.0,2026-01-04 15:14:59.524000+00:00,2026-01-04 15:14:59.524000+00:00
+issue-presidential_announcements-0-1767539699685,Economy: New Policy,presidential_announcements,active,850,40.0,2026-01-04 15:14:59.685000+00:00,2026-01-04 15:14:59.685000+00:00
+issue-presidential_announcements-1-1767539699761,Healthcare Crisis,presidential_announcements,escalated,5000,90.0,2026-01-04 15:14:59.761000+00:00,2026-01-04 15:14:59.761000+00:00
+issue-military_operations-0-1767539699834,Security Alert: North,military_operations,active,1250,70.0,2026-01-04 15:14:59.834000+00:00,2026-01-04 15:14:59.834000+00:00
+issue-education_funding-0-1767539699909,Security Alert: North,education_funding,active,1250,70.0,2026-01-04 15:14:59.909000+00:00,2026-01-04 15:14:59.909000+00:00
+issue-asuu_strikes-0-1767539699983,Security Alert: North,asuu_strikes,active,1250,70.0,2026-01-04 15:14:59.983000+00:00,2026-01-04 15:14:59.983000+00:00
+issue-healthcare_crisis-0-1767539700057,Economy: New Policy,healthcare_crisis,active,850,40.0,2026-01-04 15:15:00.057000+00:00,2026-01-04 15:15:00.057000+00:00
+issue-security_threats-0-1767539700135,Security Alert: North,security_threats,active,1250,70.0,2026-01-04 15:15:00.135000+00:00,2026-01-04 15:15:00.135000+00:00
+issue-budget_allocation-0-1767539700213,Security Alert: North,budget_allocation,active,1250,70.0,2026-01-04 15:15:00.213000+00:00,2026-01-04 15:15:00.213000+00:00
+issue-infrastructure_projects-0-1767539700292,Healthcare Crisis,infrastructure_projects,escalated,5000,90.0,2026-01-04 15:15:00.292000+00:00,2026-01-04 15:15:00.292000+00:00
+issue-corruption_cases-0-1767539700378,Healthcare Crisis,corruption_cases,escalated,5000,90.0,2026-01-04 15:15:00.378000+00:00,2026-01-04 15:15:00.378000+00:00
+issue-power_outages-0-1767539700470,Economy: New Policy,power_outages,active,850,40.0,2026-01-04 15:15:00.470000+00:00,2026-01-04 15:15:00.470000+00:00
+issue-power_outages-1-1767539700565,Infrastructure Compliance,power_outages,emerging,320,40.0,2026-01-04 15:15:00.565000+00:00,2026-01-04 15:15:00.565000+00:00
+issue-unemployment-0-1767539700659,Security Alert: North,unemployment,active,1250,70.0,2026-01-04 15:15:00.659000+00:00,2026-01-04 15:15:00.659000+00:00
+issue-unemployment-1-1767539700750,Infrastructure Compliance,unemployment,emerging,320,40.0,2026-01-04 15:15:00.750000+00:00,2026-01-04 15:15:00.750000+00:00
+issue-inflation-0-1767539700842,Security Alert: North,inflation,active,1250,70.0,2026-01-04 15:15:00.842000+00:00,2026-01-04 15:15:00.842000+00:00
+issue-inflation-1-1767539700936,Healthcare Crisis,inflation,escalated,5000,90.0,2026-01-04 15:15:00.936000+00:00,2026-01-04 15:15:00.936000+00:00
+issue-foreign_affairs-0-1767539701027,Economy: New Policy,foreign_affairs,active,850,40.0,2026-01-04 15:15:01.027000+00:00,2026-01-04 15:15:01.027000+00:00
+issue-foreign_affairs-1-1767539701117,Healthcare Crisis,foreign_affairs,escalated,5000,90.0,2026-01-04 15:15:01.117000+00:00,2026-01-04 15:15:01.117000+00:00
+issue-agriculture_food_security-0-1767539701205,Infrastructure Compliance,agriculture_food_security,emerging,320,40.0,2026-01-04 15:15:01.205000+00:00,2026-01-04 15:15:01.205000+00:00
+issue-agriculture_food_security-1-1767539701289,Economy: New Policy,agriculture_food_security,active,850,40.0,2026-01-04 15:15:01.289000+00:00,2026-01-04 15:15:01.289000+00:00
+issue-fuel_pricing-0-1767542407804,Security Alert: North,fuel_pricing,active,1250,70.0,2026-01-04 16:00:07.804000+00:00,2026-01-04 16:00:07.804000+00:00
+issue-fuel_pricing-1-1767542408115,Healthcare Crisis,fuel_pricing,escalated,5000,90.0,2026-01-04 16:00:08.115000+00:00,2026-01-04 16:00:08.115000+00:00
+issue-presidential_announcements-0-1767542408279,Economy: New Policy,presidential_announcements,active,850,40.0,2026-01-04 16:00:08.279000+00:00,2026-01-04 16:00:08.279000+00:00
+issue-military_operations-0-1767542408457,Security Alert: North,military_operations,active,1250,70.0,2026-01-04 16:00:08.457000+00:00,2026-01-04 16:00:08.457000+00:00
+issue-military_operations-1-1767542408630,Economy: New Policy,military_operations,active,850,40.0,2026-01-04 16:00:08.630000+00:00,2026-01-04 16:00:08.630000+00:00
+issue-education_funding-0-1767542408794,Healthcare Crisis,education_funding,escalated,5000,90.0,2026-01-04 16:00:08.794000+00:00,2026-01-04 16:00:08.794000+00:00
+issue-asuu_strikes-0-1767542408960,Security Alert: North,asuu_strikes,active,1250,70.0,2026-01-04 16:00:08.960000+00:00,2026-01-04 16:00:08.960000+00:00
+issue-healthcare_crisis-0-1767542409129,Healthcare Crisis,healthcare_crisis,escalated,5000,90.0,2026-01-04 16:00:09.129000+00:00,2026-01-04 16:00:09.129000+00:00
+issue-healthcare_crisis-1-1767542409294,Security Alert: North,healthcare_crisis,active,1250,70.0,2026-01-04 16:00:09.294000+00:00,2026-01-04 16:00:09.294000+00:00
+issue-security_threats-0-1767542409456,Economy: New Policy,security_threats,active,850,40.0,2026-01-04 16:00:09.456000+00:00,2026-01-04 16:00:09.456000+00:00
+issue-budget_allocation-0-1767542409618,Security Alert: North,budget_allocation,active,1250,70.0,2026-01-04 16:00:09.618000+00:00,2026-01-04 16:00:09.618000+00:00
+issue-budget_allocation-1-1767542409790,Security Alert: North,budget_allocation,active,1250,70.0,2026-01-04 16:00:09.790000+00:00,2026-01-04 16:00:09.790000+00:00
+issue-infrastructure_projects-0-1767542409955,Security Alert: North,infrastructure_projects,active,1250,70.0,2026-01-04 16:00:09.955000+00:00,2026-01-04 16:00:09.955000+00:00
+issue-infrastructure_projects-1-1767542410111,Infrastructure Compliance,infrastructure_projects,emerging,320,40.0,2026-01-04 16:00:10.111000+00:00,2026-01-04 16:00:10.111000+00:00
+issue-corruption_cases-0-1767542410289,Security Alert: North,corruption_cases,active,1250,70.0,2026-01-04 16:00:10.289000+00:00,2026-01-04 16:00:10.289000+00:00
+issue-corruption_cases-1-1767542410444,Infrastructure Compliance,corruption_cases,emerging,320,40.0,2026-01-04 16:00:10.444000+00:00,2026-01-04 16:00:10.444000+00:00
+issue-power_outages-0-1767542410594,Healthcare Crisis,power_outages,escalated,5000,90.0,2026-01-04 16:00:10.594000+00:00,2026-01-04 16:00:10.594000+00:00
+issue-power_outages-1-1767542410742,Economy: New Policy,power_outages,active,850,40.0,2026-01-04 16:00:10.742000+00:00,2026-01-04 16:00:10.742000+00:00
+issue-unemployment-0-1767542410908,Security Alert: North,unemployment,active,1250,70.0,2026-01-04 16:00:10.908000+00:00,2026-01-04 16:00:10.908000+00:00
+issue-inflation-0-1767542411089,Infrastructure Compliance,inflation,emerging,320,40.0,2026-01-04 16:00:11.089000+00:00,2026-01-04 16:00:11.089000+00:00
+issue-inflation-1-1767542411271,Infrastructure Compliance,inflation,emerging,320,40.0,2026-01-04 16:00:11.271000+00:00,2026-01-04 16:00:11.271000+00:00
+issue-foreign_affairs-0-1767542411440,Economy: New Policy,foreign_affairs,active,850,40.0,2026-01-04 16:00:11.440000+00:00,2026-01-04 16:00:11.440000+00:00
+issue-foreign_affairs-1-1767542411585,Economy: New Policy,foreign_affairs,active,850,40.0,2026-01-04 16:00:11.585000+00:00,2026-01-04 16:00:11.585000+00:00
+issue-agriculture_food_security-0-1767542411713,Security Alert: North,agriculture_food_security,active,1250,70.0,2026-01-04 16:00:11.713000+00:00,2026-01-04 16:00:11.713000+00:00
+issue-agriculture_food_security-1-1767542411832,Healthcare Crisis,agriculture_food_security,escalated,5000,90.0,2026-01-04 16:00:11.832000+00:00,2026-01-04 16:00:11.832000+00:00
+issue-defence-0-1767542411952,Infrastructure Compliance,DEFENCE,emerging,320,40.0,2026-01-04 16:00:11.952000+00:00,2026-01-04 16:00:11.952000+00:00

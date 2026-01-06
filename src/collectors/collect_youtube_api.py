@@ -13,6 +13,9 @@ from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import time
+from src.api.database import SessionLocal
+from src.services.data_ingestor import DataIngestor
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,10 +33,29 @@ def set_target_config(target_config):
     logger.info(f"Set target config for: {target_config.name if target_config else 'None'}")
 
 class YouTubeAPICollector:
-    def __init__(self):
+    def __init__(self, user_id: Optional[str] = None):
+        """
+        Initialize YouTubeAPICollector.
+        
+        Args:
+            user_id: Optional user ID to associate with collected data.
+        """
+        self.user_id = user_id
+        self.session = SessionLocal()
+        self.ingestor = DataIngestor(self.session, user_id=user_id)
+
         # Load .env from collectors folder first, then root directory as fallback
         collectors_env_path = Path(__file__).parent / '.env'
-        root_env_path = Path(__file__).parent.parent.parent / '.env'
+        
+        # Add src directory to path to allow imports from config
+        import sys
+        src_path = Path(__file__).resolve().parent.parent
+        if str(src_path) not in sys.path:
+            sys.path.append(str(src_path))
+            
+        from src.config.path_manager import PathManager
+        self.path_manager = PathManager()
+        root_env_path = self.path_manager.base_path / '.env'
         
         logger.info(f"Current file location: {Path(__file__)}")
         logger.info(f"Checking for .env in collectors folder: {collectors_env_path}")
@@ -51,7 +73,7 @@ class YouTubeAPICollector:
             logger.warning(f"  - Collectors folder: {collectors_env_path}")
             logger.warning(f"  - Root directory: {root_env_path}")
         
-        self.base_path = Path(__file__).parent.parent.parent
+        self.base_path = self.path_manager.base_path
         
         # YouTube API configuration
         self.youtube_api_key = os.getenv("YOUTUBE_API_KEY")
@@ -80,14 +102,14 @@ class YouTubeAPICollector:
     def _load_tv_channels_config(self) -> Dict[str, Dict[str, str]]:
         """Load TV channels configuration from JSON file"""
         try:
-            config_path = self.base_path / 'config' / 'youtube_tv_channels.json'
+            config_path = self.path_manager.config_dir / 'youtube_tv_channels.json'
             if config_path.exists():
                 import json
                 with open(config_path, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                 
                 # Extract just the channel IDs for backward compatibility
-                channels = {}
+                channels: Dict[str, Dict[str, str]] = {}
                 for country, country_channels in config.items():
                     if country in ['qatar', 'nigeria']:
                         channels[country] = {}
@@ -152,19 +174,48 @@ class YouTubeAPICollector:
         _configured_instance.target_config = target_config
         logger.info(f"Set target config for: {target_config.name if target_config else 'None'}")
 
-    def _get_target_keywords(self) -> List[str]:
-        """Get keywords to filter videos based on target configuration"""
+    def _get_target_keywords(self) -> List[str]:  # type: ignore[no-any-return]
+        """Get keywords to filter videos based on target configuration.
+        
+        Priority order:
+        1. ConfigManager: collectors.keywords.<target_id>.youtube (target-specific, from DB)
+        2. ConfigManager: collectors.keywords.default.youtube (default, from DB)
+        3. target_config.sources.youtube.keywords (backward compatibility)
+        4. target_config.keywords (backward compatibility)
+        5. Hardcoded defaults (last resort)
+        """
+        from config.config_manager import ConfigManager
+        config = ConfigManager()
+        
+        # Priority 1: Target-specific keywords from ConfigManager (enables DB editing)
+        if self.target_config and hasattr(self.target_config, 'name'):
+            target_name = self.target_config.name.lower().replace(" ", "_")
+            target_key = f"collectors.keywords.{target_name}.youtube"
+            target_keywords = config.get_list(target_key, None)
+            if target_keywords:
+                logger.info(f"Using target-specific keywords from ConfigManager: {target_keywords}")
+                return target_keywords
+        
+        # Priority 2: Default keywords from ConfigManager (enables DB editing)
+        default_keywords = config.get_list("collectors.keywords.default.youtube", None)
+        if default_keywords:
+            logger.info(f"Using default keywords from ConfigManager: {default_keywords}")
+            return default_keywords
+        
+        # Priority 3: Legacy - target_config source-specific keywords (backward compatibility)
         if self.target_config and hasattr(self.target_config, 'sources'):
-            # First, check for YouTube-specific keywords
             youtube_config = self.target_config.sources.get('youtube')
             if youtube_config and hasattr(youtube_config, 'keywords') and youtube_config.keywords:
+                logger.info(f"Using keywords from target_config.sources.youtube: {youtube_config.keywords}")
                 return youtube_config.keywords
         
-        # Fallback to top-level target keywords
+        # Priority 4: Legacy - top-level target keywords (backward compatibility)
         if self.target_config and hasattr(self.target_config, 'keywords') and self.target_config.keywords:
+            logger.info(f"Using keywords from target_config: {self.target_config.keywords}")
             return self.target_config.keywords
         
-        # Fallback to default Emir keywords for backward compatibility
+        # Priority 5: Hardcoded defaults (last resort)
+        logger.warning("Using hardcoded default keywords - consider configuring in ConfigManager/DB")
         return ["emir", "amir", "sheikh tamim", "al thani"]
 
     def _get_target_countries(self) -> List[str]:
@@ -202,9 +253,13 @@ class YouTubeAPICollector:
     def _should_include_video(self, title: str, description: str) -> bool:
         """Determine if a video should be included based on target configuration"""
         if not self.target_config:
-            # Fallback to default Emir filtering for backward compatibility
+            # Fallback to default keywords from ConfigManager (enables DB editing)
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            default_keywords = config.get_list("collectors.keywords.default.youtube", 
+                config.get_list("collectors.default_keywords.youtube", ["emir", "amir", "sheikh tamim", "al thani"]))
             content = f"{title} {description}".lower()
-            return any(term.lower() in content for term in ["emir", "amir", "sheikh tamim", "al thani"])
+            return any(term.lower() in content for term in default_keywords)
         
         # Use target-specific keywords
         target_keywords = self._get_target_keywords()
@@ -306,8 +361,11 @@ class YouTubeAPICollector:
                     logger.warning(f"Unexpected error processing playlist item: {e}, item: {item}")
                     continue
                 
-                # Rate limiting
-                time.sleep(0.1)
+                # Rate limiting from ConfigManager
+                from config.config_manager import ConfigManager
+                config = ConfigManager()
+                delay = config.get_float("collectors.youtube.delay_between_requests_seconds", 0.1)
+                time.sleep(delay)
             
             return videos
             
@@ -380,8 +438,11 @@ class YouTubeAPICollector:
                     logger.warning(f"Unexpected error processing search item: {e}, item: {item}")
                     continue
                 
-                # Rate limiting
-                time.sleep(0.1)
+                # Rate limiting from ConfigManager
+                from config.config_manager import ConfigManager
+                config = ConfigManager()
+                delay = config.get_float("collectors.youtube.delay_between_requests_seconds", 0.1)
+                time.sleep(delay)
             
             return videos
             
@@ -389,7 +450,7 @@ class YouTubeAPICollector:
             logger.error(f"Error searching videos in channel {channel_id}: {e}")
             return []
 
-    def _get_thumbnail_url(self, thumbnails: Dict[str, Any]) -> str:
+    def _get_thumbnail_url(self, thumbnails: Dict[str, Any]) -> str:  # type: ignore[no-any-return]
         """Safely get the highest resolution thumbnail URL or a default."""
         if 'high' in thumbnails and thumbnails['high']['url']:
             return thumbnails['high']['url']
@@ -399,13 +460,17 @@ class YouTubeAPICollector:
             return thumbnails['default']['url']
         return "https://via.placeholder.com/120x90" # Default thumbnail
 
-    def collect_data(self, target_and_variations: List[str] = None) -> Dict[str, Any]:
+    def collect_data(self, target_and_variations: Optional[List[str]] = None) -> Dict[str, Any]:
         """Main collection method"""
         start_time = time.time()
         logger.info("Starting YouTube API data collection")
         
         if not target_and_variations:
-            target_and_variations = ["emir"]  # Default fallback
+            # Default fallback from ConfigManager (enables DB editing)
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            target_and_variations = config.get_list("collectors.keywords.default.youtube_default_fallback", 
+                config.get_list("collectors.default_keywords.youtube_default_fallback", ["emir"]))
         
         target_keywords = self._get_target_keywords()
         target_countries = self._get_target_countries()
@@ -482,17 +547,28 @@ class YouTubeAPICollector:
                     
                     logger.info(f"Found {len(filtered_videos)} relevant videos from {channel_name}")
                     
+                    # Stream to DB immediately
+                    for video in filtered_videos:
+                        self.ingestor.insert_record(video, commit=False)
+                    self.ingestor.session.commit()
+                    logger.info(f"Ingested {len(filtered_videos)} videos to DB")
+
+                    
                 except Exception as e:
                     logger.error(f"Error processing channel {channel_name}: {e}")
                     collection_stats['errors'] += 1
                     continue
                 
-                # Rate limiting between channels
-                time.sleep(1)
+                # Rate limiting between channels from ConfigManager
+                from config.config_manager import ConfigManager
+                config = ConfigManager()
+                delay = config.get_int("collectors.youtube.delay_between_pages_seconds", 1)
+                time.sleep(delay)
         
-        # Save collected data
-        if all_videos:
-            self._save_data(all_videos)
+        # Save collected data (Legacy/Backup - Optional)
+        # if all_videos:
+        #     self._save_data(all_videos)
+
         
         end_time = time.time()
         duration = end_time - start_time
@@ -512,7 +588,7 @@ class YouTubeAPICollector:
         """Save collected video data to CSV file"""
         try:
             # Create data directory if it doesn't exist
-            data_dir = self.base_path / 'data' / 'raw'
+            data_dir = self.path_manager.data_raw
             data_dir.mkdir(parents=True, exist_ok=True)
             
             # Create DataFrame
@@ -528,7 +604,7 @@ class YouTubeAPICollector:
             logger.info(f"Saved {len(videos)} videos to {filepath}")
             
             # Also save to processed data directory
-            processed_dir = self.base_path / 'data' / 'processed'
+            processed_dir = self.path_manager.data_processed
             processed_dir.mkdir(parents=True, exist_ok=True)
             processed_filepath = processed_dir / filename
             df.to_csv(processed_filepath, index=False)
@@ -537,7 +613,7 @@ class YouTubeAPICollector:
         except Exception as e:
             logger.error(f"Error saving data: {e}")
 
-def main(target_and_variations: List[str] = None, user_id: str = None):
+def main(target_and_variations: Optional[List[str]] = None, user_id: Optional[str] = None):
     """Main function for standalone execution and integration with collector system"""
     try:
         # Check if we have a pre-configured instance from the configurable collector
@@ -547,7 +623,9 @@ def main(target_and_variations: List[str] = None, user_id: str = None):
             print(f"[YouTube Collector] Using configured instance for target: {collector.target_config.name}")
         else:
             # Create new instance for standalone execution
-            collector = YouTubeAPICollector()
+            # Create new instance for standalone execution
+            collector = YouTubeAPICollector(user_id=user_id)
+
             print(f"[YouTube Collector] Created new instance for standalone execution")
         
         # If target_and_variations are provided, use them for collection
@@ -555,9 +633,11 @@ def main(target_and_variations: List[str] = None, user_id: str = None):
             print(f"[YouTube Collector] Received Target: {target_and_variations[0]}, Queries: {target_and_variations[1:]}")
             
             # Construct output file name with target
+            from src.config.path_manager import PathManager
+            path_manager = PathManager()
             today = datetime.now().strftime("%Y%m%d")
             safe_target_name = target_and_variations[0].replace(" ", "_").lower()
-            output_path = Path(__file__).parent.parent.parent / "data" / "raw" / f"youtube_tv_{safe_target_name}_{today}.csv"
+            output_path = path_manager.data_raw / f"youtube_tv_{safe_target_name}_{today}.csv"
             
             # Collect data with target-specific queries
             result = collector.collect_data(target_and_variations[1:])

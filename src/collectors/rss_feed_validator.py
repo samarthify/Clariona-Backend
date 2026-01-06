@@ -54,15 +54,19 @@ class RSSFeedValidator:
             'Cache-Control': 'no-cache'
         }
         
-        # Validation settings
-        self.timeout = self.config.get('feed_validation', {}).get('timeout_seconds', 10)
+        # Validation settings - use ConfigManager for timeout, fallback to local config
+        from config.config_manager import ConfigManager
+        config_manager = ConfigManager()
+        self.timeout = config_manager.get_int("collectors.rss_validator.timeout_seconds", 
+                                             self.config.get('feed_validation', {}).get('timeout_seconds', 10))
         self.max_retries = self.config.get('feed_validation', {}).get('max_retries', 3)
         self.min_health_score = self.config.get('feed_validation', {}).get('min_health_score', 0.5)
     
     def _load_config(self) -> Dict:
-        """Load configuration from JSON file."""
+        """Load configuration from JSON file (domain-specific RSS feed config)."""
         try:
             if self.config_file.exists():
+                # Use direct JSON loading for domain-specific config file
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except Exception as e:
@@ -92,7 +96,7 @@ class RSSFeedValidator:
         
         return list(set(feeds))  # Remove duplicates
     
-    def _get_replacement_feed(self, original_feed: str) -> Optional[str]:
+    def _get_replacement_feed(self, original_feed: str) -> Optional[str]:  # type: ignore[no-any-return]
         """Get replacement feed for a failing feed."""
         replacements = self.config.get('replacement_mapping', {})
         return replacements.get(original_feed)

@@ -2,7 +2,14 @@
 
 ## ⚠️ Critical Files for Backend Operation
 
-### `run_cycles.sh` - Agent Cycle Runner
+### `src/services/main.py` - Unified Streaming Service (Primary)
+
+**This is the NEW MAIN ENTRY POINT** for the backend. It runs:
+1.  **DatasetTailer**: Streams data from Apify.
+2.  **AnalysisWorker**: Real-time polling analysis.
+3.  **LocalScheduler**: Runs periodic collectors (RSS/YouTube).
+
+### `run_cycles.sh` - Legacy Cycle Runner (Fallback)
 
 **This is a CRITICAL file** for running automated agent cycles. It:
 

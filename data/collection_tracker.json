@@ -1,0 +1,52 @@
+{
+  "6440da7f-e630-4b2f-884e-a8721cc9a9c0": {
+    "twitter": {
+      "last_collection_time": "2026-01-05T09:55:28.525334",
+      "records_collected": 0,
+      "status": "failed",
+      "updated_at": "2026-01-05T09:55:28.525639"
+    },
+    "youtube": {
+      "last_collection_time": "2026-01-05T09:55:31.209799",
+      "records_collected": 0,
+      "status": "success",
+      "updated_at": "2026-01-05T09:55:31.218355"
+    },
+    "news": {
+      "last_collection_time": "2026-01-05T09:57:21.368950",
+      "records_collected": 0,
+      "status": "success",
+      "updated_at": "2026-01-05T09:57:21.369262"
+    },
+    "tiktok": {
+      "last_collection_time": "2026-01-05T10:12:07.282917",
+      "records_collected": 0,
+      "status": "timeout",
+      "updated_at": "2026-01-05T10:12:07.295255"
+    },
+    "rss": {
+      "last_collection_time": "2026-01-05T10:12:07.282741",
+      "records_collected": 0,
+      "status": "timeout",
+      "updated_at": "2026-01-05T10:12:07.283081"
+    },
+    "radio": {
+      "last_collection_time": "2026-01-05T09:55:29.392330",
+      "records_collected": 0,
+      "status": "success",
+      "updated_at": "2026-01-05T09:55:29.402140"
+    },
+    "instagram": {
+      "last_collection_time": "2026-01-05T09:55:28.544544",
+      "records_collected": 0,
+      "status": "failed",
+      "updated_at": "2026-01-05T09:55:28.573507"
+    },
+    "facebook": {
+      "last_collection_time": "2026-01-05T09:55:28.535273",
+      "records_collected": 0,
+      "status": "failed",
+      "updated_at": "2026-01-05T09:55:28.548039"
+    }
+  }
+}

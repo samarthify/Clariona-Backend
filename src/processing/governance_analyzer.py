@@ -8,7 +8,7 @@ import os
 import openai
 import json
 import time
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from .governance_categories import (
     FEDERAL_MINISTRIES,
     MINISTRY_SUBCATEGORIES,
@@ -27,7 +27,12 @@ from .governance_categories import (
 from utils.openai_rate_limiter import get_rate_limiter
 from utils.multi_model_rate_limiter import get_multi_model_rate_limiter
 
-logger = logging.getLogger('GovernanceAnalyzer')
+# Use centralized logging configuration
+try:
+    from src.config.logging_config import get_logger
+    logger = get_logger(__name__)
+except ImportError:
+    logger = logging.getLogger(__name__)
 
 # Issue keyword patterns for normalization
 ISSUE_PATTERNS = {
@@ -134,17 +139,28 @@ class GovernanceAnalyzer:
     Phase 2: Issue classification within ministry (dynamic, max 20 per ministry)
     """
     
-    def __init__(self, enable_issue_classification: bool = True, model: str = "gpt-5-nano"):
+    def __init__(self, enable_issue_classification: bool = True, model: Optional[str] = None) -> None:
         """
         Initialize the governance analyzer.
         
         Args:
             enable_issue_classification: If True, performs Phase 2 (issue classification)
-            model: Model to use (gpt-5-mini, gpt-5-nano, gpt-4.1-mini, gpt-4.1-nano)
+            model: Model to use (gpt-5-mini, gpt-5-nano, gpt-4.1-mini, gpt-4.1-nano). If None, uses config default.
         """
         self.openai_client = None
         self.enable_issue_classification = enable_issue_classification
         self.issue_classifier = None
+        
+        # Load default model from ConfigManager if not provided
+        if model is None:
+            try:
+                from config.config_manager import ConfigManager
+                config = ConfigManager()
+                model = config.get("models.llm_models.default", "gpt-5-nano")
+            except Exception as e:
+                logger.warning(f"Could not load ConfigManager for default model, using 'gpt-5-nano': {e}")
+                model = "gpt-5-nano"
+        
         self.model = model  # Model to use for classification
         
         self.setup_openai()
@@ -163,7 +179,7 @@ class GovernanceAnalyzer:
         else:
             logger.warning("OpenAI API key not available for governance analysis")
     
-    def analyze(self, text: str, source_type: str = None, sentiment: str = None) -> Dict[str, Any]:
+    def analyze(self, text: str, source_type: Optional[str] = None, sentiment: Optional[str] = None) -> Dict[str, Any]:
         """
         Analyze text and return governance category and metadata.
         
@@ -220,8 +236,8 @@ class GovernanceAnalyzer:
     def _analyze_with_openai(self, text: str, source_type: str = None, sentiment: str = None) -> Dict[str, Any]:
         """Analyze using OpenAI API."""
         
-        # Create the prompt for governance analysis
-        prompt = self._create_governance_prompt(text, source_type)
+        # Get prompts from config
+        system_message, user_prompt = self._get_governance_prompts(text)
         
         multi_model_limiter = get_multi_model_rate_limiter()
         request_id = f"gov_{id(text)}_{int(time.time())}"
@@ -236,8 +252,8 @@ class GovernanceAnalyzer:
                     response = self.openai_client.responses.create(
                         model=self.model,
                         input=[
-                            {"role": "system", "content": "You are a governance analyst specializing in Nigerian politics and policy."},
-                            {"role": "user", "content": prompt}
+                            {"role": "system", "content": system_message},
+                            {"role": "user", "content": user_prompt}
                         ],
                         store=False
                     )
@@ -274,26 +290,85 @@ class GovernanceAnalyzer:
                 multi_model_limiter.handle_rate_limit_error(self.model, request_id, retry_after)
                 
                 if attempt == max_retries - 1:
-                    logger.error(f"OpenAI API rate limit error after {max_retries} attempts: {e}")
+                    rate_limit_error = RateLimitError(
+                        f"OpenAI rate limit error after {max_retries} attempts",
+                        retry_after=retry_after,
+                        details={"model": self.model, "request_id": request_id, "attempt": attempt + 1}
+                    )
+                    logger.error(str(rate_limit_error))
                     return self._analyze_fallback(text, source_type, sentiment)
                 continue
                 
-            except Exception as e:
-                logger.error(f"OpenAI API error: {e}")
+            except openai.APIError as e:
+                # Handle OpenAI API errors
+                openai_error = OpenAIError(
+                    f"OpenAI API error in governance analysis: {str(e)}",
+                    details={"model": self.model, "request_id": request_id, "attempt": attempt + 1}
+                )
+                logger.error(str(openai_error))
                 if attempt == max_retries - 1:
                     return self._analyze_fallback(text, source_type, sentiment)
-                # Wait a bit before retrying other errors
+                time.sleep(1.0)
+                continue
+                
+            except Exception as e:
+                # Handle other unexpected errors
+                analysis_error = AnalysisError(
+                    f"Unexpected error in governance analysis: {str(e)}",
+                    details={"model": self.model, "request_id": request_id, "attempt": attempt + 1, "error_type": type(e).__name__}
+                )
+                logger.error(str(analysis_error), exc_info=True)
+                if attempt == max_retries - 1:
+                    return self._analyze_fallback(text, source_type, sentiment)
                 time.sleep(1.0)
                 continue
         
         return self._analyze_fallback(text, source_type, sentiment)
     
-    def _create_governance_prompt(self, text: str, source_type: str = None) -> str:
-        """Create prompt for governance analysis with 36 federal ministry categories."""
-        
-        prompt = f"""Categorize this Nigerian governance text into ONE federal ministry.
+    def _get_governance_prompts(self, text: str) -> Tuple[str, str]:
+        """
+        Get system message and user prompt from config, with fallback to defaults.
+        Returns: (system_message, user_prompt)
+        """
+        try:
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            
+            # Get prompt templates from config
+            prompt_config = config.get("processing.prompts.governance", {})
+            system_message = prompt_config.get("system_message", "You are a governance analyst specializing in Nigerian politics and policy.")
+            user_template = prompt_config.get("user_template", """Categorize this Nigerian governance text into ONE federal ministry.
 
-Text: "{text[:800]}"
+Text: "{text}"
+
+Ministries (use exact key):
+1. agriculture_food_security 2. aviation_aerospace 3. budget_economic_planning 4. communications_digital 5. defence 6. education 7. environment_ecological 8. finance 9. foreign_affairs 10. health_social_welfare 11. housing_urban 12. humanitarian_poverty 13. industry_trade 14. interior 15. justice 16. labour_employment 17. marine_blue_economy 18. niger_delta 19. petroleum_resources 20. power 21. science_technology 22. solid_minerals 23. sports_development 24. tourism 25. transportation 26. water_resources 27. women_affairs 28. works 29. youth_development 30. livestock_development 31. information_culture 32. police_affairs 33. steel_development 34. special_duties 35. fct_administration 36. art_culture_creative 37. non_governance
+
+Return JSON:
+{{
+    "ministry_category": "exact_key",
+    "governance_relevance": 0.0-1.0,
+    "confidence": 0.0-1.0,
+    "keywords": ["kw1", "kw2"],
+    "reasoning": "brief"
+}}""")
+            text_truncate_length = prompt_config.get("text_truncate_length", 800)
+            
+            # Truncate text
+            truncated_text = text[:text_truncate_length] if len(text) > text_truncate_length else text
+            
+            # Format template with variables
+            user_prompt = user_template.format(text=truncated_text)
+            
+            return system_message, user_prompt
+        except Exception as e:
+            logger.warning(f"Could not load prompt templates from ConfigManager, using defaults: {e}")
+            # Fallback to hardcoded defaults
+            truncated_text = text[:800] if len(text) > 800 else text
+            system_message = "You are a governance analyst specializing in Nigerian politics and policy."
+            user_prompt = f"""Categorize this Nigerian governance text into ONE federal ministry.
+
+Text: "{truncated_text}"
 
 Ministries (use exact key):
 1. agriculture_food_security 2. aviation_aerospace 3. budget_economic_planning 4. communications_digital 5. defence 6. education 7. environment_ecological 8. finance 9. foreign_affairs 10. health_social_welfare 11. housing_urban 12. humanitarian_poverty 13. industry_trade 14. interior 15. justice 16. labour_employment 17. marine_blue_economy 18. niger_delta 19. petroleum_resources 20. power 21. science_technology 22. solid_minerals 23. sports_development 24. tourism 25. transportation 26. water_resources 27. women_affairs 28. works 29. youth_development 30. livestock_development 31. information_culture 32. police_affairs 33. steel_development 34. special_duties 35. fct_administration 36. art_culture_creative 37. non_governance
@@ -307,7 +382,12 @@ Return JSON:
     "reasoning": "brief"
 }}
 """
-        return prompt
+            return system_message, user_prompt
+
+    def _create_governance_prompt(self, text: str, source_type: str = None) -> str:
+        """Create prompt for governance analysis with 36 federal ministry categories."""
+        _, user_prompt = self._get_governance_prompts(text)
+        return user_prompt
     
     def _parse_openai_response(self, response_text: str, sentiment: str = None) -> Dict[str, Any]:
         """Parse OpenAI response and return structured data."""
@@ -369,6 +449,15 @@ Return JSON:
             logger.error(f"Error parsing OpenAI response: {e}")
             return self._get_default_result(error=f"Parse error: {e}", sentiment=sentiment)
     
+    def _get_embedding_model(self) -> str:
+        """Get embedding model name from ConfigManager."""
+        try:
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            return config.get("models.embedding_model", "text-embedding-3-small")
+        except Exception:
+            return "text-embedding-3-small"
+    
     def _get_embedding(self, text: str) -> List[float]:
         """Get embedding for text."""
         try:
@@ -377,7 +466,7 @@ Return JSON:
                 # Embeddings: ~2200 tokens (1536 dims × ~1.3 tokens per dim)
                 with rate_limiter.acquire(estimated_tokens=2200):
                     response = self.openai_client.embeddings.create(
-                        model="text-embedding-3-small",
+                        model=self._get_embedding_model(),
                         input=text[:8000]  # Limit text length
                     )
                     return response.data[0].embedding

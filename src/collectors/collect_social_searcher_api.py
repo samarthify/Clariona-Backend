@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from typing import List
 
-def collect_social_searcher_api(queries: List[str], output_file=None, max_pages=5, time_period="last30days"):
+def collect_social_searcher_api(queries: List[str], output_file=None, max_pages=None, time_period="last30days"):
     """
     Collect data from Social Searcher using their API instead of scraping.
     
@@ -25,10 +25,18 @@ def collect_social_searcher_api(queries: List[str], output_file=None, max_pages=
     if not api_key:
         raise ValueError("SOCIAL_SEARCHER_API_KEY must be set in .env file")
     
+    # Get default max_pages from ConfigManager if not provided
+    if max_pages is None:
+        from config.config_manager import ConfigManager
+        config = ConfigManager()
+        max_pages = config.get_int("collectors.social_searcher.default_max_pages", 5)
+    
     # Ensure output directory exists
     if output_file is None:
+        from src.config.path_manager import PathManager
+        path_manager = PathManager()
         today = datetime.now().strftime("%Y%m%d")
-        output_file = str(Path(__file__).parent.parent.parent / "data" / "raw" / f"social_searcher_api_data_{today}.csv")
+        output_file = str(path_manager.data_raw / f"social_searcher_api_data_{today}.csv")
     
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     
@@ -214,7 +222,10 @@ def collect_social_searcher_api(queries: List[str], output_file=None, max_pages=
                             current_page += 1
                             
                             # Add small delay between requests to avoid rate limiting
-                            time.sleep(2)
+                            from config.config_manager import ConfigManager
+                            config = ConfigManager()
+                            delay = config.get_int("collectors.social_searcher.delay_between_requests_seconds", 2)
+                            time.sleep(delay)
                             
                         except Exception as e:
                             print(f"    Error making API request for query '{query_format}' in language: {lang}, network: {network}: {e}")
@@ -261,11 +272,11 @@ def main(target_and_variations: List[str]):
         # Select/reorder relevant columns
         # df = df[[...relevant columns...]]
         
+        from src.config.path_manager import PathManager
+        path_manager = PathManager()
         today = datetime.now().strftime("%Y%m%d")
         safe_target_name = target_name.replace(" ", "_").lower()
-        output_dir = Path(__file__).parent.parent.parent / "data" / "raw"
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_file = output_dir / f"social_searcher_{safe_target_name}_{today}.csv"
+        output_file = path_manager.data_raw / f"social_searcher_{safe_target_name}_{today}.csv"
         
         # ... (append/save logic) ...
         df.to_csv(output_file, index=False, mode='a', header=not output_file.exists())

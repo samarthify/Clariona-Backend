@@ -1,0 +1,399 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Clariona Backend Configuration Schema",
+  "description": "Configuration schema for the Clariona Backend application",
+  "type": "object",
+  "properties": {
+    "paths": {
+      "type": "object",
+      "description": "File system paths configuration",
+      "properties": {
+        "base": {
+          "type": "string",
+          "description": "Base path for the project",
+          "default": "."
+        },
+        "data_raw": {
+          "type": "string",
+          "description": "Path to raw data directory",
+          "default": "data/raw"
+        },
+        "data_processed": {
+          "type": "string",
+          "description": "Path to processed data directory",
+          "default": "data/processed"
+        },
+        "logs": {
+          "type": "string",
+          "description": "Path to logs directory",
+          "default": "logs"
+        },
+        "logs_agent": {
+          "type": "string",
+          "description": "Path to agent log file",
+          "default": "logs/agent.log"
+        },
+        "logs_scheduling": {
+          "type": "string",
+          "description": "Path to automatic scheduling log file",
+          "default": "logs/automatic_scheduling.log"
+        },
+        "logs_collectors": {
+          "type": "string",
+          "description": "Path to collectors logs directory",
+          "default": "logs/collectors"
+        },
+        "logs_openai": {
+          "type": "string",
+          "description": "Path to OpenAI calls log file",
+          "default": "logs/openai_calls.csv"
+        },
+        "config_agent": {
+          "type": "string",
+          "description": "Path to agent config file",
+          "default": "config/agent_config.json"
+        },
+        "config_topic_embeddings": {
+          "type": "string",
+          "description": "Path to topic embeddings config file",
+          "default": "config/topic_embeddings.json"
+        }
+      }
+    },
+    "processing": {
+      "type": "object",
+      "description": "Processing configuration",
+      "properties": {
+        "parallel": {
+          "type": "object",
+          "description": "Parallel processing configuration",
+          "properties": {
+            "max_collector_workers": {
+              "type": "integer",
+              "description": "Maximum number of collector worker threads",
+              "minimum": 1,
+              "default": 8
+            },
+            "max_sentiment_workers": {
+              "type": "integer",
+              "description": "Maximum number of sentiment analysis worker threads",
+              "minimum": 1,
+              "default": 20
+            },
+            "max_location_workers": {
+              "type": "integer",
+              "description": "Maximum number of location classification worker threads",
+              "minimum": 1,
+              "default": 8
+            },
+            "sentiment_batch_size": {
+              "type": "integer",
+              "description": "Batch size for sentiment processing",
+              "minimum": 1,
+              "default": 150
+            },
+            "location_batch_size": {
+              "type": "integer",
+              "description": "Batch size for location processing",
+              "minimum": 1,
+              "default": 300
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable parallel processing",
+              "default": true
+            },
+            "collector_timeout_seconds": {
+              "type": "integer",
+              "description": "Timeout for collector operations in seconds",
+              "minimum": 1,
+              "default": 1000
+            },
+            "batch_timeout_seconds": {
+              "type": ["integer", "null"],
+              "description": "Timeout for batch operations in seconds",
+              "minimum": 1,
+              "default": null
+            },
+            "apify_timeout_seconds": {
+              "type": "integer",
+              "description": "Timeout for Apify API calls in seconds",
+              "minimum": 1,
+              "default": 600
+            },
+            "apify_wait_seconds": {
+              "type": "integer",
+              "description": "Wait time for Apify API calls in seconds",
+              "minimum": 1,
+              "default": 600
+            },
+            "lock_max_age_seconds": {
+              "type": "integer",
+              "description": "Maximum age for locks in seconds",
+              "minimum": 1,
+              "default": 300
+            }
+          }
+        },
+        "timeouts": {
+          "type": "object",
+          "description": "Timeout configurations",
+          "properties": {
+            "collector_timeout_seconds": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1000
+            },
+            "apify_timeout_seconds": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 600
+            },
+            "apify_wait_seconds": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 600
+            },
+            "lock_max_age_seconds": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 300
+            },
+            "scheduler_join_timeout": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 10
+            },
+            "scheduler_timeout": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 30
+            },
+            "http_request_timeout": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 120
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "max_records_per_batch": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 10000
+            }
+          }
+        }
+      }
+    },
+    "deduplication": {
+      "type": "object",
+      "description": "Deduplication configuration",
+      "properties": {
+        "similarity_threshold": {
+          "type": "number",
+          "description": "Similarity threshold for duplicate detection",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.85
+        },
+        "length_ratio_threshold": {
+          "type": "number",
+          "description": "Length ratio threshold for duplicate detection",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "description": "Database configuration",
+      "properties": {
+        "pool_size": {
+          "type": "integer",
+          "description": "Database connection pool size",
+          "minimum": 1,
+          "default": 30
+        },
+        "max_overflow": {
+          "type": "integer",
+          "description": "Maximum overflow connections",
+          "minimum": 0,
+          "default": 20
+        },
+        "pool_recycle_seconds": {
+          "type": "integer",
+          "description": "Connection pool recycle time in seconds",
+          "minimum": 1,
+          "default": 3600
+        },
+        "pool_timeout_seconds": {
+          "type": "integer",
+          "description": "Connection pool timeout in seconds",
+          "minimum": 1,
+          "default": 60
+        }
+      }
+    },
+    "api": {
+      "type": "object",
+      "description": "API configuration",
+      "properties": {
+        "cors_origins": {
+          "type": "array",
+          "description": "Allowed CORS origins",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://13.202.48.110:3000",
+            "http://13.202.48.110:3001",
+            "https://*.railway.app",
+            "https://*.up.railway.app"
+          ]
+        },
+        "timeouts": {
+          "type": "object",
+          "properties": {
+            "http_request_timeout": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 60
+            }
+          }
+        },
+        "pagination": {
+          "type": "object",
+          "properties": {
+            "default_limit": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 100
+            }
+          }
+        }
+      }
+    },
+    "models": {
+      "type": "object",
+      "description": "Model configuration",
+      "properties": {
+        "string_lengths": {
+          "type": "object",
+          "properties": {
+            "short": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 50
+            },
+            "medium": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 100
+            },
+            "long": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 200
+            },
+            "very_long": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 500
+            }
+          }
+        }
+      }
+    },
+    "collection_interval_minutes": {
+      "type": "integer",
+      "description": "Collection interval in minutes",
+      "minimum": 1
+    },
+    "processing_interval_minutes": {
+      "type": "integer",
+      "description": "Processing interval in minutes",
+      "minimum": 1
+    },
+    "auto_scheduling": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "cycle_interval_minutes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "continuous_mode": {
+          "type": "boolean"
+        },
+        "max_consecutive_cycles": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stop_after_first_cycle": {
+          "type": "boolean"
+        },
+        "enabled_user_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rate_limits": {
+      "type": "object",
+      "properties": {
+        "twitter": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "news": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "openai_logging": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "log_path": {
+          "type": "string"
+        },
+        "max_chars": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "redact_prompts": {
+          "type": "boolean"
+        },
+        "log_to_console": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}
+
+
+
+
+
+
+
+
+
+
+
+

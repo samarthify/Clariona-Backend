@@ -48,7 +48,7 @@ import json
 import time
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from dotenv import load_dotenv
 from apify_client import ApifyClient
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -105,7 +105,7 @@ def determine_country_from_username(username: str) -> str:
             country = "india"
     return country
 
-def collect_instagram_apify(queries: List[str], output_file=None, max_results=100, search_type="hashtag", 
+def collect_instagram_apify(queries: List[str], output_file=None, max_results=None, search_type="hashtag", 
                           include_comments=True, include_likes=True, **kwargs):
     """
     Collect Instagram data using multiple Apify Actors for the given queries.
@@ -130,10 +130,50 @@ def collect_instagram_apify(queries: List[str], output_file=None, max_results=10
     # Initialize the ApifyClient
     client = ApifyClient(api_token)
     
+    # Get default max_results from ConfigManager if not provided
+    if max_results is None:
+        from src.config.config_manager import ConfigManager
+        config = ConfigManager()
+        max_results = config.get_int("collectors.instagram.default_max_results", 100)
+    
+    # Get keywords from ConfigManager (enables DB editing)
+    # Priority: 1) ConfigManager default, 2) queries parameter, 3) hardcoded defaults
+    from src.config.config_manager import ConfigManager
+    config = ConfigManager()
+    
+    # Try to get target name from queries if available (for target-specific keywords)
+    target_name = None
+    if queries and len(queries) > 0:
+        # First element might be target name
+        target_name = queries[0].lower().replace(" ", "_") if queries else None
+    
+    # Priority 1: Target-specific keywords from ConfigManager (if target name available)
+    if target_name:
+        target_key = f"collectors.keywords.{target_name}.instagram"
+        target_keywords = config.get_list(target_key, None)
+        if target_keywords:
+            print(f"[Instagram Apify] Using target-specific keywords from ConfigManager: {target_keywords}")
+            queries = target_keywords
+    
+    # Priority 2: Default keywords from ConfigManager (enables DB editing)
+    if not queries:
+        default_keywords = config.get_list("collectors.keywords.default.instagram", None)
+        if default_keywords:
+            print(f"[Instagram Apify] Using default keywords from ConfigManager: {default_keywords}")
+            queries = default_keywords
+    
+    # Priority 3: Use queries parameter as-is (if provided)
+    # Priority 4: Hardcoded fallback (last resort)
+    if not queries:
+        print("[Instagram Apify] Using hardcoded default keywords - consider configuring in ConfigManager/DB")
+        queries = ["qatar", "doha", "sheikh tamim", "nigeria", "lagos", "abuja"]
+    
     # Ensure output directory exists
     if output_file is None:
+        from src.config.path_manager import PathManager
+        path_manager = PathManager()
         today = datetime.now().strftime("%Y%m%d")
-        output_file = str(Path(__file__).parent.parent.parent / "data" / "raw" / f"instagram_apify_data_{today}.csv")
+        output_file = str(path_manager.data_raw / f"instagram_apify_data_{today}.csv")
     
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     
@@ -175,7 +215,7 @@ def collect_instagram_apify(queries: List[str], output_file=None, max_results=10
         actor_type = actor_config["type"]
         max_actor_results = min(max_results, actor_config["max_results"])
         
-        query_data = []
+        query_data: List[Dict[str, Any]] = []
         items_count = 0
         
         try:
@@ -183,12 +223,18 @@ def collect_instagram_apify(queries: List[str], output_file=None, max_results=10
             
             # Prepare actor input based on type
             if actor_type == "general":
+                # Get limits from ConfigManager
+                from src.config.config_manager import ConfigManager
+                config = ConfigManager()
+                search_limit = config.get_int("collectors.instagram.default_search_limit", 10)
+                results_limit = config.get_int("collectors.instagram.default_results_limit", 50)
+                
                 run_input = {
                     "search": query,
                     "searchType": search_type,
-                    "searchLimit": 10,
+                    "searchLimit": search_limit,
                     "resultsType": "posts",
-                    "resultsLimit": max_actor_results
+                    "resultsLimit": min(max_actor_results, results_limit)
                 }
             elif actor_type == "hashtag":
                 # For multi-word queries, use only the first word as hashtag
@@ -205,9 +251,14 @@ def collect_instagram_apify(queries: List[str], output_file=None, max_results=10
                     print(f"[Instagram Apify - {actor_name}] Skipping query '{query}' (empty hashtag)")
                     return query_data, items_count
                 
+                # Get results limit from ConfigManager
+                from src.config.config_manager import ConfigManager
+                config = ConfigManager()
+                results_limit = config.get_int("collectors.instagram.default_results_limit", 50)
+                
                 run_input = {
                     "hashtags": [hashtag],
-                    "resultsLimit": max_actor_results
+                    "resultsLimit": min(max_actor_results, results_limit)
                 }
             else:
                 return query_data, items_count
@@ -454,7 +505,7 @@ def _extract_instagram_data(item: Dict, query: str, actor_id: str, actor_type: s
         print(f"Error extracting Instagram data: {e}")
         return None
 
-def main(target_and_variations: List[str], user_id: str = None):
+def main(target_and_variations: List[str], user_id: Optional[str] = None):
     """Main function called by run_collectors. Accepts target/variations list."""
     if not target_and_variations:
         print("[Instagram Apify] Error: No target/query variations provided.")
@@ -465,9 +516,11 @@ def main(target_and_variations: List[str], user_id: str = None):
     print(f"[Instagram Apify] Received Target: {target_name}, Queries: {queries}")
     
     # Construct output file name
+    from src.config.path_manager import PathManager
+    path_manager = PathManager()
     today = datetime.now().strftime("%Y%m%d")
     safe_target_name = target_name.replace(" ", "_").lower()
-    output_path = Path(__file__).parent.parent.parent / "data" / "raw" / f"instagram_apify_{safe_target_name}_{today}.csv"
+    output_path = path_manager.data_raw / f"instagram_apify_{safe_target_name}_{today}.csv"
     
     # Call the collection function with the queries
     collect_instagram_apify(queries=queries, output_file=str(output_path))

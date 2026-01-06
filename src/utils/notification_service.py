@@ -27,6 +27,22 @@ BASE_PATH = Path(__file__).parent.parent.parent
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000") # Default for local dev
 COMPARISON_DATA_ENDPOINT = f"{API_BASE_URL}/comparison-data"
 
+# Load sentiment thresholds from ConfigManager
+def _get_sentiment_thresholds():
+    """Get sentiment thresholds from ConfigManager with fallback defaults."""
+    try:
+        from config.config_manager import ConfigManager
+        config = ConfigManager()
+        positive_threshold = config.get_float("processing.sentiment.positive_threshold", 0.2)
+        negative_threshold = config.get_float("processing.sentiment.negative_threshold", -0.2)
+        return positive_threshold, negative_threshold
+    except Exception as e:
+        logger.warning(f"Could not load ConfigManager for sentiment thresholds, using defaults: {e}")
+        return 0.2, -0.2
+
+# Cache thresholds at module level
+POSITIVE_THRESHOLD, NEGATIVE_THRESHOLD = _get_sentiment_thresholds()
+
 def send_analysis_report(recipients: List[str], db_factory: sessionmaker) -> bool:
     """
     Fetches latest and previous data from the API, compares them, generates an 
@@ -123,8 +139,8 @@ def send_analysis_report(recipients: List[str], db_factory: sessionmaker) -> boo
                  # Calculate counts based on score, ensuring sentiment_score exists and is not null
                  if 'sentiment_score' in latest_data_df.columns:
                      valid_scores = latest_data_df['sentiment_score'].dropna() # Drop NaNs before comparison
-                     positive_count = (valid_scores > 0.2).sum()
-                     negative_count = (valid_scores < -0.2).sum()
+                     positive_count = (valid_scores > POSITIVE_THRESHOLD).sum()
+                     negative_count = (valid_scores < NEGATIVE_THRESHOLD).sum()
                      neutral_count = len(valid_scores) - positive_count - negative_count
                  else:
                       logger.warning("'sentiment_score' column needed for calculating sentiment counts when 'sentiment_label' is missing.")
@@ -153,9 +169,9 @@ def send_analysis_report(recipients: List[str], db_factory: sessionmaker) -> boo
                     
                     for keyword in keywords:
                         # Normalize keyword case if needed: keyword = keyword.lower()
-                        if sentiment > 0.2:
+                        if sentiment > POSITIVE_THRESHOLD:
                             positive_topics[keyword] = positive_topics.get(keyword, 0) + 1
-                        elif sentiment < -0.2:
+                        elif sentiment < NEGATIVE_THRESHOLD:
                             negative_topics[keyword] = negative_topics.get(keyword, 0) + 1
             else:
                 logger.warning("Skipping topic extraction as 'sentiment_score' column is missing.")
@@ -232,7 +248,7 @@ def send_analysis_report(recipients: List[str], db_factory: sessionmaker) -> boo
     mail_sender = MailSender() # MailSender now loads config from .env
     
     sentiment_score = analysis_data.get("overall_sentiment", 0)
-    overall_sentiment_text = "Positive" if sentiment_score > 0.2 else ("Negative" if sentiment_score < -0.2 else "Neutral")
+    overall_sentiment_text = "Positive" if sentiment_score > POSITIVE_THRESHOLD else ("Negative" if sentiment_score < NEGATIVE_THRESHOLD else "Neutral")
     
     subject = f"Sentiment Analysis Report: {overall_sentiment_text} ({datetime.now().strftime('%Y-%m-%d')})"
     if analysis_data.get("sentiment_changed", False):
@@ -379,8 +395,8 @@ def detect_sentiment_change(current_data: pd.DataFrame, previous_data: pd.DataFr
             negative = len(df[df['sentiment_label'] == 'negative']) / total * 100
             neutral = 100 - positive - negative
         elif 'sentiment_score' in df.columns:
-            positive = len(df[df['sentiment_score'] > 0.2]) / total * 100
-            negative = len(df[df['sentiment_score'] < -0.2]) / total * 100
+            positive = len(df[df['sentiment_score'] > POSITIVE_THRESHOLD]) / total * 100
+            negative = len(df[df['sentiment_score'] < NEGATIVE_THRESHOLD]) / total * 100
             neutral = 100 - positive - negative
         else:
             return {"positive": 0, "negative": 0, "neutral": 0}
@@ -507,8 +523,8 @@ def format_analysis_report(analysis_data: Dict[str, Any]) -> str:
     """
     sentiment_score = analysis_data.get("overall_sentiment", 0)
     prev_sentiment_score = analysis_data.get("previous_overall_sentiment")
-    sentiment_text = "Positive" if sentiment_score > 0.2 else ("Negative" if sentiment_score < -0.2 else "Neutral")
-    sentiment_color = "#28a745" if sentiment_score > 0.2 else ("#dc3545" if sentiment_score < -0.2 else "#6c757d")
+    sentiment_text = "Positive" if sentiment_score > POSITIVE_THRESHOLD else ("Negative" if sentiment_score < NEGATIVE_THRESHOLD else "Neutral")
+    sentiment_color = "#28a745" if sentiment_score > POSITIVE_THRESHOLD else ("#dc3545" if sentiment_score < NEGATIVE_THRESHOLD else "#6c757d")
     
     sentiment_percentage = round((sentiment_score + 1) * 50, 1)
     

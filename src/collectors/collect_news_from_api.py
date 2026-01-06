@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from pathlib import Path
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import sys
 
 # Force UTF-8 encoding for the entire script to prevent charmap codec errors
@@ -26,7 +26,9 @@ class NewsAPICollector:
         # Load .env from collectors folder
         env_path = Path(__file__).parent / '.env'
         load_dotenv(env_path)
-        self.base_path = Path(__file__).parent.parent.parent
+        from src.config.path_manager import PathManager
+        self.path_manager = PathManager()
+        self.base_path = self.path_manager.base_path
         
         # API Keys - Only keeping functional ones
         self.mediastack_key = os.getenv("MEDIASTACK_API_KEY")
@@ -61,9 +63,40 @@ class NewsAPICollector:
             )
         logger.info(f"Available APIs: {', '.join(available_apis)}")
 
-    def _get_target_keywords(self) -> List[str]:
-        """Get keywords to filter articles based on target configuration"""
-        # Hardcoded keywords for news-from-api collector
+    def _get_target_keywords(self) -> List[str]:  # type: ignore[no-any-return]
+        """Get keywords to filter articles based on target configuration.
+        
+        Priority order:
+        1. ConfigManager: collectors.keywords.<target_id>.news_from_api (target-specific, from DB)
+        2. ConfigManager: collectors.keywords.default.news_from_api (default, from DB)
+        3. target_config.keywords (backward compatibility)
+        4. Hardcoded defaults (last resort)
+        """
+        from src.config.config_manager import ConfigManager
+        config = ConfigManager()
+        
+        # Priority 1: Target-specific keywords from ConfigManager (enables DB editing)
+        if self.target_config and hasattr(self.target_config, 'name'):
+            target_name = self.target_config.name.lower().replace(" ", "_")
+            target_key = f"collectors.keywords.{target_name}.news_from_api"
+            target_keywords = config.get_list(target_key, None)
+            if target_keywords:
+                logger.info(f"Using target-specific keywords from ConfigManager: {target_keywords}")
+                return target_keywords
+        
+        # Priority 2: Default keywords from ConfigManager (enables DB editing)
+        default_keywords = config.get_list("collectors.keywords.default.news_from_api", None)
+        if default_keywords:
+            logger.info(f"Using default keywords from ConfigManager: {default_keywords}")
+            return default_keywords
+        
+        # Priority 3: Legacy - target_config keywords (backward compatibility)
+        if self.target_config and hasattr(self.target_config, 'keywords') and self.target_config.keywords:
+            logger.info(f"Using keywords from target_config: {self.target_config.keywords}")
+            return self.target_config.keywords
+        
+        # Priority 4: Hardcoded defaults (last resort)
+        logger.warning("Using hardcoded default keywords - consider configuring in ConfigManager/DB")
         return [
             'Asiwaju Bola Ahmed Adekunle Tinubu',
             'President of the Federal Republic of Nigeria',
@@ -75,7 +108,7 @@ class NewsAPICollector:
             'nigeria'
         ]
 
-    def _get_target_countries(self) -> List[str]:
+    def _get_target_countries(self) -> List[str]:  # type: ignore[no-any-return]
         """Get countries to search based on target configuration"""
         if self.target_config and hasattr(self.target_config, 'sources'):
             news_config = self.target_config.sources.get('news')
@@ -95,9 +128,9 @@ class NewsAPICollector:
         has_target_keywords = any(keyword.lower() in content_lower for keyword in target_keywords)
         
         # Apply additional filters if configured
-        if hasattr(self.target_config, 'sources') and 'news' in self.target_config.sources:
+        if self.target_config and hasattr(self.target_config, 'sources') and 'news' in self.target_config.sources:
             news_config = self.target_config.sources['news']
-            if hasattr(news_config, 'filters') and news_config.filters:
+            if news_config and hasattr(news_config, 'filters') and news_config.filters:
                 filters = news_config.filters
                 
                 # Check must_contain filters
@@ -184,7 +217,7 @@ class NewsAPICollector:
                         })
             
             # Log breakdown by country
-            country_breakdown = {}
+            country_breakdown: Dict[str, int] = {}
             for article in articles:
                 country = article['country']
                 country_breakdown[country] = country_breakdown.get(country, 0) + 1
@@ -258,7 +291,7 @@ class NewsAPICollector:
                         })
             
             # Log breakdown by country
-            country_breakdown = {}
+            country_breakdown: Dict[str, int] = {}
             for article in articles:
                 country = article['country']
                 country_breakdown[country] = country_breakdown.get(country, 0) + 1
@@ -274,14 +307,14 @@ class NewsAPICollector:
         
         return articles
 
-    def collect_all(self, queries: List[str], output_file: str = None) -> None:
+    def collect_all(self, queries: List[str], output_file: Optional[str] = None) -> None:
         """Collect news from all available sources"""
         if output_file is None:
             today = datetime.now().strftime("%Y%m%d")
             target_name = "default"
             if self.target_config:
                 target_name = self.target_config.name.replace(" ", "_").lower()
-            output_file = str(self.base_path / "data" / "raw" / f"news_data_{target_name}_{today}.csv")
+            output_file = str(self.path_manager.data_raw / f"news_data_{target_name}_{today}.csv")
         
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         
@@ -339,7 +372,7 @@ class NewsAPICollector:
             # logger.warning("No articles collected from any source")
             pass # Added pass to avoid indentation error
 
-def main(target_and_variations: List[str], user_id: str = None):
+def main(target_and_variations: List[str], user_id: Optional[str] = None):
     """Main function called by run_collectors. Accepts target/variations list and user_id."""
     if not target_and_variations:
         print("[News API] Error: No target/query variations provided.")
@@ -369,11 +402,11 @@ def main(target_and_variations: List[str], user_id: str = None):
         print(f"⚠️  Could not load target configuration: {e}, using default settings")
     
     # Construct the output file path
+    from src.config.path_manager import PathManager
+    path_manager = PathManager()
     today = datetime.now().strftime("%Y%m%d")
     safe_target_name = target_name.replace(" ", "_").lower()
-    output_dir = Path(__file__).parent.parent.parent / "data" / "raw"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_file = output_dir / f"news_api_{safe_target_name}_{today}.csv"
+    output_file = path_manager.data_raw / f"news_api_{safe_target_name}_{today}.csv"
 
     # Call the collector's collect_all method
     collector.collect_all(queries=queries, output_file=str(output_file))

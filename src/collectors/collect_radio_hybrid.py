@@ -15,6 +15,9 @@ from urllib.parse import urljoin, urlparse
 import random
 import feedparser
 import xml.etree.ElementTree as ET
+from src.api.database import SessionLocal
+from src.services.data_ingestor import DataIngestor
+
 
 # Force UTF-8 encoding for the entire script to prevent charmap codec errors
 if sys.platform.startswith('win'):
@@ -29,11 +32,51 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class HybridRadioCollector:
-    def __init__(self):
+    """
+    Hybrid radio collector combining radio station scraping and online sources.
+    
+    This collector gathers content from two sources:
+    1. Radio stations: Direct scraping from radio station websites
+    2. Online sources: News articles from online news websites
+    
+    It combines both sources into a single collection result.
+    
+    Attributes:
+        path_manager: PathManager instance for file path management
+        base_path: Base path for the project
+        target_config: Target-specific configuration
+        radio_stations: Dictionary of radio station configurations
+        online_sources: Dictionary of online source configurations
+        session: Requests session for HTTP requests
+        config: ConfigManager instance for configuration
+        request_delay: Delay between requests in seconds
+        last_request_time: Timestamp of last request for rate limiting
+        max_retries: Maximum number of retry attempts
+    """
+    def __init__(self, user_id: Optional[str] = None):
+        """
+        Initialize HybridRadioCollector.
+        
+        Args:
+            user_id: Optional user ID to associate with collected data.
+        """
+        self.user_id = user_id
+        self.session_db = SessionLocal()
+        self.ingestor = DataIngestor(self.session_db, user_id=user_id)
+        
         # Load .env from collectors folder
+
         env_path = Path(__file__).parent / '.env'
         load_dotenv(env_path)
-        self.base_path = Path(__file__).parent.parent.parent
+        
+        # Add src directory to path to allow imports from config
+        src_path = Path(__file__).resolve().parent.parent
+        if str(src_path) not in sys.path:
+            sys.path.append(str(src_path))
+            
+        from src.config.path_manager import PathManager
+        self.path_manager = PathManager()
+        self.base_path = self.path_manager.base_path
         
         # Target-specific configuration
         self.target_config = None
@@ -50,10 +93,25 @@ class HybridRadioCollector:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
         
-        # Rate limiting
-        self.request_delay = 2  # seconds between requests
+        # Rate limiting from ConfigManager
+        from config.config_manager import ConfigManager
+        self.config = ConfigManager()
+        self.request_delay = self.config.get_int("collectors.radio.request_delay_seconds", 2)
         self.last_request_time = 0
-        self.max_retries = 3
+        self.max_retries = self.config.get_int("collectors.radio.max_retries", 3)
+
+    def _ingest_batch(self, articles: List[Dict[str, Any]]) -> None:
+        """Helper to ingest a batch of articles into the database"""
+        if not articles:
+            return
+        try:
+            for article in articles:
+                self.ingestor.insert_record(article, commit=False)
+            self.ingestor.session.commit()
+            logger.info(f"Streamed {len(articles)} articles to DB")
+        except Exception as e:
+            logger.error(f"Error streaming batch to DB: {e}")
+
 
     def _load_radio_stations(self) -> Dict[str, Dict[str, Any]]:
         """Load radio station configuration with grouped URLs by station"""
@@ -261,7 +319,7 @@ class HybridRadioCollector:
         self.target_config = target_config
         logger.info(f"Set target config for: {target_config.name if target_config else 'None'}")
 
-    def _rate_limit(self):
+    def _rate_limit(self) -> None:
         """Implement rate limiting between requests"""
         current_time = time.time()
         time_since_last = current_time - self.last_request_time
@@ -269,11 +327,40 @@ class HybridRadioCollector:
             time.sleep(self.request_delay - time_since_last)
         self.last_request_time = time.time()
 
-    def _get_target_keywords(self) -> List[str]:
-        """Get keywords to filter content based on target configuration"""
-        if self.target_config and hasattr(self.target_config, 'keywords'):
+    def _get_target_keywords(self) -> List[str]:  # type: ignore[no-any-return]
+        """Get keywords to filter content based on target configuration.
+        
+        Priority order:
+        1. ConfigManager: collectors.keywords.<target_id>.radio_hybrid (target-specific, from DB)
+        2. ConfigManager: collectors.keywords.default.radio_hybrid (default, from DB)
+        3. target_config.keywords (backward compatibility)
+        4. Hardcoded defaults (last resort)
+        """
+        from config.config_manager import ConfigManager
+        config = ConfigManager()
+        
+        # Priority 1: Target-specific keywords from ConfigManager (enables DB editing)
+        if self.target_config and hasattr(self.target_config, 'name'):
+            target_name = self.target_config.name.lower().replace(" ", "_")
+            target_key = f"collectors.keywords.{target_name}.radio_hybrid"
+            target_keywords = config.get_list(target_key, None)
+            if target_keywords:
+                logger.info(f"Using target-specific keywords from ConfigManager: {target_keywords}")
+                return target_keywords
+        
+        # Priority 2: Default keywords from ConfigManager (enables DB editing)
+        default_keywords = config.get_list("collectors.keywords.default.radio_hybrid", None)
+        if default_keywords:
+            logger.info(f"Using default keywords from ConfigManager: {default_keywords}")
+            return default_keywords
+        
+        # Priority 3: Legacy - target_config keywords (backward compatibility)
+        if self.target_config and hasattr(self.target_config, 'keywords') and self.target_config.keywords:
+            logger.info(f"Using keywords from target_config: {self.target_config.keywords}")
             return self.target_config.keywords
-        # Fallback to default keywords
+        
+        # Priority 4: Hardcoded defaults (last resort)
+        logger.warning("Using hardcoded default keywords - consider configuring in ConfigManager/DB")
         return ["nigeria", "government", "politics", "economy", "news"]
 
     def _should_include_content(self, content: str) -> bool:
@@ -370,7 +457,8 @@ class HybridRadioCollector:
                 if full_url not in pagination_links and full_url != base_url:
                     pagination_links.append(full_url)
         
-        return pagination_links[:5]  # Limit to 5 pages
+        max_pages = self.config.get_int("collectors.radio.max_pages", 5)
+        return pagination_links[:max_pages]  # Limit to configured max pages
 
     def _find_section_links(self, soup: BeautifulSoup, base_url: str) -> List[str]:
         """Find section-specific links like 'More from Fact Check', 'More from Hot Tori', etc."""
@@ -481,7 +569,7 @@ class HybridRadioCollector:
             '.item', '.card', '.tile', '.block', '.section'
         ]
         
-        found_articles = []
+        found_articles: List[Any] = []
         for selector in article_selectors:
             try:
                 elements = soup.select(selector)
@@ -525,9 +613,11 @@ class HybridRadioCollector:
                 ]
                 
                 # Check if it has news keywords OR looks like a news URL
-                has_news_keywords = any(keyword in href.lower() or keyword in text.lower() for keyword in news_keywords)
-                has_skip_keywords = any(skip in href.lower() or skip in text.lower() for skip in skip_keywords)
-                looks_like_news_url = any(term in href.lower() for term in ['news', 'article', 'story', 'post', 'update', 'latest'])
+                href_str = str(href) if href else ""
+                text_str = str(text) if text else ""
+                has_news_keywords = any(keyword in href_str.lower() or keyword in text_str.lower() for keyword in news_keywords)
+                has_skip_keywords = any(skip in href_str.lower() or skip in text_str.lower() for skip in skip_keywords)
+                looks_like_news_url = any(term in href_str.lower() for term in ['news', 'article', 'story', 'post', 'update', 'latest'])
                 
                 # Accept if it has news keywords OR looks like news URL, and doesn't have skip keywords
                 if (len(text) > 15 and (has_news_keywords or looks_like_news_url) and not has_skip_keywords):
@@ -568,7 +658,8 @@ class HybridRadioCollector:
                     found_articles.append(heading)
         
         # Process found articles
-        for element in found_articles[:25]:  # Limit to 25 articles per page
+        max_articles = self.config.get_int("collectors.radio.max_articles_per_page", 25)
+        for element in found_articles[:max_articles]:  # Limit to configured max articles per page
             try:
                 article_data = self._extract_article_data(element, station_name, url)
                 if article_data and self._should_include_content(article_data.get('text', '')):
@@ -598,14 +689,16 @@ class HybridRadioCollector:
             for i, user_agent in enumerate(user_agents):
                 try:
                     self.session.headers.update({'User-Agent': user_agent})
-                    response = self.session.get(url, timeout=15, allow_redirects=True)
+                    http_timeout = self.config.get_int("collectors.radio.http_timeout_seconds", 15)
+                    response = self.session.get(url, timeout=http_timeout, allow_redirects=True)
                     response.raise_for_status()
                     break
                 except Exception as e:
                     if i == len(user_agents) - 1:  # Last attempt
                         raise e
                     logger.warning(f"Attempt {i+1} failed for {url}: {e}")
-                    time.sleep(2)  # Wait before retry
+                    retry_delay = self.config.get_int("collectors.radio.retry_delay_seconds", 2)
+                    time.sleep(retry_delay)  # Wait before retry
             
             # Parse with different parsers if needed
             try:
@@ -619,7 +712,9 @@ class HybridRadioCollector:
             # First, scrape the main page
             page_articles = self._extract_articles_from_soup(soup, station_name, url)
             articles.extend(page_articles)
+            self._ingest_batch(page_articles)
             logger.info(f"Found {len(page_articles)} articles on main page: {url}")
+
             
             # Look for section-specific "More from..." links (especially for Wazobia FM)
             section_links = self._find_section_links(soup, url)
@@ -631,13 +726,16 @@ class HybridRadioCollector:
                     self._rate_limit()
                     logger.info(f"Scraping section {i+1}: {section_url}")
                     
-                    section_response = self.session.get(section_url, timeout=15, allow_redirects=True)
+                    http_timeout = self.config.get_int("collectors.radio.http_timeout_seconds", 15)
+                    section_response = self.session.get(section_url, timeout=http_timeout, allow_redirects=True)
                     section_response.raise_for_status()
                     
                     section_soup = BeautifulSoup(section_response.content, 'html.parser')
                     section_articles = self._extract_articles_from_soup(section_soup, station_name, section_url)
                     articles.extend(section_articles)
+                    self._ingest_batch(section_articles)
                     logger.info(f"Found {len(section_articles)} articles in section: {section_url}")
+
                     
                 except Exception as e:
                     logger.warning(f"Failed to scrape section {section_url}: {e}")
@@ -653,13 +751,16 @@ class HybridRadioCollector:
                     self._rate_limit()
                     logger.info(f"Scraping pagination page {i+2}: {page_url}")
                     
-                    page_response = self.session.get(page_url, timeout=15, allow_redirects=True)
+                    http_timeout = self.config.get_int("collectors.radio.http_timeout_seconds", 15)
+                    page_response = self.session.get(page_url, timeout=http_timeout, allow_redirects=True)
                     page_response.raise_for_status()
                     
                     page_soup = BeautifulSoup(page_response.content, 'html.parser')
                     page_articles = self._extract_articles_from_soup(page_soup, station_name, page_url)
                     articles.extend(page_articles)
+                    self._ingest_batch(page_articles)
                     logger.info(f"Found {len(page_articles)} articles on page {i+2}: {page_url}")
+
                     
                 except Exception as e:
                     logger.warning(f"Failed to scrape pagination page {page_url}: {e}")
@@ -792,7 +893,9 @@ class HybridRadioCollector:
                     logger.warning(f"Error processing RSS entry from {url}: {e}")
                     continue
             
+            self._ingest_batch(articles)
             logger.info(f"Found {len(articles)} relevant articles from RSS feed: {url}")
+
             
         except Exception as e:
             logger.error(f"Error scraping RSS feed {url}: {e}")
@@ -1065,7 +1168,7 @@ class HybridRadioCollector:
         logger.info(f"Online sources collection complete: {len(all_articles)} articles from {successful_sources}/{total_sources} sources")
         return all_articles
 
-    def collect_all(self, queries: List[str] = None, output_file: str = None) -> Dict[str, Any]:
+    def collect_all(self, queries: Optional[List[str]] = None, output_file: Optional[str] = None) -> Dict[str, Any]:
         """Collect content from all configured radio stations and online sources"""
         logger.info("Starting hybrid radio station and online sources collection...")
         
@@ -1114,16 +1217,18 @@ class HybridRadioCollector:
         logger.info(f"Hybrid collection complete: {len(all_articles)} total articles ({len(radio_articles)} radio + {len(online_articles)} online)")
         return results
 
-def main(target_and_variations: List[str], user_id: str = None):
+def main(target_and_variations: List[str], user_id: Optional[str] = None):
     """Main function to run hybrid radio station and online sources collection"""
     logger.info(f"Starting hybrid radio station and online sources collection for: {target_and_variations}")
     
     try:
-        collector = HybridRadioCollector()
+        collector = HybridRadioCollector(user_id=user_id)
+
         
         # Set up output file
-        output_dir = Path(__file__).parent.parent.parent / "data" / "raw"
-        output_dir.mkdir(parents=True, exist_ok=True)
+        from src.config.path_manager import PathManager
+        path_manager = PathManager()
+        output_dir = path_manager.data_raw
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_file = output_dir / f"radio_online_hybrid_{timestamp}.csv"

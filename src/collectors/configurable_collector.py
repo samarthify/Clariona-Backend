@@ -24,6 +24,7 @@ if sys.platform.startswith('win'):
 
 from .target_config_manager import TargetConfigManager, get_target_by_name, get_target_by_keywords
 from .target_helper import get_target_and_queries
+from src.config.path_manager import PathManager
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +36,14 @@ class ConfigurableCollector:
     
     def __init__(self):
         self.target_config_manager = TargetConfigManager()
-        self.base_path = Path(__file__).parent.parent.parent
+        self.path_manager = PathManager()
+        self.base_path = self.path_manager.base_path  # For backward compatibility
+        from config.config_manager import ConfigManager
+        self.config = ConfigManager()
         
-        # Timeout settings
-        self.collector_timeout = 1800  # 30 minutes per collector
-        self.overall_timeout = 7200    # 2 hours total system timeout
+        # Timeout settings from ConfigManager
+        self.collector_timeout = self.config.get_int("processing.timeouts.collector_timeout_seconds", 1800)  # 30 minutes per collector
+        self.overall_timeout = self.config.get_int("processing.timeouts.overall_timeout_seconds", 7200)    # 2 hours total system timeout
         
         # Available collector modules
         self.collectors = {
@@ -55,7 +59,7 @@ class ConfigurableCollector:
             'linkedin': 'collectors.collect_linkedin_apify'
         }
     
-    def determine_target(self, target_and_variations: List[str], user_id: str = None) -> Optional[str]:
+    def determine_target(self, target_and_variations: List[str], user_id: Optional[str] = None) -> Optional[str]:
         """
         Determine which target individual to use based on input.
         
@@ -144,7 +148,7 @@ class ConfigurableCollector:
         logger.info(f"Enabled collectors for {target_id}: {enabled_collectors}")
         return enabled_collectors
     
-    def run_collector(self, collector_type: str, target_id: str, target_and_variations: List[str], user_id: str = None) -> bool:
+    def run_collector(self, collector_type: str, target_id: str, target_and_variations: List[str], user_id: Optional[str] = None) -> bool:
         """
         Run a specific collector for a target.
         
@@ -209,7 +213,7 @@ class ConfigurableCollector:
             logger.error(f"Error running {collector_type} collector for {target_id}: {e}")
             return False
     
-    def run_collection_for_target(self, target_and_variations: List[str], user_id: str = None) -> Dict[str, bool]:
+    def run_collection_for_target(self, target_and_variations: List[str], user_id: Optional[str] = None) -> Dict[str, bool]:
         """
         Run collection for a specific target individual.
         
@@ -261,7 +265,7 @@ class ConfigurableCollector:
         
         return results
     
-    def run_collection_with_target_detection(self, queries: List[str], user_id: str = None) -> Dict[str, Any]:
+    def run_collection_with_target_detection(self, queries: List[str], user_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Main entry point for running collection with automatic target detection.
         
@@ -325,7 +329,7 @@ class ConfigurableCollector:
         summary["total_targets"] = len(summary["available_targets"])
         return summary
 
-def main(target_and_variations: List[str], user_id: str = None):
+def main(target_and_variations: List[str], user_id: Optional[str] = None):
     """
     Main function for the configurable collector.
     This replaces the individual collector main functions.

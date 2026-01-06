@@ -6,7 +6,7 @@ Tracks token usage per minute and limits concurrent requests.
 import time
 import threading
 import logging
-from typing import Optional
+from typing import Optional, Dict, Tuple, Deque
 from collections import deque
 from dataclasses import dataclass
 
@@ -42,14 +42,14 @@ class OpenAIRateLimiter:
         self.config = config or RateLimitConfig()
         
         # Token usage tracking (sliding window)
-        self.token_usage = deque()  # List of (timestamp, tokens) tuples
+        self.token_usage: Deque[Tuple[float, int]] = deque()  # List of (timestamp, tokens) tuples
         self.lock = threading.Lock()
         
         # Semaphore to limit concurrent requests
         self.semaphore = threading.Semaphore(self.config.max_concurrent_requests)
         
         # Track retry attempts
-        self.retry_counts = {}
+        self.retry_counts: Dict[str, int] = {}
         
         logger.info(
             f"OpenAIRateLimiter initialized: "

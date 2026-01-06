@@ -23,17 +23,38 @@ class RecordRouter:
             models: List of models to use. Defaults to all 4 models.
         """
         if models is None:
-            self.models = ["gpt-5-mini", "gpt-5-nano", "gpt-4.1-mini", "gpt-4.1-nano"]
+            try:
+                from config.config_manager import ConfigManager
+                config = ConfigManager()
+                self.models = config.get_list("models.llm_models.available", ["gpt-5-mini", "gpt-5-nano", "gpt-4.1-mini", "gpt-4.1-nano"])
+            except Exception as e:
+                logger.warning(f"Could not load ConfigManager for available models, using defaults: {e}")
+                self.models = ["gpt-5-mini", "gpt-5-nano", "gpt-4.1-mini", "gpt-4.1-nano"]
         else:
             self.models = models
         
-        # TPM capacity for each model (for capacity-based routing)
-        self.model_capacities = {
-            "gpt-5-mini": 500000,  # 500k TPM
-            "gpt-5-nano": 200000,  # 200k TPM
-            "gpt-4.1-mini": 200000,  # 200k TPM
-            "gpt-4.1-nano": 200000,  # 200k TPM
-        }
+        # TPM capacity for each model (for capacity-based routing) - load from ConfigManager
+        try:
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            tpm_capacities_dict = config.get_dict("models.llm_models.tpm_capacities", {})
+            # Default capacities if not in config
+            default_capacities = {
+                "gpt-5-mini": 500000,  # 500k TPM
+                "gpt-5-nano": 200000,  # 200k TPM
+                "gpt-4.1-mini": 200000,  # 200k TPM
+                "gpt-4.1-nano": 200000,  # 200k TPM
+            }
+            # Merge config values with defaults
+            self.model_capacities = {**default_capacities, **tpm_capacities_dict}
+        except Exception as e:
+            logger.warning(f"Could not load ConfigManager for TPM capacities, using defaults: {e}")
+            self.model_capacities = {
+                "gpt-5-mini": 500000,  # 500k TPM
+                "gpt-5-nano": 200000,  # 200k TPM
+                "gpt-4.1-mini": 200000,  # 200k TPM
+                "gpt-4.1-nano": 200000,  # 200k TPM
+            }
         
         # Calculate routing weights based on TPM capacity
         self._calculate_routing_weights()

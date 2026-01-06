@@ -31,7 +31,9 @@ class RadioStationCollector:
         # Load .env from collectors folder
         env_path = Path(__file__).parent / '.env'
         load_dotenv(env_path)
-        self.base_path = Path(__file__).parent.parent.parent
+        from src.config.path_manager import PathManager
+        self.path_manager = PathManager()
+        self.base_path = self.path_manager.base_path
         
         # Target-specific configuration
         self.target_config = None
@@ -45,10 +47,12 @@ class RadioStationCollector:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
         
-        # Rate limiting
-        self.request_delay = 2  # seconds between requests
+        # Rate limiting from ConfigManager
+        from config.config_manager import ConfigManager
+        self.config = ConfigManager()
+        self.request_delay = self.config.get_int("collectors.radio.request_delay_seconds", 2)
         self.last_request_time = 0
-        self.max_retries = 3
+        self.max_retries = self.config.get_int("collectors.radio.max_retries", 3)
 
     def _load_radio_stations(self) -> Dict[str, List[Dict]]:
         """Load radio station configuration from the comprehensive media sources"""
@@ -119,11 +123,40 @@ class RadioStationCollector:
             time.sleep(self.request_delay - time_since_last)
         self.last_request_time = time.time()
 
-    def _get_target_keywords(self) -> List[str]:
-        """Get keywords to filter content based on target configuration"""
-        if self.target_config and hasattr(self.target_config, 'keywords'):
+    def _get_target_keywords(self) -> List[str]:  # type: ignore[no-any-return]
+        """Get keywords to filter content based on target configuration.
+        
+        Priority order:
+        1. ConfigManager: collectors.keywords.<target_id>.radio_stations (target-specific, from DB)
+        2. ConfigManager: collectors.keywords.default.radio_stations (default, from DB)
+        3. target_config.keywords (backward compatibility)
+        4. Hardcoded defaults (last resort)
+        """
+        from config.config_manager import ConfigManager
+        config = ConfigManager()
+        
+        # Priority 1: Target-specific keywords from ConfigManager (enables DB editing)
+        if self.target_config and hasattr(self.target_config, 'name'):
+            target_name = self.target_config.name.lower().replace(" ", "_")
+            target_key = f"collectors.keywords.{target_name}.radio_stations"
+            target_keywords = config.get_list(target_key, None)
+            if target_keywords:
+                logger.info(f"Using target-specific keywords from ConfigManager: {target_keywords}")
+                return target_keywords
+        
+        # Priority 2: Default keywords from ConfigManager (enables DB editing)
+        default_keywords = config.get_list("collectors.keywords.default.radio_stations", None)
+        if default_keywords:
+            logger.info(f"Using default keywords from ConfigManager: {default_keywords}")
+            return default_keywords
+        
+        # Priority 3: Legacy - target_config keywords (backward compatibility)
+        if self.target_config and hasattr(self.target_config, 'keywords') and self.target_config.keywords:
+            logger.info(f"Using keywords from target_config: {self.target_config.keywords}")
             return self.target_config.keywords
-        # Fallback to default keywords
+        
+        # Priority 4: Hardcoded defaults (last resort)
+        logger.warning("Using hardcoded default keywords - consider configuring in ConfigManager/DB")
         return ["nigeria", "government", "politics", "economy", "news"]
 
     def _should_include_content(self, content: str) -> bool:
@@ -159,7 +192,7 @@ class RadioStationCollector:
 
     def _scrape_radio_website(self, station: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Scrape content from a radio station website with improved error handling"""
-        articles = []
+        articles: List[Dict[str, Any]] = []
         station_name = station.get('name', 'Unknown Station')
         website_url = station.get('website_url', '')
         
@@ -182,14 +215,16 @@ class RadioStationCollector:
             for i, user_agent in enumerate(user_agents):
                 try:
                     self.session.headers.update({'User-Agent': user_agent})
-                    response = self.session.get(website_url, timeout=15, allow_redirects=True)
+                    http_timeout = self.config.get_int("collectors.radio.http_timeout_seconds", 15)
+                    response = self.session.get(website_url, timeout=http_timeout, allow_redirects=True)
                     response.raise_for_status()
                     break
                 except Exception as e:
                     if i == len(user_agents) - 1:  # Last attempt
                         raise e
                     logger.warning(f"Attempt {i+1} failed for {station_name}: {e}")
-                    time.sleep(2)  # Wait before retry
+                    retry_delay = self.config.get_int("collectors.radio.retry_delay_seconds", 2)
+                    time.sleep(retry_delay)  # Wait before retry
             
             # Parse with different parsers if needed
             try:
@@ -209,7 +244,7 @@ class RadioStationCollector:
                 '.item', '.card', '.tile', '.block', '.section'
             ]
             
-            found_articles = []
+            found_articles: List[Any] = []
             for selector in article_selectors:
                 try:
                     elements = soup.select(selector)
@@ -442,7 +477,7 @@ class RadioStationCollector:
         """Collect content from a single radio station"""
         return self._scrape_radio_website(station)
 
-    def collect_all(self, queries: List[str] = None, output_file: str = None) -> Dict[str, Any]:
+    def collect_all(self, queries: Optional[List[str]] = None, output_file: Optional[str] = None) -> Dict[str, Any]:
         """Collect content from all configured radio stations"""
         logger.info("Starting radio station collection...")
         
@@ -490,7 +525,7 @@ class RadioStationCollector:
         logger.info(f"Radio collection complete: {len(all_articles)} articles from {successful_stations}/{total_stations} stations")
         return results
 
-def main(target_and_variations: List[str], user_id: str = None):
+def main(target_and_variations: List[str], user_id: Optional[str] = None):
     """Main function to run radio station collection"""
     logger.info(f"Starting radio station collection for: {target_and_variations}")
     
@@ -498,8 +533,9 @@ def main(target_and_variations: List[str], user_id: str = None):
         collector = RadioStationCollector()
         
         # Set up output file
-        output_dir = Path(__file__).parent.parent.parent / "data" / "raw"
-        output_dir.mkdir(parents=True, exist_ok=True)
+        from src.config.path_manager import PathManager
+        path_manager = PathManager()
+        output_dir = path_manager.data_raw
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_file = output_dir / f"radio_stations_{timestamp}.csv"

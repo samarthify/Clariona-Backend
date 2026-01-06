@@ -56,7 +56,7 @@ import json
 import time
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from urllib.parse import urlparse
 from dotenv import load_dotenv
 from apify_client import ApifyClient
@@ -190,10 +190,44 @@ def collect_facebook_apify(queries: List[str], output_file=None, max_posts=1000,
     # Initialize the ApifyClient
     client = ApifyClient(api_token)
     
+    # Get keywords from ConfigManager (enables DB editing)
+    # Priority: 1) ConfigManager default, 2) queries parameter, 3) hardcoded defaults
+    from config.config_manager import ConfigManager
+    config = ConfigManager()
+    
+    # Try to get target name from queries if available (for target-specific keywords)
+    target_name = None
+    if queries and len(queries) > 0:
+        # First element might be target name
+        target_name = queries[0].lower().replace(" ", "_") if queries else None
+    
+    # Priority 1: Target-specific keywords from ConfigManager (if target name available)
+    if target_name:
+        target_key = f"collectors.keywords.{target_name}.facebook"
+        target_keywords = config.get_list(target_key, None)
+        if target_keywords:
+            print(f"[Facebook Apify] Using target-specific keywords from ConfigManager: {target_keywords}")
+            queries = target_keywords
+    
+    # Priority 2: Default keywords from ConfigManager (enables DB editing)
+    if not queries and not facebook_urls:
+        default_keywords = config.get_list("collectors.keywords.default.facebook", None)
+        if default_keywords:
+            print(f"[Facebook Apify] Using default keywords from ConfigManager: {default_keywords}")
+            queries = default_keywords
+    
+    # Priority 3: Use queries parameter as-is (if provided)
+    # Priority 4: Hardcoded fallback (last resort)
+    if not queries and not facebook_urls:
+        print("[Facebook Apify] Using hardcoded default keywords - consider configuring in ConfigManager/DB")
+        queries = ["qatar", "nigeria", "india", "news", "politics"]
+    
     # Ensure output directory exists
     if output_file is None:
+        from src.config.path_manager import PathManager
+        path_manager = PathManager()
         today = datetime.now().strftime("%Y%m%d")
-        output_file = str(Path(__file__).parent.parent.parent / "data" / "raw" / f"facebook_apify_data_{today}.csv")
+        output_file = str(path_manager.data_raw / f"facebook_apify_data_{today}.csv")
     
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     
@@ -209,7 +243,7 @@ def collect_facebook_apify(queries: List[str], output_file=None, max_posts=1000,
         print(f"\n--- [Facebook Apify - {actor_name}] Starting collection ({actor_id}) ---")
         
         actor_collected_count = 0
-        runs_to_process = []
+        runs_to_process: List[Dict[str, Any]] = []
 
         # --- Prepare and Run Actor --- 
         # Use provided Facebook URLs if available, otherwise generate from queries
@@ -581,7 +615,7 @@ def _extract_profile_data(item: Dict, query: str, actor_id: str) -> Dict[str, An
         print(f"Error extracting profile data: {e}")
         return None
 
-def main(target_and_variations: List[str], user_id: str = None):
+def main(target_and_variations: List[str], user_id: Optional[str] = None):
     """Main function called by run_collectors. Accepts target/variations list."""
     if not target_and_variations:
         print("[Facebook Apify] Error: No target/query variations provided.")
@@ -592,9 +626,11 @@ def main(target_and_variations: List[str], user_id: str = None):
     print(f"[Facebook Apify] Received Target: {target_name}, Queries: {queries}")
     
     # Construct output file name
+    from src.config.path_manager import PathManager
+    path_manager = PathManager()
     today = datetime.now().strftime("%Y%m%d")
     safe_target_name = target_name.replace(" ", "_").lower()
-    output_path = Path(__file__).parent.parent.parent / "data" / "raw" / f"facebook_apify_{safe_target_name}_{today}.csv"
+    output_path = path_manager.data_raw / f"facebook_apify_{safe_target_name}_{today}.csv"
     
     # Call the collection function with the queries
     collect_facebook_apify(queries=queries, output_file=str(output_path))

@@ -1,31 +1,50 @@
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
-from fastapi.responses import JSONResponse
+# Standard library imports
+import os
+import sys
+import csv
 import json
 import logging
-from typing import List, Dict, Any, Optional
+from pathlib import Path
 from datetime import datetime
-import pandas as pd
+from typing import List, Dict, Any, Optional
+from uuid import UUID
+
+# Third-party imports
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-import csv
-import os
-from pathlib import Path
-from uuid import UUID
+import pandas as pd
 
-# Import the presidential analyzer
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Local imports - config
+from src.config.path_manager import PathManager
+from src.config.logging_config import get_logger
+
+# Local imports - exceptions
+# Add src to path for imports (needed for exceptions module)
+if str(Path(__file__).parent.parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+from exceptions import APIError, DatabaseError
+
+# Local imports - utils
+from utils.deduplication_service import DeduplicationService
+
+# Local imports - processing
 from processing.presidential_sentiment_analyzer import PresidentialSentimentAnalyzer
 from processing.presidential_data_processor import PresidentialDataProcessor
 
-# Import database dependencies
+# Local imports - API modules
 from . import models, database
 from .database import SessionLocal, get_db
 from .auth import get_current_user_id
 
-logger = logging.getLogger("presidential_service")
+# Use centralized logging configuration
+try:
+    from src.config.logging_config import get_logger
+    logger = get_logger(__name__)
+except ImportError:
+    logger = logging.getLogger(__name__)
 
 # Initialize presidential analyzer
 presidential_analyzer = PresidentialSentimentAnalyzer("President Bola Tinubu", "Nigeria")
@@ -43,9 +62,9 @@ def save_presidential_analysis_to_csv(processed_records: List[Dict], user_id: st
         Path to the saved CSV file
     """
     try:
-        # Create data/processed directory if it doesn't exist
-        processed_dir = Path("data/processed")
-        processed_dir.mkdir(parents=True, exist_ok=True)
+        # Use PathManager for processed data directory
+        path_manager = PathManager()
+        processed_dir = path_manager.data_processed
         
         # Generate filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -68,22 +87,54 @@ def save_presidential_analysis_to_csv(processed_records: List[Dict], user_id: st
 
 # Pydantic models for presidential analysis
 class PresidentialAnalysisRequest(BaseModel):
+    """
+    Request model for single presidential sentiment analysis.
+    
+    Attributes:
+        text: Text content to analyze
+        source_type: Optional source type (e.g., "news", "social_media")
+        user_id: Optional user ID for user-specific analysis
+    """
     text: str
     source_type: Optional[str] = None
     user_id: Optional[str] = None
 
 class PresidentialAnalysisResponse(BaseModel):
+    """
+    Response model for presidential sentiment analysis.
+    
+    Attributes:
+        sentiment_label: Sentiment classification (e.g., "positive", "negative", "neutral")
+        sentiment_score: Sentiment score (-1.0 to 1.0)
+        sentiment_justification: Explanation of the sentiment analysis
+        analysis_timestamp: ISO format timestamp of when analysis was performed
+    """
     sentiment_label: str
     sentiment_score: float
     sentiment_justification: str
     analysis_timestamp: str
 
 class PresidentialBatchRequest(BaseModel):
+    """
+    Request model for batch presidential sentiment analysis.
+    
+    Attributes:
+        texts: List of text contents to analyze
+        source_types: Optional list of source types corresponding to texts
+        user_id: Optional user ID for user-specific analysis
+    """
     texts: List[str]
     source_types: Optional[List[str]] = None
     user_id: Optional[str] = None
 
 class PresidentialInsightsRequest(BaseModel):
+    """
+    Request model for presidential insights and analytics.
+    
+    Attributes:
+        user_id: User ID for user-specific insights
+        date_range: Optional date range filter with "start" and "end" keys (ISO format)
+    """
     user_id: str
     date_range: Optional[Dict[str, str]] = None
     source_filter: Optional[str] = None
@@ -281,7 +332,12 @@ async def generate_presidential_report(user_id: str, db: Session = Depends(get_d
         return response
         
     except Exception as e:
-        logger.error(f"Error generating presidential report: {e}", exc_info=True)
+        from exceptions import APIError
+        api_error = APIError(
+            f"Error generating presidential report: {str(e)}",
+            details={"user_id": user_id, "error_type": type(e).__name__}
+        )
+        logger.error(str(api_error), exc_info=True)
         raise HTTPException(status_code=500, detail=f"Presidential report generation failed: {str(e)}")
 
 async def get_presidential_metrics(user_id: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
@@ -445,6 +501,9 @@ def deduplicate_sentiment_data(records: List[models.SentimentData]) -> List[mode
     
     logger.info(f"Starting deduplication of {len(records)} records")
     
+    # Initialize deduplication service
+    dedup_service = DeduplicationService()
+    
     # Convert to list of dictionaries for easier processing
     records_dict = []
     for record in records:
@@ -453,7 +512,7 @@ def deduplicate_sentiment_data(records: List[models.SentimentData]) -> List[mode
         records_dict.append({
             'record': record,
             'text': text_content,
-            'normalized_text': normalize_text_for_dedup(text_content)
+            'normalized_text': dedup_service.normalize_text(text_content)
         })
     
     # Remove exact duplicates based on normalized text
@@ -475,31 +534,18 @@ def deduplicate_sentiment_data(records: List[models.SentimentData]) -> List[mode
     
     return final_records
 
-def normalize_text_for_dedup(text: str) -> str:
-    """
-    Normalize text for deduplication (same logic as data processor).
-    """
-    if not text:
-        return ""
-    
-    # Convert to lowercase
-    text = text.lower()
-    
-    # Remove extra whitespace
-    text = ' '.join(text.split())
-    
-    # Remove common punctuation that doesn't affect meaning
-    import re
-    text = re.sub(r'[^\w\s]', '', text)
-    
-    return text.strip()
-
 def remove_similar_content(records: List[models.SentimentData], similarity_threshold: float = 0.85) -> List[models.SentimentData]:
     """
-    Remove records with similar content using a simplified approach.
+    Remove records with similar content using DeduplicationService.
+    
+    When two records are similar (above threshold), keeps the longer/more detailed one.
+    Uses the canonical similarity check from DeduplicationService for consistency.
     """
     if len(records) <= 1:
         return records
+    
+    # Initialize deduplication service
+    dedup_service = DeduplicationService()
     
     # Convert to list of dictionaries for processing
     records_data = []
@@ -508,54 +554,44 @@ def remove_similar_content(records: List[models.SentimentData], similarity_thres
         records_data.append({
             'record': record,
             'text': text_content,
-            'normalized_text': normalize_text_for_dedup(text_content)
+            'normalized_text': dedup_service.normalize_text(text_content)
         })
     
-    # Simple similarity check based on text length and content overlap
-    indices_to_keep = []
+    # Track which records to drop (by index)
+    indices_to_drop = set()
     
-    for i, item1 in enumerate(records_data):
-        keep_record = True
+    # Compare each pair of records
+    # For each record i, check if there's a longer similar record j (where j > i)
+    # If yes, mark i to be dropped (we'll keep the longer j instead)
+    for i in range(len(records_data)):
+        item1 = records_data[i]
         
+        # Skip empty text (keep it, no need to compare)
+        if not item1['normalized_text']:
+            continue
+        
+        # Check against all remaining records
         for j in range(i + 1, len(records_data)):
             item2 = records_data[j]
             
-            # Skip if we already decided to drop this record
-            if j in indices_to_keep:
+            # Skip empty text
+            if not item2['normalized_text']:
                 continue
             
-            # Quick length check
-            len1, len2 = len(item1['normalized_text']), len(item2['normalized_text'])
-            if len1 == 0 or len2 == 0:
-                continue
-            
-            # Calculate similarity based on common words
-            words1 = set(item1['normalized_text'].split())
-            words2 = set(item2['normalized_text'].split())
-            
-            if len(words1) == 0 or len(words2) == 0:
-                continue
-            
-            intersection = len(words1.intersection(words2))
-            union = len(words1.union(words2))
-            
-            if union > 0:
-                similarity = intersection / union
-                
-                # If similarity is high, keep the longer/more detailed record
-                if similarity > similarity_threshold:
-                    if len(item1['text']) < len(item2['text']):
-                        keep_record = False
-                        break
-                    else:
-                        # Mark the other record to be dropped
-                        indices_to_keep.append(j)
-        
-        if keep_record:
-            indices_to_keep.append(i)
+            # Use canonical similarity check from DeduplicationService
+            if dedup_service.is_similar_text(item1['normalized_text'], item2['normalized_text'], threshold=similarity_threshold):
+                # Records are similar - drop the shorter one
+                if len(item1['text']) < len(item2['text']):
+                    # item1 is shorter, mark it to be dropped
+                    indices_to_drop.add(i)
+                    break  # No need to check further - item1 is similar to a longer record
+                else:
+                    # item2 is shorter, mark it to be dropped
+                    indices_to_drop.add(j)
+                    # Continue checking - item1 might be similar to other longer records
     
-    # Return only the records we decided to keep
-    return [records_data[i]['record'] for i in indices_to_keep if i < len(records_data)]
+    # Return all records not marked to drop (maintain original order)
+    return [records_data[i]['record'] for i in range(len(records_data)) if i not in indices_to_drop]
 
 async def update_latest_data_with_presidential_analysis(user_id: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
     """

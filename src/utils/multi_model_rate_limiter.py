@@ -7,19 +7,44 @@ Supports: gpt-5-mini, gpt-5-nano, gpt-4.1-mini, gpt-4.1-nano
 import time
 import threading
 import logging
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple, Deque
 from collections import deque
 from dataclasses import dataclass
 
-logger = logging.getLogger('MultiModelRateLimiter')
+# Use centralized logging configuration
+try:
+    from src.config.logging_config import get_logger
+    logger = get_logger(__name__)
+except ImportError:
+    logger = logging.getLogger(__name__)
 
-# Model rate limits
-MODEL_RATE_LIMITS = {
-    "gpt-5-mini": 500000,  # 500k TPM
-    "gpt-5-nano": 200000,  # 200k TPM
-    "gpt-4.1-mini": 200000,  # 200k TPM
-    "gpt-4.1-nano": 200000,  # 200k TPM
-}
+# Load model rate limits from ConfigManager
+def _get_model_rate_limits():
+    """Get model rate limits from ConfigManager with fallback defaults."""
+    try:
+        from config.config_manager import ConfigManager
+        config = ConfigManager()
+        tpm_capacities = config.get_dict("models.llm_models.tpm_capacities", {})
+        # Default rate limits if not in config
+        default_limits = {
+            "gpt-5-mini": 500000,  # 500k TPM
+            "gpt-5-nano": 200000,  # 200k TPM
+            "gpt-4.1-mini": 200000,  # 200k TPM
+            "gpt-4.1-nano": 200000,  # 200k TPM
+        }
+        # Merge config values with defaults
+        return {**default_limits, **tpm_capacities}
+    except Exception as e:
+        logger.warning(f"Could not load ConfigManager for model rate limits, using defaults: {e}")
+        return {
+            "gpt-5-mini": 500000,  # 500k TPM
+            "gpt-5-nano": 200000,  # 200k TPM
+            "gpt-4.1-mini": 200000,  # 200k TPM
+            "gpt-4.1-nano": 200000,  # 200k TPM
+        }
+
+# Module-level constant loaded from config
+MODEL_RATE_LIMITS = _get_model_rate_limits()
 
 @dataclass
 class ModelRateLimitConfig:
@@ -34,10 +59,10 @@ class ModelRateLimiter:
     
     def __init__(self, config: ModelRateLimitConfig):
         self.config = config
-        self.token_usage = deque()  # (timestamp, tokens) tuples
+        self.token_usage: Deque[Tuple[float, int]] = deque()  # (timestamp, tokens) tuples
         self.lock = threading.Lock()
         self.semaphore = threading.Semaphore(self.config.max_concurrent_requests)
-        self.retry_counts = {}
+        self.retry_counts: Dict[str, int] = {}
         
         logger.info(
             f"ModelRateLimiter initialized for {config.model_name}: "

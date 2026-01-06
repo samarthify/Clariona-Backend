@@ -3,6 +3,7 @@ import shutil
 import logging
 from datetime import datetime
 from pathlib import Path
+from src.config.path_manager import PathManager
 
 logger = logging.getLogger(__name__)
 
@@ -20,12 +21,13 @@ def rotate_processed_files(new_csv_path):
         bool: True if successful, False otherwise
     """
     try:
-        # Determine project base path (assuming this script is in src/utils)
-        base_path = Path(__file__).parent.parent.parent
+        # Use PathManager for centralized path management
+        path_manager = PathManager()
+        base_path = path_manager.base_path
         
         # Construct absolute paths
         dashboard_public_dir = base_path / "dashboard" / "public"
-        archive_dir = base_path / "data" / "processed" / "archive"
+        archive_dir = path_manager.data_processed / "archive"
         new_csv_path = Path(new_csv_path) # Ensure new_csv_path is a Path object
 
         # Ensure the dashboard public directory exists

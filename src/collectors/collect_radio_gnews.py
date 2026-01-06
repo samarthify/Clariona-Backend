@@ -9,6 +9,9 @@ from typing import List, Dict, Any, Optional
 import sys
 import time
 
+# Import custom exceptions
+from src.exceptions import ValidationError
+
 # Force UTF-8 encoding for the entire script to prevent charmap codec errors
 if sys.platform.startswith('win'):
     os.environ['PYTHONIOENCODING'] = 'utf-8'
@@ -17,16 +20,42 @@ if sys.platform.startswith('win'):
     if hasattr(sys.stderr, 'reconfigure'):
         sys.stderr.reconfigure(encoding='utf-8')
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Use centralized logging configuration
+try:
+    from src.config.logging_config import get_logger
+    logger = get_logger(__name__)
+except ImportError:
+    # Fallback to basic config
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
 class GNewsRadioCollector:
+    """
+    Radio news collector using GNews and NewsAPI.
+    
+    This collector fetches news articles from multiple APIs (GNews and NewsAPI)
+    focusing on Nigerian radio station sources and online news sources. It uses
+    domain filtering to target specific radio station websites.
+    
+    Attributes:
+        path_manager: PathManager instance for file path management
+        base_path: Base path for the project
+        config: ConfigManager instance for configuration
+        target_config: Target-specific configuration
+        gnews_key: GNews API key
+        newsapi_key: NewsAPI key
+        radio_sources: List of radio station domain sources
+        online_sources: List of online news sources
+    """
     def __init__(self):
         # Load .env from collectors folder
         env_path = Path(__file__).parent / '.env'
         load_dotenv(env_path)
-        self.base_path = Path(__file__).parent.parent.parent
+        from src.config.path_manager import PathManager
+        from config.config_manager import ConfigManager
+        self.path_manager = PathManager()
+        self.base_path = self.path_manager.base_path
+        self.config = ConfigManager()
         
         # Target-specific configuration
         self.target_config = None
@@ -36,7 +65,10 @@ class GNewsRadioCollector:
         self.newsapi_key = os.getenv("NEWSAPI_KEY")
         
         if not self.gnews_key and not self.newsapi_key:
-            raise ValueError("Neither GNEWS_API_KEY nor NEWSAPI_KEY found in environment variables")
+            raise ValidationError(
+                "Neither GNEWS_API_KEY nor NEWSAPI_KEY found in environment variables",
+                details={"collector": "GNewsRadioCollector"}
+            )
         
         # Nigerian radio station sources for both GNews and NewsAPI
         # Using domain filtering since these APIs don't have Nigerian radio stations as sources
@@ -127,10 +159,39 @@ class GNewsRadioCollector:
         logger.info(f"Set target config for: {target_config.name if target_config else 'None'}")
 
     def _get_target_keywords(self) -> List[str]:
-        """Get keywords to filter content based on target configuration"""
-        if self.target_config and hasattr(self.target_config, 'keywords'):
+        """Get keywords to filter content based on target configuration.
+        
+        Priority order:
+        1. ConfigManager: collectors.keywords.<target_id>.radio_gnews (target-specific, from DB)
+        2. ConfigManager: collectors.keywords.default.radio_gnews (default, from DB)
+        3. target_config.keywords (backward compatibility)
+        4. Hardcoded defaults (last resort)
+        """
+        from config.config_manager import ConfigManager
+        config = ConfigManager()
+        
+        # Priority 1: Target-specific keywords from ConfigManager (enables DB editing)
+        if self.target_config and hasattr(self.target_config, 'name'):
+            target_name = self.target_config.name.lower().replace(" ", "_")
+            target_key = f"collectors.keywords.{target_name}.radio_gnews"
+            target_keywords = config.get_list(target_key, None)
+            if target_keywords:
+                logger.info(f"Using target-specific keywords from ConfigManager: {target_keywords}")
+                return target_keywords
+        
+        # Priority 2: Default keywords from ConfigManager (enables DB editing)
+        default_keywords = config.get_list("collectors.keywords.default.radio_gnews", None)
+        if default_keywords:
+            logger.info(f"Using default keywords from ConfigManager: {default_keywords}")
+            return default_keywords
+        
+        # Priority 3: Legacy - target_config keywords (backward compatibility)
+        if self.target_config and hasattr(self.target_config, 'keywords') and self.target_config.keywords:
+            logger.info(f"Using keywords from target_config: {self.target_config.keywords}")
             return self.target_config.keywords
-        # Fallback to default keywords
+        
+        # Priority 4: Hardcoded defaults (last resort)
+        logger.warning("Using hardcoded default keywords - consider configuring in ConfigManager/DB")
         return ["nigeria", "government", "politics", "economy", "news"]
 
     def _should_include_article(self, content: str) -> bool:
@@ -198,7 +259,8 @@ class GNewsRadioCollector:
                         
                         # Make API request
                         url = "https://gnews.io/api/v4/search"
-                        response = requests.get(url, params=params, timeout=30)
+                        http_timeout = self.config.get_int("collectors.radio_gnews.http_timeout_seconds", 30)
+                        response = requests.get(url, params=params, timeout=http_timeout)
                         
                         if response.status_code != 200:
                             logger.warning(f"GNews API error for {station_name} ({approach}): {response.status_code}")
@@ -260,7 +322,8 @@ class GNewsRadioCollector:
                                 articles.append(article_data)
                         
                         # Rate limiting - GNews has limits
-                        time.sleep(1)
+                        delay = self.config.get_int("collectors.radio_gnews.delay_between_requests_seconds", 1)
+                        time.sleep(delay)
                         
                     except Exception as e:
                         logger.error(f"Error collecting from {station_name} for query '{query}': {e}")
@@ -275,7 +338,7 @@ class GNewsRadioCollector:
 
     def collect_from_newsapi(self, station_name: str, station_config: Dict[str, Any], queries: List[str]) -> List[Dict[str, Any]]:
         """Collect news from a specific radio station using NewsAPI"""
-        articles = []
+        articles: List[Dict[str, Any]] = []
         
         if not self.newsapi_key:
             logger.warning("NewsAPI key not available")
@@ -313,7 +376,8 @@ class GNewsRadioCollector:
                         
                         # Make API request
                         url = "https://newsapi.org/v2/everything"
-                        response = requests.get(url, params=params, timeout=30)
+                        http_timeout = self.config.get_int("collectors.radio_gnews.http_timeout_seconds", 30)
+                        response = requests.get(url, params=params, timeout=http_timeout)
                         
                         if response.status_code != 200:
                             logger.warning(f"NewsAPI error for {station_name} ({approach}): {response.status_code}")
@@ -374,8 +438,9 @@ class GNewsRadioCollector:
                                 
                                 articles.append(article_data)
                         
-                        # Rate limiting - NewsAPI has limits
-                        time.sleep(1)
+                        # Rate limiting - NewsAPI has limits - use config delay
+                        delay = self.config.get_int("collectors.radio_gnews.delay_between_requests_seconds", 1)
+                        time.sleep(delay)
                         
                     except Exception as e:
                         logger.error(f"Error collecting from {station_name} for query '{query}' via NewsAPI: {e}")
@@ -388,7 +453,7 @@ class GNewsRadioCollector:
         
         return articles
 
-    def collect_all(self, queries: List[str] = None, output_file: str = None) -> Dict[str, Any]:
+    def collect_all(self, queries: Optional[List[str]] = None, output_file: Optional[str] = None) -> Dict[str, Any]:
         """Collect news from all configured radio stations using both GNews and NewsAPI"""
         logger.info("Starting multi-API radio station collection...")
         
@@ -429,7 +494,7 @@ class GNewsRadioCollector:
             logger.info(f"Saved {len(all_articles)} articles to {output_file}")
         
         # Log breakdown by platform
-        platform_breakdown = {}
+        platform_breakdown: Dict[str, int] = {}
         for article in all_articles:
             platform = article.get('platform', 'unknown')
             platform_breakdown[platform] = platform_breakdown.get(platform, 0) + 1
@@ -449,7 +514,7 @@ class GNewsRadioCollector:
         logger.info(f"Multi-API radio collection complete: {len(all_articles)} articles from {successful_stations}/{total_stations} stations")
         return results
 
-def main(target_and_variations: List[str], user_id: str = None):
+def main(target_and_variations: List[str], user_id: Optional[str] = None):
     """Main function to run multi-API radio collection (GNews + NewsAPI)"""
     logger.info(f"Starting multi-API radio collection for: {target_and_variations}")
     
@@ -457,8 +522,9 @@ def main(target_and_variations: List[str], user_id: str = None):
         collector = GNewsRadioCollector()
         
         # Set up output file
-        output_dir = Path(__file__).parent.parent.parent / "data" / "raw"
-        output_dir.mkdir(parents=True, exist_ok=True)
+        from src.config.path_manager import PathManager
+        path_manager = PathManager()
+        output_dir = path_manager.data_raw
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_file = output_dir / f"radio_gnews_{timestamp}.csv"

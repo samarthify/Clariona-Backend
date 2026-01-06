@@ -10,7 +10,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Load environment variables from .env file in the config directory
-env_path = Path(__file__).parent.parent.parent / 'config' / '.env'
+try:
+    from src.config.path_manager import PathManager
+    path_manager = PathManager()
+    env_path = path_manager.config_dir / '.env'
+except Exception:
+    # Fallback if PathManager not available (shouldn't happen, but safe fallback)
+    env_path = Path(__file__).parent.parent.parent / 'config' / '.env'
+
 if env_path.exists():
     load_dotenv(dotenv_path=env_path)
     logger.info(f"Loaded environment variables from {env_path}")
@@ -25,8 +32,14 @@ ALGORITHM = "HS256"  # Supabase uses HS256 for JWT signing
 if not SECRET_KEY:
     logger.error("CRITICAL: SUPABASE_JWT_SECRET environment variable not set. Authentication will fail.")
     # Try to load from config/.env if not already loaded
-    from pathlib import Path
-    config_env_path = Path(__file__).parent.parent.parent / "config" / ".env"
+    try:
+        from src.config.path_manager import PathManager
+        path_manager = PathManager()
+        config_env_path = path_manager.config_dir / ".env"
+    except Exception:
+        # Fallback if PathManager not available
+        config_env_path = Path(__file__).parent.parent.parent / "config" / ".env"
+    
     if config_env_path.exists():
         load_dotenv(dotenv_path=config_env_path)
         SECRET_KEY = os.getenv("SUPABASE_JWT_SECRET")

@@ -16,7 +16,16 @@ class DeduplicationService:
     """
     
     def __init__(self):
-        self.similarity_threshold = 0.85
+        # Load similarity threshold from ConfigManager
+        try:
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            self.similarity_threshold = config.get_float("deduplication.similarity_threshold", 0.85)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Could not load ConfigManager for similarity threshold, using default 0.85: {e}")
+            self.similarity_threshold = 0.85
         self.text_fields = ['text', 'content', 'title', 'description']
         
     def normalize_text(self, text: str) -> str:
@@ -38,7 +47,7 @@ class DeduplicationService:
         
         return text
     
-    def is_similar_text(self, text1: str, text2: str, threshold: float = None) -> bool:
+    def is_similar_text(self, text1: str, text2: str, threshold: Optional[float] = None) -> bool:
         """Check if two texts are similar using sequence matcher"""
         if threshold is None:
             threshold = self.similarity_threshold
@@ -78,7 +87,7 @@ class DeduplicationService:
         from src.api.models import SentimentData
         
         logger = logging.getLogger(__name__)
-        duplicates_map = {}
+        duplicates_map: Dict[str, List[int]] = {}
         
         logger.info(f"🔍 Starting deduplication for {len(new_records)} new records...")
         

@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 from pathlib import Path
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 # Remove the old import that doesn't exist
 # from query_variations import query_variations
 import time
@@ -21,25 +21,66 @@ import html
 import chardet
 import warnings
 from urllib3.exceptions import InsecureRequestWarning
+import sys
+
+# Add src to path for imports
+if str(Path(__file__).parent.parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from exceptions import CollectionError, NetworkError, FileError, ValidationError
 
 # Suppress SSL warnings for cleaner output
 warnings.filterwarnings('ignore', message='Unverified HTTPS request')
 warnings.filterwarnings('ignore', category=InsecureRequestWarning)
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Use centralized logging configuration
+try:
+    from src.config.logging_config import get_logger
+    logger = get_logger(__name__)
+except ImportError:
+    # Fallback to basic config
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
 class RSSFeedCollector:
+    """
+    RSS feed collector for gathering news articles from RSS/Atom feeds.
+    
+    This collector fetches articles from multiple RSS feeds, filters them based on
+    custom queries/keywords, and saves the results to CSV files. It handles SSL
+    certificate issues, timeouts, and retries automatically.
+    
+    Attributes:
+        path_manager: PathManager instance for file path management
+        base_path: Base path for the project
+        custom_queries: List of query keywords for filtering articles
+        feed_timeout: Timeout in seconds for feed requests
+        max_retries: Maximum number of retry attempts for failed feeds
+        ssl_context: SSL context for handling certificate verification
+        headers: HTTP headers for requests
+        failed_sources: Set of sources that have failed
+        source_failures: Dictionary tracking failure counts per source
+        rss_feeds: List of RSS feed URLs to collect from
+    """
     def __init__(self, custom_queries=None):
-        self.base_path = Path(__file__).parent.parent.parent
+        from src.config.path_manager import PathManager
+        self.path_manager = PathManager()
+        self.base_path = self.path_manager.base_path
         
         # Use provided queries or fall back to predefined query variations as keywords for filtering
         self.custom_queries = custom_queries or []
         
-        # Timeout settings
-        self.feed_timeout = 15  # Increased timeout for slower servers
-        self.max_retries = 3    # Increased retries
+        # Timeout settings from ConfigManager
+        try:
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            self.feed_timeout = config.get_int("collectors.rss.feed_timeout_seconds", 30)
+            self.max_retries = config.get_int("collectors.rss.max_retries", 3)
+        except Exception as e:
+            logger.warning(f"Could not load ConfigManager for RSS timeouts, using defaults: {e}")
+            self.feed_timeout = 30  # Default from config
+            # Don't raise - fallback to defaults is acceptable
+            self.max_retries = 3
         
         # SSL Context for certificate verification issues
         self.ssl_context = ssl._create_unverified_context()
@@ -197,7 +238,7 @@ class RSSFeedCollector:
             
         return False
 
-    def _clean_xml(self, xml_content: str) -> str:
+    def _clean_xml(self, xml_content: str) -> Optional[str]:
         """Clean problematic XML content"""
         if not xml_content:
             return None
@@ -226,7 +267,7 @@ class RSSFeedCollector:
             logger.warning(f"Error cleaning XML: {str(e)}")
             return None
 
-    def _fetch_feed_with_requests(self, feed_url: str) -> str:
+    def _fetch_feed_with_requests(self, feed_url: str) -> Optional[str]:
         """Fetch feed content using requests with better error handling and SSL verification"""
         try:
             # Try different variations of the URL if initial one fails
@@ -348,7 +389,8 @@ class RSSFeedCollector:
             
             # Check if feed parsing was successful
             if hasattr(feed, 'status') and feed.status >= 400:
-                raise HTTPError(feed_url, feed.status, f"HTTP Error: {feed.status}", {}, None)
+                from http.client import HTTPMessage
+                raise HTTPError(feed_url, feed.status, f"HTTP Error: {feed.status}", HTTPMessage(), None)
                 
             if feed.get('bozo', 0) == 1 and hasattr(feed, 'bozo_exception'):
                 # Only raise if it's a serious error
@@ -388,15 +430,44 @@ class RSSFeedCollector:
             self.source_failures.pop(feed_url, None)
             return articles
             
-        except Exception as e:
-            error_type = type(e).__name__
-            error_msg = str(e)
-            logger.warning(f"Error parsing feed {feed_url}: {error_type} - {error_msg}")
+        except (ValidationError, NetworkError, CollectionError):
+            # Re-raise our custom exceptions
+            raise
+        except (ValueError, HTTPError, URLError) as e:
+            # Convert standard library exceptions to our custom exceptions
+            if isinstance(e, HTTPError):
+                network_error = NetworkError(
+                    f"HTTP error parsing feed: {str(e)}",
+                    details={"feed_url": feed_url, "query": query, "status": getattr(e, 'code', None)}
+                )
+                logger.warning(str(network_error))
+            elif isinstance(e, URLError):
+                network_error = NetworkError(
+                    f"URL error parsing feed: {str(e)}",
+                    details={"feed_url": feed_url, "query": query}
+                )
+                logger.warning(str(network_error))
+            else:
+                validation_error = ValidationError(
+                    f"Validation error parsing feed: {str(e)}",
+                    details={"feed_url": feed_url, "query": query}
+                )
+                logger.warning(str(validation_error))
             
             if not self._should_retry_source(feed_url, e):
                 logger.error(f"Marking source as failed after multiple attempts: {feed_url}")
                 self.failed_sources.add(feed_url)
-                
+            return []
+        except Exception as e:
+            collection_error = CollectionError(
+                f"Unexpected error parsing feed: {str(e)}",
+                details={"feed_url": feed_url, "query": query, "error_type": type(e).__name__}
+            )
+            logger.warning(str(collection_error))
+            
+            if not self._should_retry_source(feed_url, e):
+                logger.error(f"Marking source as failed after multiple attempts: {feed_url}")
+                self.failed_sources.add(feed_url)
             return []
 
     def collect_from_feeds(self, query: str) -> List[Dict[Any, Any]]:
@@ -412,8 +483,14 @@ class RSSFeedCollector:
                 articles = self._parse_feed(feed_url, query)
                 all_articles.extend(articles)
                 
-                # Be nice to the servers
-                time.sleep(1)
+                # Be nice to the servers - use config delay
+                try:
+                    from config.config_manager import ConfigManager
+                    config = ConfigManager()
+                    delay = config.get_int("collectors.rss.delay_between_feeds_seconds", 1)
+                    time.sleep(delay)
+                except Exception:
+                    time.sleep(1)  # Fallback default
             except Exception as e:
                 logger.error(f"Error collecting from {feed_url}: {str(e)}")
                 continue
@@ -426,7 +503,7 @@ class RSSFeedCollector:
         
         return all_articles
 
-    def collect_all(self, queries: List[str] = None, output_file: str = None, target_name: str = None) -> None:
+    def collect_all(self, queries: Optional[List[str]] = None, output_file: Optional[str] = None, target_name: Optional[str] = None) -> None:
         """
         Collect news for all queries and save to CSV
         
@@ -444,13 +521,23 @@ class RSSFeedCollector:
         if queries:
             search_queries.extend(queries)
         
-        # If no queries are available, use a default set of relevant keywords
+        # If no queries are available, use keywords from ConfigManager (enables DB editing)
         if not search_queries:
-            # Default keywords for Middle East and international news
-            search_queries = [
-                "middle east", "qatar", "nigeria", "gulf", "arab", "islamic", 
-                "oil", "energy", "politics", "diplomacy", "trade", "business"
-            ]
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            
+            # Priority 1: Default keywords from ConfigManager (enables DB editing)
+            default_keywords = config.get_list("collectors.keywords.default.rss", None)
+            if default_keywords:
+                logger.info(f"Using default keywords from ConfigManager: {default_keywords}")
+                search_queries = default_keywords
+            else:
+                # Priority 2: Legacy key (backward compatibility)
+                search_queries = config.get_list("collectors.default_keywords.rss", [
+                    "middle east", "qatar", "nigeria", "gulf", "arab", "islamic", 
+                    "oil", "energy", "politics", "diplomacy", "trade", "business"
+                ])
+                logger.warning("Using legacy default_keywords - consider migrating to collectors.keywords.default.rss")
         
         # Remove duplicates while preserving order
         search_queries = list(dict.fromkeys(search_queries))
@@ -474,17 +561,17 @@ class RSSFeedCollector:
             if output_file is None:
                 # Use target name in filename if provided
                 filename_prefix = f"rss_news_{target_name.replace(' ', '_').lower()}" if target_name else "rss_news"
-                output_file = self.base_path / 'data' / 'raw' / f"{filename_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+                output_file = str(self.base_path / 'data' / 'raw' / f"{filename_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
             
-            output_file = Path(output_file)
-            output_file.parent.mkdir(parents=True, exist_ok=True)
+            output_path = Path(output_file)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
             
-            df.to_csv(output_file, index=False)
+            df.to_csv(output_path, index=False)
             logger.info(f"Saved {len(df)} articles to {output_file}")
         else:
             logger.warning("No articles found for any query")
 
-def main(target_and_variations: List[str] = None, user_id: str = None):
+def main(target_and_variations: Optional[List[str]] = None, user_id: Optional[str] = None):
     """
     Main function called by run_collectors. Accepts target/variations list.
     
@@ -501,9 +588,11 @@ def main(target_and_variations: List[str] = None, user_id: str = None):
     print(f"[RSS Collector] Received Target: {target_name}, Queries: {queries}")
     
     # Construct output file name
+    from src.config.path_manager import PathManager
+    path_manager = PathManager()
     today = datetime.now().strftime("%Y%m%d")
     safe_target_name = target_name.replace(" ", "_").lower()
-    output_path = Path(__file__).parent.parent.parent / "data" / "raw" / f"rss_{safe_target_name}_{today}.csv"
+    output_path = path_manager.data_raw / f"rss_{safe_target_name}_{today}.csv"
     
     # Initialize collector with the provided queries
     collector = RSSFeedCollector(custom_queries=queries)

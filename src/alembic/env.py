@@ -6,10 +6,15 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 import os
+import sys
+from pathlib import Path
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
+
+# Add parent directory to path so we can import src modules
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Add these lines to import your Base and models
 from src.api.database import Base  # Import Base from your database setup

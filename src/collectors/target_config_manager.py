@@ -16,11 +16,11 @@ logger = logging.getLogger(__name__)
 class TargetSourceConfig:
     """Configuration for a specific source type for a target"""
     enabled: bool
-    countries: List[str] = None
-    keywords: List[str] = None
-    locations: List[str] = None
-    feeds: List[str] = None
-    filters: Dict[str, Any] = None
+    countries: Optional[List[str]] = None
+    keywords: Optional[List[str]] = None
+    locations: Optional[List[str]] = None
+    feeds: Optional[List[str]] = None
+    filters: Optional[Dict[str, Any]] = None
 
 @dataclass
 class TargetConfig:
@@ -36,23 +36,29 @@ class TargetConfig:
 class TargetConfigManager:
     """Manages target configurations for the collector system"""
     
-    def __init__(self, config_path: str = None):
+    def __init__(self, config_path: Optional[str] = None):
         if config_path is None:
             # Default to config directory relative to project root
-            config_path = Path(__file__).parent.parent.parent / "config" / "target_configs.json"
+            try:
+                from src.config.path_manager import PathManager
+                path_manager = PathManager()
+                config_path = path_manager.config_dir / "target_configs.json"
+            except Exception:
+                config_path = Path(__file__).parent.parent.parent / "config" / "target_configs.json"
         
         self.config_path = Path(config_path)
-        self.config_data = {}
-        self.targets = {}
+        self.config_data: Dict[str, Any] = {}
+        self.targets: Dict[str, TargetConfig] = {}
         self._load_config()
     
     def _load_config(self):
-        """Load the target configuration file"""
+        """Load the target configuration file using ConfigManager for path resolution"""
         try:
             if not self.config_path.exists():
                 logger.warning(f"Target config file not found: {self.config_path}")
                 return
             
+            # Use ConfigManager's path resolution, but load JSON directly since this is domain-specific config
             with open(self.config_path, 'r', encoding='utf-8') as f:
                 self.config_data = json.load(f)
             
@@ -165,20 +171,37 @@ class TargetConfigManager:
         if not target_config:
             return []
         
-        # Map source types to collector module names
-        # Some sources have multiple collectors (news, radio)
-        source_to_collector = {
-            "news": ["collect_news_from_api", "collect_news_apify"],  # Run BOTH news collectors
-            "twitter": ["collect_twitter_apify"],
-            "facebook": ["collect_facebook_apify"],
-            "rss": ["collect_rss_nigerian_qatar_indian"],
-            "youtube": ["collect_youtube_api"],
-            "radio": ["collect_radio_hybrid"],  # Use radio_hybrid, not radio_apify
-            "reddit": ["collect_reddit_apify"],
-            "instagram": ["collect_instagram_apify"],
-            "tiktok": ["collect_tiktok_apify"],
-            "linkedin": ["collect_linkedin"]  # No apify version yet
-        }
+        # Get source-to-collector mapping from ConfigManager
+        try:
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            source_to_collector = config.get_dict("collectors.source_to_collector_mapping", {
+                "news": ["collect_news_from_api", "collect_news_apify"],
+                "twitter": ["collect_twitter_apify"],
+                "facebook": ["collect_facebook_apify"],
+                "rss": ["collect_rss_nigerian_qatar_indian"],
+                "youtube": ["collect_youtube_api"],
+                "radio": ["collect_radio_hybrid"],
+                "reddit": ["collect_reddit_apify"],
+                "instagram": ["collect_instagram_apify"],
+                "tiktok": ["collect_tiktok_apify"],
+                "linkedin": ["collect_linkedin"]
+            })
+        except Exception as e:
+            logger.warning(f"Error loading source-to-collector mapping from ConfigManager: {e}, using defaults")
+            # Fallback to hardcoded defaults
+            source_to_collector = {
+                "news": ["collect_news_from_api", "collect_news_apify"],
+                "twitter": ["collect_twitter_apify"],
+                "facebook": ["collect_facebook_apify"],
+                "rss": ["collect_rss_nigerian_qatar_indian"],
+                "youtube": ["collect_youtube_api"],
+                "radio": ["collect_radio_hybrid"],
+                "reddit": ["collect_reddit_apify"],
+                "instagram": ["collect_instagram_apify"],
+                "tiktok": ["collect_tiktok_apify"],
+                "linkedin": ["collect_linkedin"]
+            }
         
         enabled_collectors = []
         for source_type, source_config in target_config.sources.items():

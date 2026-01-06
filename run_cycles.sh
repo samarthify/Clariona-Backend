@@ -69,7 +69,7 @@ while true; do
     echo "[$CYCLE_START] Starting new cycle..."
     
     # Trigger the cycle
-    RESPONSE=$(curl -s -X POST "http://localhost:8000/agent/test-cycle-no-auth?test_user_id=$USER_ID" \
+    RESPONSE=$(curl -s -X POST "http://localhost:8000/agent/test-cycle-no-auth?test_user_id=$USER_ID&skip_collection_only=true" \
                     -H "Content-Type: application/json")
     
     STATUS=$(echo "$RESPONSE" | grep -o '"status":"[^"]*"' | cut -d'"' -f4)

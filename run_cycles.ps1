@@ -96,7 +96,7 @@ while ($true) {
     
     # Trigger the cycle
     try {
-        $response = Invoke-RestMethod -Uri "$BackendUrl/agent/test-cycle-no-auth?test_user_id=$UserId" `
+        $response = Invoke-RestMethod -Uri "$BackendUrl/agent/test-cycle-no-auth?test_user_id=$UserId&skip_collection_only=true" `
             -Method Post -ContentType "application/json"
         
         if ($response.status -eq "success") {
@@ -126,6 +126,23 @@ while ($true) {
         Start-Sleep -Seconds 300
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

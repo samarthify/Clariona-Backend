@@ -32,7 +32,9 @@ class PresidentialDataProcessor:
     
     def __init__(self, president_name: str = "the President", country: str = "Nigeria"):
         logger.debug("PresidentialDataProcessor.__init__: Initializing...")
-        self.base_path = Path(__file__).parent.parent.parent
+        from src.config.path_manager import PathManager
+        self.path_manager = PathManager()
+        self.base_path = self.path_manager.base_path
         logger.debug(f"PresidentialDataProcessor.__init__: Base path set to {self.base_path}")
         
         # Initialize Presidential Sentiment Analyzer (for sentiment analysis)
@@ -96,8 +98,8 @@ class PresidentialDataProcessor:
         logger.info("PresidentialDataProcessor.process_files: Starting presidential data processing...")
         
         # Get all CSV files from the raw data directory
-        raw_data_path = self.base_path / "data" / "raw"
-        processed_data_path = self.base_path / "data" / "processed"
+        raw_data_path = self.path_manager.data_raw
+        processed_data_path = self.path_manager.data_processed
         
         if not raw_data_path.exists():
             logger.warning(f"Raw data directory does not exist: {raw_data_path}")

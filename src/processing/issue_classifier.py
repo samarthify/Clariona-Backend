@@ -11,10 +11,22 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import openai
+import sys
+
+# Add src to path for imports
+if str(Path(__file__).parent.parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from utils.openai_rate_limiter import get_rate_limiter
 from utils.multi_model_rate_limiter import get_multi_model_rate_limiter
+from exceptions import AnalysisError, RateLimitError, OpenAIError
 
-logger = logging.getLogger('IssueClassifier')
+# Use centralized logging configuration
+try:
+    from src.config.logging_config import get_logger
+    logger = get_logger(__name__)
+except ImportError:
+    logger = logging.getLogger(__name__)
 
 class IssueClassifier:
     """
@@ -22,7 +34,7 @@ class IssueClassifier:
     Maintains a list of up to 20 issue labels per ministry.
     """
     
-    def __init__(self, storage_dir: str = "ministry_issues", model: str = "gpt-5-nano"):
+    def __init__(self, storage_dir: str = "ministry_issues", model: str = "gpt-5-nano") -> None:
         """
         Initialize the issue classifier.
         
@@ -143,21 +155,108 @@ class IssueClassifier:
         # Normal classification: compare to existing issues (may create new if under limit)
         return self._classify_with_comparison(text, ministry, ministry_data)
     
-    def _classify_with_comparison(self, text: str, ministry: str, ministry_data: Dict) -> Tuple[str, str]:
-        """Compare new mention to existing issues and decide match or create new."""
-        existing_issues = ministry_data['issues']
-        
-        # Truncate issues list if too long (save tokens - only show first 10)
-        truncated_issues = existing_issues[:10] if len(existing_issues) > 10 else existing_issues
-        truncated_issues_list = "\n".join([
-            f"{i+1}. {issue['slug']}: {issue['label']} ({issue['mention_count']} mentions)"
-            for i, issue in enumerate(truncated_issues)
-        ])
-        
-        prompt = f"""Classify this mention into an existing issue or create new one.
+    def _get_issue_classification_prompts(self, text: str, ministry: str, existing_issues: List[Dict], is_consolidation: bool = False) -> Tuple[str, str]:
+        """
+        Get system message and user prompt from config, with fallback to defaults.
+        Returns: (system_message, user_prompt)
+        """
+        try:
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            
+            # Get prompt templates from config
+            prompt_type = "consolidation" if is_consolidation else "comparison"
+            prompt_config = config.get(f"processing.prompts.issue_classification.{prompt_type}", {})
+            
+            system_message = prompt_config.get("system_message", 
+                "You are an expert at categorizing similar content." if not is_consolidation 
+                else "You are an expert at categorizing content into existing categories. Always match to existing issues, never create new ones.")
+            
+            user_template = prompt_config.get("user_template", 
+                """Classify this mention into an existing issue or create new one.
 
 Ministry: {ministry}
-Text: "{text[:400]}"
+Text: "{text}"
+
+Existing issues ({issue_count}/20):
+{existing_issues_list}
+
+Return JSON:
+{{
+    "matches_existing": true/false,
+    "matched_issue_slug": "slug" or null,
+    "new_issue_slug": "new-slug" or null,
+    "new_issue_label": "Label" or null,
+    "reasoning": "brief"
+}}""" if not is_consolidation else """Classify this mention into an EXISTING issue. DO NOT create a new issue.
+
+Ministry: {ministry}
+Text: "{text}"
+
+Existing issues ({issue_count}/20 - AT CAPACITY):
+{existing_issues_list}
+
+Return JSON:
+{{
+    "matched_issue_slug": "slug",
+    "reasoning": "brief explanation of why this matches"
+}}""")
+            
+            text_truncate_length = prompt_config.get("text_truncate_length", 400)
+            max_issues_to_show = prompt_config.get("max_issues_to_show", 10 if not is_consolidation else 15)
+            
+            # Truncate text
+            truncated_text = text[:text_truncate_length] if len(text) > text_truncate_length else text
+            
+            # Truncate issues list
+            truncated_issues = existing_issues[:max_issues_to_show] if len(existing_issues) > max_issues_to_show else existing_issues
+            truncated_issues_list = "\n".join([
+                f"{i+1}. {issue['slug']}: {issue['label']} ({issue['mention_count']} mentions)"
+                for i, issue in enumerate(truncated_issues)
+            ])
+            
+            # Format template with variables
+            user_prompt = user_template.format(
+                ministry=ministry,
+                text=truncated_text,
+                issue_count=len(existing_issues),
+                existing_issues_list=truncated_issues_list
+            )
+            
+            return system_message, user_prompt
+        except Exception as e:
+            logger.warning(f"Could not load prompt templates from ConfigManager, using defaults: {e}")
+            # Fallback to hardcoded defaults
+            truncated_text = text[:400] if len(text) > 400 else text
+            max_issues = 15 if is_consolidation else 10
+            truncated_issues = existing_issues[:max_issues] if len(existing_issues) > max_issues else existing_issues
+            truncated_issues_list = "\n".join([
+                f"{i+1}. {issue['slug']}: {issue['label']} ({issue['mention_count']} mentions)"
+                for i, issue in enumerate(truncated_issues)
+            ])
+            
+            if is_consolidation:
+                system_message = "You are an expert at categorizing content into existing categories. Always match to existing issues, never create new ones."
+                user_prompt = f"""Classify this mention into an EXISTING issue. DO NOT create a new issue.
+
+Ministry: {ministry}
+Text: "{truncated_text}"
+
+Existing issues ({len(existing_issues)}/20 - AT CAPACITY):
+{truncated_issues_list}
+
+Return JSON:
+{{
+    "matched_issue_slug": "slug",
+    "reasoning": "brief explanation of why this matches"
+}}
+"""
+            else:
+                system_message = "You are an expert at categorizing similar content."
+                user_prompt = f"""Classify this mention into an existing issue or create new one.
+
+Ministry: {ministry}
+Text: "{truncated_text}"
 
 Existing issues ({len(existing_issues)}/20):
 {truncated_issues_list}
@@ -171,6 +270,14 @@ Return JSON:
     "reasoning": "brief"
 }}
 """
+            return system_message, user_prompt
+
+    def _classify_with_comparison(self, text: str, ministry: str, ministry_data: Dict) -> Tuple[str, str]:
+        """Compare new mention to existing issues and decide match or create new."""
+        existing_issues = ministry_data['issues']
+        
+        # Get prompts from config
+        system_message, user_prompt = self._get_issue_classification_prompts(text, ministry, existing_issues, is_consolidation=False)
         
         multi_model_limiter = get_multi_model_rate_limiter()
         request_id = f"issue_{id(text)}_{int(time.time())}"
@@ -185,8 +292,8 @@ Return JSON:
                     response = self.openai_client.responses.create(
                         model=self.model,
                         input=[
-                            {"role": "system", "content": "You are an expert at categorizing similar content."},
-                            {"role": "user", "content": prompt}
+                            {"role": "system", "content": system_message},
+                            {"role": "user", "content": user_prompt}
                         ],
                         store=False
                     )
@@ -224,12 +331,34 @@ Return JSON:
                 multi_model_limiter.handle_rate_limit_error(self.model, request_id, retry_after)
                 
                 if attempt == max_retries - 1:
-                    logger.error(f"Rate limit error after {max_retries} attempts: {e}")
+                    rate_limit_error = RateLimitError(
+                        f"OpenAI rate limit error after {max_retries} attempts",
+                        retry_after=retry_after,
+                        details={"model": self.model, "request_id": request_id, "attempt": attempt + 1, "ministry": ministry}
+                    )
+                    logger.error(str(rate_limit_error))
                     return self._fallback_classification(text, ministry)
                 continue
                 
+            except openai.APIError as e:
+                # Handle OpenAI API errors
+                openai_error = OpenAIError(
+                    f"OpenAI API error in issue classification: {str(e)}",
+                    details={"model": self.model, "request_id": request_id, "attempt": attempt + 1, "ministry": ministry}
+                )
+                logger.error(str(openai_error))
+                if attempt == max_retries - 1:
+                    return self._fallback_classification(text, ministry)
+                time.sleep(1.0)
+                continue
+                
             except Exception as e:
-                logger.error(f"Error in issue classification: {e}")
+                # Handle other unexpected errors
+                analysis_error = AnalysisError(
+                    f"Unexpected error in issue classification: {str(e)}",
+                    details={"model": self.model, "request_id": request_id, "attempt": attempt + 1, "ministry": ministry, "error_type": type(e).__name__}
+                )
+                logger.error(str(analysis_error), exc_info=True)
                 if attempt == max_retries - 1:
                     return self._fallback_classification(text, ministry)
                 time.sleep(1.0)
@@ -291,8 +420,15 @@ Return JSON:
                 
                 return new_slug, new_label
         
+        except AnalysisError:
+            # Re-raise analysis errors as-is
+            raise
         except Exception as e:
-            logger.error(f"Error in issue classification: {e}")
+            analysis_error = AnalysisError(
+                f"Unexpected error in issue classification: {str(e)}",
+                details={"ministry": ministry, "error_type": type(e).__name__}
+            )
+            logger.error(str(analysis_error), exc_info=True)
             return self._fallback_classification(text, ministry)
     
     def _create_new_issue(self, text: str, ministry: str, ministry_data: Dict) -> Tuple[str, str]:
@@ -348,27 +484,8 @@ Return JSON:
         """
         existing_issues = ministry_data['issues']
         
-        # Truncate issues list if too long (save tokens - only show first 15)
-        truncated_issues = existing_issues[:15] if len(existing_issues) > 15 else existing_issues
-        truncated_issues_list = "\n".join([
-            f"{i+1}. {issue['slug']}: {issue['label']} ({issue['mention_count']} mentions)"
-            for i, issue in enumerate(truncated_issues)
-        ])
-        
-        prompt = f"""Classify this mention into an EXISTING issue. DO NOT create a new issue.
-
-Ministry: {ministry}
-Text: "{text[:400]}"
-
-Existing issues ({len(existing_issues)}/20 - AT CAPACITY):
-{truncated_issues_list}
-
-Return JSON:
-{{
-    "matched_issue_slug": "slug",
-    "reasoning": "brief explanation of why this matches"
-}}
-"""
+        # Get prompts from config (consolidation mode)
+        system_message, user_prompt = self._get_issue_classification_prompts(text, ministry, existing_issues, is_consolidation=True)
         
         multi_model_limiter = get_multi_model_rate_limiter()
         request_id = f"issue_forced_{id(text)}_{int(time.time())}"
@@ -381,8 +498,8 @@ Return JSON:
                     response = self.openai_client.responses.create(
                         model=self.model,
                         input=[
-                            {"role": "system", "content": "You are an expert at categorizing content into existing categories. Always match to existing issues, never create new ones."},
-                            {"role": "user", "content": prompt}
+                            {"role": "system", "content": system_message},
+                            {"role": "user", "content": user_prompt}
                         ],
                         store=False
                     )

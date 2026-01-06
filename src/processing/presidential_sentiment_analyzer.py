@@ -1,22 +1,31 @@
-import logging
+# Standard library imports
+import os
+import sys
+import json
 import time
 from pathlib import Path
-import os
+from typing import Dict, List, Tuple, Optional, Any
+
+# Third-party imports
 import openai
 import requests
-import json
-from typing import Dict, List, Tuple, Optional, Any
 import pandas as pd
 from dotenv import load_dotenv
+
+# Local imports - config (first)
+if str(Path(__file__).parent.parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+from src.config.logging_config import get_logger
+
+# Local imports - exceptions
+from exceptions import AnalysisError, RateLimitError, OpenAIError
+
+# Local imports - utils
 from utils.openai_rate_limiter import get_rate_limiter
 from utils.multi_model_rate_limiter import get_multi_model_rate_limiter
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger('PresidentialSentimentAnalyzer')
+# Module-level setup
+logger = get_logger(__name__)
 
 class PresidentialSentimentAnalyzer:
     """
@@ -24,20 +33,51 @@ class PresidentialSentimentAnalyzer:
     Instead of general positive/negative sentiment, it classifies content based on:
     - How it affects the President's agenda, image, or political capital
     - Whether it's supportive, threatening, requires attention, or is irrelevant
+    
+    Week 3: Enhanced with emotion detection and weighted sentiment calculation.
     """
     
-    def __init__(self, president_name: str = "the President", country: str = "Nigeria", model: str = "gpt-5-nano"):
+    def __init__(self, president_name: str = "the President", country: str = "Nigeria", model: Optional[str] = None) -> None:
         self.president_name = president_name
         self.country = country
+        
+        # Load default model from ConfigManager if not provided
+        if model is None:
+            try:
+                from config.config_manager import ConfigManager
+                config = ConfigManager()
+                model = config.get("models.llm_models.default", "gpt-5-nano")
+            except Exception as e:
+                logger.warning(f"Could not load ConfigManager for default model, using 'gpt-5-nano': {e}")
+                model = "gpt-5-nano"
+        
         self.model = model  # Model to use: gpt-5-mini, gpt-5-nano, gpt-4.1-mini, gpt-4.1-nano
         
         # Load environment variables from config/.env
-        config_env_path = Path(__file__).parent.parent.parent / "config" / ".env"
+        try:
+            from src.config.path_manager import PathManager
+            path_manager = PathManager()
+            config_env_path = path_manager.config_dir / ".env"
+        except Exception:
+            config_env_path = Path(__file__).parent.parent.parent / "config" / ".env"
+        
         if config_env_path.exists():
             load_dotenv(config_env_path)
             logger.debug(f"Loaded environment variables from {config_env_path}")
         else:
             logger.warning(f"Config .env file not found at {config_env_path}")
+        
+        # Week 3: Initialize emotion analyzer and weight calculator
+        try:
+            from processing.emotion_analyzer import EmotionAnalyzer
+            from processing.sentiment_weight_calculator import SentimentWeightCalculator
+            self.emotion_analyzer = EmotionAnalyzer()
+            self.weight_calculator = SentimentWeightCalculator()
+            logger.debug("Week 3: Emotion analyzer and weight calculator initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Week 3 components: {e}. Emotion detection and weights will be skipped.")
+            self.emotion_analyzer = None
+            self.weight_calculator = None
         
         # Presidential sentiment categories (using traditional labels with strategic reasoning)
         self.sentiment_categories = {
@@ -72,18 +112,52 @@ class PresidentialSentimentAnalyzer:
             "education": ["education", "school", "university", "students", "teachers", "learning"]
         }
         
-        logger.debug(f"Presidential Sentiment Analyzer initialized for {president_name} of {country}")
-
-    def _call_openai_for_presidential_sentiment(self, text: str) -> Tuple[str, float, str, List[str]]:
-        """
-        Analyze text from the President's strategic perspective using OpenAI.
-        Returns: (sentiment_label, sentiment_score, justification, relevant_topics)
-        """
-        if not self.openai_client:
-            logger.warning("OpenAI client not available. Cannot perform presidential analysis.")
-            return "neutral", 0.5, "OpenAI client not available", []
+        # Load sentiment thresholds and prompt variables from ConfigManager
+        try:
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            self.positive_threshold = config.get_float("processing.sentiment.positive_threshold", 0.2)
+            self.negative_threshold = config.get_float("processing.sentiment.negative_threshold", -0.2)
+            # Load prompt variables (president_name and country can be overridden from config)
+            config_president_name = config.get("processing.prompt_variables.president_name", None)
+            config_country = config.get("processing.prompt_variables.country", None)
+            if config_president_name:
+                self.president_name = config_president_name
+            if config_country:
+                self.country = config_country
+        except Exception as e:
+            logger.warning(f"Could not load ConfigManager for sentiment thresholds, using defaults: {e}")
+            self.positive_threshold = 0.2
+            self.negative_threshold = -0.2
         
-        prompt = f"""Analyze media from {self.president_name}'s perspective. Evaluate: Does this help or hurt the President's power/reputation/governance?
+        logger.debug(f"Presidential Sentiment Analyzer initialized for {self.president_name} of {self.country}")
+    
+    def _get_embedding_model(self) -> str:
+        """Get embedding model name from ConfigManager."""
+        try:
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            return config.get("models.embedding_model", "text-embedding-3-small")
+        except Exception:
+            return "text-embedding-3-small"
+
+    def _get_negative_threshold(self) -> float:
+        """Get negative sentiment threshold."""
+        return self.negative_threshold
+
+    def _get_presidential_prompt(self, text: str) -> Tuple[str, str]:
+        """
+        Get system message and user prompt from config, with fallback to defaults.
+        Returns: (system_message, user_prompt)
+        """
+        try:
+            from config.config_manager import ConfigManager
+            config = ConfigManager()
+            
+            # Get prompt templates from config
+            prompt_config = config.get("processing.prompts.presidential_sentiment", {})
+            system_message_template = prompt_config.get("system_message", "You are a strategic advisor to {president_name} analyzing media impact.")
+            user_template = prompt_config.get("user_template", """Analyze media from {president_name}'s perspective. Evaluate: Does this help or hurt the President's power/reputation/governance?
 
 Categories:
 - POSITIVE: Strengthens image/agenda, builds political capital
@@ -96,8 +170,51 @@ Sentiment Score: [-1.0 to 1.0] (POSITIVE: 0.2-1.0, NEGATIVE: -1.0 to -0.2, NEUTR
 Justification: [Brief strategic reasoning]
 Topics: [comma-separated topics]
 
-Text: "{text[:800]}"
+Text: "{text}"
+""")
+            text_truncate_length = prompt_config.get("text_truncate_length", 800)
+            
+            # Truncate text
+            truncated_text = text[:text_truncate_length] if len(text) > text_truncate_length else text
+            
+            # Format templates with variables
+            system_message = system_message_template.format(president_name=self.president_name)
+            user_prompt = user_template.format(president_name=self.president_name, text=truncated_text)
+            
+            return system_message, user_prompt
+        except Exception as e:
+            logger.warning(f"Could not load prompt templates from ConfigManager, using defaults: {e}")
+            # Fallback to hardcoded defaults
+            truncated_text = text[:800] if len(text) > 800 else text
+            system_message = f"You are a strategic advisor to {self.president_name} analyzing media impact."
+            user_prompt = f"""Analyze media from {self.president_name}'s perspective. Evaluate: Does this help or hurt the President's power/reputation/governance?
+
+Categories:
+- POSITIVE: Strengthens image/agenda, builds political capital
+- NEGATIVE: Threatens image/agenda, creates problems
+- NEUTRAL: No material impact
+
+Response format:
+Sentiment: [POSITIVE/NEGATIVE/NEUTRAL]
+Sentiment Score: [-1.0 to 1.0] (POSITIVE: 0.2-1.0, NEGATIVE: -1.0 to -0.2, NEUTRAL: -0.2 to 0.2)
+Justification: [Brief strategic reasoning]
+Topics: [comma-separated topics]
+
+Text: "{truncated_text}"
 """
+            return system_message, user_prompt
+
+    def _call_openai_for_presidential_sentiment(self, text: str) -> Tuple[str, float, str, List[str]]:
+        """
+        Analyze text from the President's strategic perspective using OpenAI.
+        Returns: (sentiment_label, sentiment_score, justification, relevant_topics)
+        """
+        if not self.openai_client:
+            logger.warning("OpenAI client not available. Cannot perform presidential analysis.")
+            return "neutral", 0.5, "OpenAI client not available", []
+        
+        # Get prompts from config
+        system_message, user_prompt = self._get_presidential_prompt(text)
         
         multi_model_limiter = get_multi_model_rate_limiter()
         request_id = f"pres_{id(text)}_{int(time.time())}"
@@ -111,8 +228,8 @@ Text: "{text[:800]}"
                     response = self.openai_client.responses.create(
                         model=self.model,
                         input=[
-                            {"role": "system", "content": f"You are a strategic advisor to {self.president_name} analyzing media impact."},
-                            {"role": "user", "content": prompt}
+                            {"role": "system", "content": system_message},
+                            {"role": "user", "content": user_prompt}
                         ],
                         store=False
                     )
@@ -169,12 +286,34 @@ Text: "{text[:800]}"
                 multi_model_limiter.handle_rate_limit_error(self.model, request_id, retry_after)
                 
                 if attempt == max_retries - 1:
-                    logger.error(f"Rate limit error after {max_retries} attempts: {e}")
+                    rate_limit_error = RateLimitError(
+                        f"OpenAI rate limit error after {max_retries} attempts",
+                        retry_after=retry_after,
+                        details={"model": self.model, "request_id": request_id, "attempt": attempt + 1}
+                    )
+                    logger.error(str(rate_limit_error))
                     return "neutral", 0.0, f"Rate limit error: {str(e)}", []
                 continue
                 
+            except openai.APIError as e:
+                # Handle OpenAI API errors
+                openai_error = OpenAIError(
+                    f"OpenAI API error in presidential sentiment analysis: {str(e)}",
+                    details={"model": self.model, "request_id": request_id, "attempt": attempt + 1}
+                )
+                logger.error(str(openai_error), exc_info=True)
+                if attempt == max_retries - 1:
+                    return "neutral", 0.0, f"OpenAI API error: {str(e)}", []
+                time.sleep(1.0)
+                continue
+                
             except Exception as e:
-                logger.error(f"Error in presidential sentiment analysis: {e}", exc_info=True)
+                # Handle other unexpected errors
+                analysis_error = AnalysisError(
+                    f"Unexpected error in presidential sentiment analysis: {str(e)}",
+                    details={"model": self.model, "request_id": request_id, "attempt": attempt + 1, "error_type": type(e).__name__}
+                )
+                logger.error(str(analysis_error), exc_info=True)
                 if attempt == max_retries - 1:
                     return "neutral", 0.0, f"Analysis failed: {str(e)}", []
                 time.sleep(1.0)
@@ -193,21 +332,35 @@ Text: "{text[:800]}"
         
         return relevant_topics
 
-    def analyze(self, text: str, source_type: str = None) -> Dict[str, Any]:
+    def analyze(self, text: str, source_type: str = None, 
+                user_verified: bool = False, reach: int = 0) -> Dict[str, Any]:
         """
         Analyze text from the President's strategic perspective.
         
+        Week 3: Enhanced with emotion detection and weighted sentiment.
+        
+        Args:
+            text: Text to analyze
+            source_type: Source type (twitter, news, etc.)
+            user_verified: Whether user/account is verified (for weight calculation)
+            reach: Engagement metrics (for weight calculation)
+        
         Returns:
         {
-            'sentiment_label': str,  # positive/negative/neutral (using existing field)
-            'sentiment_score': float,  # -1.0 to 1.0 (using existing field)
-            'sentiment_justification': str,  # Strategic reasoning + recommended action (using existing field)
-            'issue_label': str,  # Human-readable issue label (NEW)
-            'issue_slug': str,  # URL-friendly identifier (NEW)
-            'issue_confidence': float,  # Classification confidence (NEW)
-            'issue_keywords': List[str],  # Keywords array (NEW)
-            'ministry_hint': str,  # Ministry association hint (NEW)
-            'embedding': List[float],  # OpenAI embedding vector (NEW)
+            'sentiment_label': str,  # positive/negative/neutral
+            'sentiment_score': float,  # -1.0 to 1.0
+            'sentiment_justification': str,  # Strategic reasoning + recommended action
+            'emotion_label': str,  # Week 3: Primary emotion (anger, fear, trust, sadness, joy, disgust, neutral)
+            'emotion_score': float,  # Week 3: Emotion confidence (0-1)
+            'emotion_distribution': Dict,  # Week 3: All 6 emotions with scores
+            'influence_weight': float,  # Week 3: Source influence weight (1.0-5.0)
+            'confidence_weight': float,  # Week 3: Classification confidence (0-1)
+            'issue_label': str,  # Human-readable issue label
+            'issue_slug': str,  # URL-friendly identifier
+            'issue_confidence': float,  # Classification confidence
+            'issue_keywords': List[str],  # Keywords array
+            'ministry_hint': str,  # Ministry association hint
+            'embedding': List[float],  # OpenAI embedding vector (Week 3: Fixed - now returns real embeddings)
         }
         """
         if not text or str(text).strip() == "" or str(text).lower() == "none":
@@ -240,16 +393,36 @@ Text: "{text[:800]}"
         # Combine justification and recommended action for the existing sentiment_justification field
         full_justification = f"{justification}\n\nRecommended Action: {recommended_action}"
         
+        # Week 3: Get actual embedding (fixes Week 2 issue)
+        embedding = self._get_embedding(text)
+        
+        # Week 3: Analyze emotions
+        emotion_result = self._analyze_emotion(text)
+        
+        # Week 3: Calculate influence weight
+        influence_weight = self._calculate_influence_weight(source_type, user_verified, reach)
+        
+        # Week 3: Calculate confidence weight
+        confidence_weight = self._calculate_confidence_weight(confidence, emotion_result.get('emotion_score'))
+        
         return {
             'sentiment_label': sentiment,  # Use existing field
             'sentiment_score': confidence,  # Use existing field
             'sentiment_justification': full_justification,  # Use existing field with combined content
+            # Week 3: Emotion detection
+            'emotion_label': emotion_result.get('emotion_label', 'neutral'),
+            'emotion_score': emotion_result.get('emotion_score', 0.5),
+            'emotion_distribution': emotion_result.get('emotion_distribution', {}),
+            # Week 3: Weight calculation
+            'influence_weight': influence_weight,
+            'confidence_weight': confidence_weight,
+            # Existing fields
             'issue_label': issue_label,  # Simple fallback - governance analyzer's label is used instead
             'issue_slug': issue_slug,  # Simple fallback - governance analyzer's slug is used instead
             'issue_confidence': issue_confidence,  # NEW
             'issue_keywords': issue_keywords,  # NEW
             'ministry_hint': ministry_hint,  # NEW
-            'embedding': [0.0] * 1536  # Placeholder - batch embeddings will replace this
+            'embedding': embedding  # Week 3: Actual embedding (fixes Week 2 zero vector issue)
         }
 
     def _generate_issue_label(self, text: str, topics: List[str], sentiment: str) -> str:
@@ -377,7 +550,7 @@ Text: "{text[:800]}"
             text_for_embedding = text[:8000]  # Leave some buffer
             
             response = self.openai_client.embeddings.create(
-                model="text-embedding-3-small",
+                model=self._get_embedding_model(),
                 input=text_for_embedding
             )
             
@@ -425,6 +598,84 @@ Text: "{text[:800]}"
             logger.error(f"Error generating batch embeddings: {e}")
             return [[0.0] * 1536 for _ in texts]
 
+    def _analyze_emotion(self, text: str) -> Dict[str, Any]:
+        """
+        Analyze emotions in text (Week 3).
+        
+        Args:
+            text: Text to analyze
+        
+        Returns:
+            Emotion analysis result
+        """
+        if self.emotion_analyzer:
+            try:
+                return self.emotion_analyzer.analyze_emotion(text)
+            except Exception as e:
+                logger.warning(f"Emotion analysis failed: {e}")
+        
+        # Fallback: return neutral
+        return {
+            'emotion_label': 'neutral',
+            'emotion_score': 0.5,
+            'emotion_distribution': {
+                'anger': 0.0,
+                'fear': 0.0,
+                'trust': 0.0,
+                'sadness': 0.0,
+                'joy': 0.0,
+                'disgust': 0.0
+            }
+        }
+    
+    def _calculate_influence_weight(self, source_type: Optional[str], user_verified: bool, reach: int) -> float:
+        """
+        Calculate influence weight (Week 3).
+        
+        Args:
+            source_type: Source type
+            user_verified: Whether verified
+            reach: Engagement reach
+        
+        Returns:
+            Influence weight (1.0-5.0)
+        """
+        if self.weight_calculator:
+            try:
+                return self.weight_calculator.calculate_influence_weight(
+                    source_type=source_type,
+                    user_verified=user_verified,
+                    reach=reach
+                )
+            except Exception as e:
+                logger.warning(f"Influence weight calculation failed: {e}")
+        
+        # Fallback: default weight
+        return 1.0
+    
+    def _calculate_confidence_weight(self, sentiment_score: float, emotion_score: Optional[float]) -> float:
+        """
+        Calculate confidence weight (Week 3).
+        
+        Args:
+            sentiment_score: Sentiment score
+            emotion_score: Emotion confidence score
+        
+        Returns:
+            Confidence weight (0.0-1.0)
+        """
+        if self.weight_calculator:
+            try:
+                return self.weight_calculator.calculate_confidence_weight(
+                    sentiment_score=sentiment_score,
+                    emotion_score=emotion_score
+                )
+            except Exception as e:
+                logger.warning(f"Confidence weight calculation failed: {e}")
+        
+        # Fallback: use sentiment score magnitude
+        return abs(sentiment_score) if sentiment_score else 0.5
+    
     def _generate_recommended_action(self, sentiment: str, topics: List[str], sentiment_score: float) -> str:
         """Generate recommended presidential action based on sentiment and topics."""
         if sentiment == "positive":
@@ -484,7 +735,7 @@ Text: "{text[:800]}"
         # High impact items (negative with high confidence)
         high_impact_mask = (
             (data['sentiment_label'] == 'negative') & 
-            (data['sentiment_score'] < -0.2)
+            (data['sentiment_score'] < self._get_negative_threshold())
         )
         high_impact_items = data[high_impact_mask]
         insights["high_impact_items"] = high_impact_items.to_dict('records')
