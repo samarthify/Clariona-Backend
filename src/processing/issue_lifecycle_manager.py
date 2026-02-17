@@ -6,7 +6,7 @@ Week 4: Automatic issue lifecycle management.
 
 # Standard library imports
 from typing import Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import sys
 from pathlib import Path
 
@@ -143,9 +143,20 @@ class IssueLifecycleManager:
         if issue.is_archived or issue.state == 'archived':
             return 'archived'
         
-        # Calculate metrics
-        age = datetime.now() - (issue.start_time or issue.created_at)
-        time_since_activity = datetime.now() - (issue.last_activity or issue.created_at)
+        # Calculate metrics (use timezone-aware datetime)
+        now = datetime.now(timezone.utc)
+        
+        # Handle timezone-aware and naive datetimes
+        start_time = issue.start_time or issue.created_at
+        if start_time and start_time.tzinfo is None:
+            start_time = start_time.replace(tzinfo=timezone.utc)
+        
+        last_activity = issue.last_activity or issue.created_at
+        if last_activity and last_activity.tzinfo is None:
+            last_activity = last_activity.replace(tzinfo=timezone.utc)
+        
+        age = now - start_time if start_time else timedelta(0)
+        time_since_activity = now - last_activity if last_activity else timedelta(0)
         
         mention_count = issue.mention_count
         velocity = issue.velocity_percent or 0.0
@@ -195,11 +206,11 @@ class IssueLifecycleManager:
         
         # Update state
         issue.state = new_state
-        issue.last_activity = datetime.now()
+        issue.last_activity = datetime.now(timezone.utc)
         
         # Handle state-specific side effects
         if new_state == 'resolved':
-            issue.resolved_at = datetime.now()
+            issue.resolved_at = datetime.now(timezone.utc)
             issue.is_active = False
         elif new_state == 'archived':
             issue.is_active = False

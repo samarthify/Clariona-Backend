@@ -1,0 +1,209 @@
+{
+    "national_food_security_supply": {
+        "name": "National Food Security & Supply Status",
+        "description": "Availability and accessibility of food in Nigeria. Covers national grain reserves, hunger levels, risk of famine, food sufficiency, and the overall state of food security in the country.",
+        "keywords": [
+            "food security",
+            "hunger",
+            "famine",
+            "starvation",
+            "food shortage",
+            "grain reserve",
+            "strategic grain reserve",
+            "national food reserve",
+            "food supply",
+            "food sufficiency",
+            "zero hunger",
+            "food insecurity"
+        ],
+        "category": "agriculture"
+    },
+    "staple_crops_production": {
+        "name": "Staple Crops & Agricultural Production",
+        "description": "Cultivation and harvest of major Nigerian staple crops. Includes Rice, Maize, Cassava, Yams, Sorghum, Millet, Wheat, and general crop production output and harvest reports.",
+        "keywords": [
+            "rice farming",
+            "maize production",
+            "cassava farming",
+            "yam harvest",
+            "sorghum",
+            "millet",
+            "wheat farming",
+            "crop production",
+            "harvest season",
+            "planting season",
+            "staple crop",
+            "food crop"
+        ],
+        "keyword_groups": {
+            "groups": [
+                {
+                    "type": "or",
+                    "keywords": [
+                        "rice pyramid",
+                        "lake rice"
+                    ]
+                }
+            ]
+        },
+        "category": "agriculture"
+    },
+    "farmer_sentiment_distress": {
+        "name": "Farmer Sentiment & Distress",
+        "description": "The welfare and challenges of Nigerian farmers. Covers farmer poverty, debt, displacement due to conflict (herdsmen/farmer clashes), lack of support, and general livelihood struggles.",
+        "keywords": [
+            "farmer",
+            "smallholder farmer",
+            "peasant farmer",
+            "farmer debt",
+            "farmer poverty",
+            "farming community",
+            "farmer displacement",
+            "herdsmen attack",
+            "farmer clash",
+            "banditry farm"
+        ],
+        "category": "agriculture"
+    },
+    "agricultural_inputs": {
+        "name": "Agricultural Inputs: Fertilizer, Seeds & Fuel",
+        "description": "Access to and cost of essential farming inputs. Includes Fertilizer (NPK, Urea), improved seeds, seedlings, tractors, farm machinery, and fuel/diesel costs for mechanized farming.",
+        "keywords": [
+            "fertilizer",
+            "NPK",
+            "Urea",
+            "seedlings",
+            "improved seeds",
+            "hybrid seeds",
+            "tractor",
+            "farm machinery",
+            "mechanized farming",
+            "farm inputs",
+            "agro-chemicals",
+            "pesticides",
+            "herbicides"
+        ],
+        "category": "agriculture"
+    },
+    "food_prices_market_dynamics": {
+        "name": "Food Prices & Market Dynamics",
+        "description": "Market prices of food items and inflation. Covers the cost of a bag of rice, garri, tomatoes, onions, market inflation, rising food costs, and consumer purchasing power regarding food.",
+        "keywords": [
+            "food price",
+            "price of rice",
+            "cost of garri",
+            "food inflation",
+            "market price",
+            "expensive food",
+            "rising cost of food",
+            "tomatoes price",
+            "onions price",
+            "food market"
+        ],
+        "category": "agriculture"
+    },
+    "climate_agricultural_disasters": {
+        "name": "Climate & Agricultural Disasters",
+        "description": "Environmental impact on agriculture. Includes floods destroying farmlands, drought, desertification, climate change effects, and pest infestations (locusts, quelea birds).",
+        "keywords": [
+            "flood farm",
+            "farmland destroyed",
+            "drought",
+            "desertification",
+            "climate change agriculture",
+            "pest infestation",
+            "locust",
+            "quelea bird",
+            "armyworm",
+            "delayed rain",
+            "dry spell"
+        ],
+        "category": "agriculture"
+    },
+    "government_policy_programs": {
+        "name": "Government Policy & Agricultural Programs",
+        "description": "Government intervention in agriculture. Includes the Anchor Borrowers Programme, CBN agricultural loans, Green Imperative, Ministry of Agriculture initiatives, and agricultural policy frameworks.",
+        "keywords": [
+            "Anchor Borrowers",
+            "CBN loan agriculture",
+            "Green Imperative",
+            "Ministry of Agriculture",
+            "agricultural policy",
+            "agric intervention",
+            "NIRSAL",
+            "Bank of Agriculture",
+            "agricultural subsidy"
+        ],
+        "category": "agriculture"
+    },
+    "livestock_fisheries": {
+        "name": "Livestock & Fisheries",
+        "description": "Animal husbandry and aquaculture. Covers Cattle rearing, Poultry farming, Fishery, Piggery, Ranching, Grazing reserves, NLTP (National Livestock Transformation Plan), and poultry feed costs.",
+        "keywords": [
+            "livestock",
+            "cattle",
+            "poultry",
+            "fishery",
+            "aquaculture",
+            "piggery",
+            "ranching",
+            "grazing reserve",
+            "NLTP",
+            "National Livestock Transformation Plan",
+            "animal husbandry",
+            "poultry feed",
+            "fish farming"
+        ],
+        "category": "agriculture"
+    },
+    "trade_supply_chain": {
+        "name": "Trade & Agricultural Supply Chain",
+        "description": "Import and export of agricultural goods. Includes food importation bans, border closures affecting food trade, export of cash crops (Cocoa, Cashew, Sesame), and logistics of moving food from farm to market.",
+        "keywords": [
+            "food import",
+            "food export",
+            "rice import",
+            "border closure",
+            "cocoa export",
+            "cashew export",
+            "sesame export",
+            "agric trade",
+            "food logistics",
+            "food transport",
+            "food haulage"
+        ],
+        "category": "agriculture"
+    },
+    "public_unrest_food_related": {
+        "name": "Public Unrest & Political Risk (Food-Related)",
+        "description": "Social unrest driven by food scarcity or cost. Includes food riots, looting of palliatives or warehouses, protests over hunger, and political instability tied to food security.",
+        "keywords": [
+            "food riot",
+            "looting warehouse",
+            "hunger protest",
+            "palliative looting",
+            "fight for food",
+            "stampede food",
+            "hijack food truck"
+        ],
+        "keyword_groups": {
+            "groups": [
+                {
+                    "type": "and",
+                    "keywords": [
+                        "protest",
+                        "hunger"
+                    ]
+                },
+                {
+                    "type": "and",
+                    "keywords": [
+                        "protest",
+                        "food"
+                    ]
+                }
+            ]
+        },
+        "category": "agriculture"
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "owner": "minister_transport",
+    "owner_name": "Minister of Transportation",
+    "owner_type": "minister",
+    "topics": [
+        "transport_governance",
+        "road_transport_highways",
+        "rail_transport",
+        "aviation_airports",
+        "maritime_ports",
+        "transport_safety_accidents",
+        "infrastructure_projects_delivery",
+        "urban_transport_fares",
+        "transport_labour_unions",
+        "transport_crisis_signals"
+    ],
+    "priority_topics": [
+        "transport_safety_accidents",
+        "rail_transport",
+        "transport_crisis_signals"
+    ],
+    "is_active": true,
+    "created_at": "2026-01-12",
+    "updated_at": "2026-01-12"
+}

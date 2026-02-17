@@ -1,6 +1,6 @@
 {
     "version": "1.0",
-    "last_updated": "2025-01-27",
+    "last_updated": "2026-01-13",
     "topics": {
         "fuel_pricing": {
             "name": "Fuel Pricing",
@@ -287,22 +287,1957 @@
                 "agricultural sector"
             ],
             "category": "agriculture"
+        },
+        "education_institutions_agencies": {
+            "name": "Education Institutions & Agencies",
+            "description": "Government agencies, boards, and regulatory bodies overseeing education in Nigeria, including the National Universities Commission (NUC), Universal Basic Education Commission (UBEC), TETFund, JAMB, WAEC, NECO, and SUBEB. Also includes discussions about specific universities, polytechnics, colleges of education, and unity schools.",
+            "keywords": [
+                "NUC",
+                "UBEC",
+                "TETFund",
+                "JAMB",
+                "WAEC",
+                "NECO",
+                "SUBEB",
+                "NABTEB",
+                "TRCN",
+                "NCCE",
+                "NBTE",
+                "National Universities Commission",
+                "Universal Basic Education Commission",
+                "Joint Admissions and Matriculation Board",
+                "Federal Ministry of Education",
+                "State Ministry of Education"
+            ],
+            "keyword_groups": {
+                "groups": [
+                    {
+                        "type": "or",
+                        "keywords": [
+                            "university",
+                            "polytechnic",
+                            "college of education",
+                            "unity school",
+                            "federal college",
+                            "federal university"
+                        ]
+                    }
+                ]
+            },
+            "category": "education"
+        },
+        "education_policies_frameworks": {
+            "name": "Education Policies & Frameworks",
+            "description": "Educational laws, acts, policies, and regulatory frameworks governing the Nigerian education sector. Includes the National Policy on Education, education funding acts, university autonomy bills, student loan policies, and government white papers on education reform.",
+            "keywords": [
+                "National Policy on Education",
+                "education act",
+                "university autonomy",
+                "student loan act",
+                "education reform",
+                "education bill",
+                "education law",
+                "education budget",
+                "education policy"
+            ],
+            "keyword_groups": {
+                "groups": [
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "bill",
+                            "education"
+                        ]
+                    },
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "policy",
+                            "school"
+                        ]
+                    },
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "act",
+                            "university"
+                        ]
+                    }
+                ]
+            },
+            "category": "education"
+        },
+        "education_programs_initiatives": {
+            "name": "Education Programs & Initiatives",
+            "description": "Government-led educational programs, intervention schemes, and scholarship initiatives. Includes the Almajiri Education Programme, Safe School Initiative, Home Grown School Feeding Programme, BESDA (Better Education Service Delivery for All), and various federal and state scholarship boards.",
+            "keywords": [
+                "Almajiri Education",
+                "Safe School Initiative",
+                "School Feeding Programme",
+                "BESDA",
+                "Scholarship Board",
+                "Federal Scholarship Board",
+                "PTDF",
+                "education intervention",
+                "scholarship scheme",
+                "bursary"
+            ],
+            "keyword_groups": {
+                "groups": [
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "program",
+                            "education"
+                        ]
+                    },
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "initiative",
+                            "school"
+                        ]
+                    },
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "project",
+                            "literacy"
+                        ]
+                    }
+                ]
+            },
+            "category": "education"
+        },
+        "exams_assessments": {
+            "name": "Exams & Assessments",
+            "description": "Standardized testing, entrance examinations, and academic assessments in Nigeria. Covers UTME, POST-UTME, WASSCE, NECO, NABTEB, Common Entrance Examination, and issues related to exam malpractice, result releases, and cut-off marks.",
+            "keywords": [
+                "UTME",
+                "POST-UTME",
+                "WASSCE",
+                "SSCE",
+                "Common Entrance",
+                "cut-off mark",
+                "exam malpractice",
+                "exam centers",
+                "admission list",
+                "matriculation",
+                "JAMB result",
+                "WAEC result"
+            ],
+            "category": "education"
+        },
+        "education_levels_school_types": {
+            "name": "Education Levels & School Types",
+            "description": "Discussions specific to different tiers of the education system: Early Childhood Care and Development (ECCD), Primary Education, Secondary Education (JSS/SSS), Tertiary Education, Vocational/Technical Education, and Special Needs Education.",
+            "keywords": [
+                "primary school",
+                "secondary school",
+                "tertiary institution",
+                "kindergarten",
+                "nursery school",
+                "vocational school",
+                "technical college",
+                "special education",
+                "basic education",
+                "higher education",
+                "post-primary",
+                "undergraduate",
+                "postgraduate"
+            ],
+            "category": "education"
+        },
+        "curriculum_academics": {
+            "name": "Curriculum & Academics",
+            "description": "The content of education, teaching standards, syllabus, and academic subjects. Includes discussions on STEAM (Science, Technology, Engineering, Arts, Math), entrepreneurship education, indigenous language teaching, and curriculum updates by NERDC.",
+            "keywords": [
+                "curriculum",
+                "syllabus",
+                "NERDC",
+                "scheme of work",
+                "academic calendar",
+                "STEAM",
+                "STEM",
+                "vocational training",
+                "entrepreneurship education"
+            ],
+            "keyword_groups": {
+                "groups": [
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "teaching",
+                            "subject"
+                        ]
+                    },
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "learning",
+                            "standard"
+                        ]
+                    }
+                ]
+            },
+            "category": "education"
+        },
+        "education_stakeholders_roles": {
+            "name": "Education Stakeholders & Roles",
+            "description": "Key actors in the education sector including students, teachers, lecturers, Vice-Chancellors, Rectors, parents, and unions like ASUU (Academic Staff Union of Universities), NUT (Nigeria Union of Teachers), NASU, and SSANU. Covers strikes, salary disputes, and welfare.",
+            "keywords": [
+                "ASUU",
+                "NUT",
+                "NASU",
+                "SSANU",
+                "COEASU",
+                "NANS",
+                "Vice-Chancellor",
+                "Rector",
+                "Provost",
+                "Headmaster",
+                "Principal",
+                "Teacher",
+                "Lecturer",
+                "Professor",
+                "Student Union",
+                "PTA",
+                "Parents Teachers Association"
+            ],
+            "keyword_groups": {
+                "groups": [
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "strike",
+                            "lecturer"
+                        ]
+                    },
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "strike",
+                            "teacher"
+                        ]
+                    },
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "salary",
+                            "teacher"
+                        ]
+                    }
+                ]
+            },
+            "category": "education"
+        },
+        "education_geography_administration": {
+            "name": "Education Geography & Administration",
+            "description": "Administrative structures and geographic distribution of education. Includes Local Government Education Authorities (LGEA), State Universal Basic Education Boards (SUBEB), school districts, catchment areas, and educationally disadvantaged states (EDS).",
+            "keywords": [
+                "LGEA",
+                "SUBEB",
+                "catchment area",
+                "inspectorate",
+                "ministry of education",
+                "commissioner for education",
+                "school board",
+                "education secretary",
+                "education district"
+            ],
+            "category": "education"
+        },
+        "national_food_security_supply": {
+            "name": "National Food Security & Supply Status",
+            "description": "Availability and accessibility of food in Nigeria. Covers national grain reserves, hunger levels, risk of famine, food sufficiency, and the overall state of food security in the country.",
+            "keywords": [
+                "food security",
+                "hunger",
+                "famine",
+                "starvation",
+                "food shortage",
+                "grain reserve",
+                "strategic grain reserve",
+                "national food reserve",
+                "food supply",
+                "food sufficiency",
+                "zero hunger",
+                "food insecurity"
+            ],
+            "category": "agriculture"
+        },
+        "staple_crops_production": {
+            "name": "Staple Crops & Agricultural Production",
+            "description": "Cultivation and harvest of major Nigerian staple crops. Includes Rice, Maize, Cassava, Yams, Sorghum, Millet, Wheat, and general crop production output and harvest reports.",
+            "keywords": [
+                "rice farming",
+                "maize production",
+                "cassava farming",
+                "yam harvest",
+                "sorghum",
+                "millet",
+                "wheat farming",
+                "crop production",
+                "harvest season",
+                "planting season",
+                "staple crop",
+                "food crop"
+            ],
+            "keyword_groups": {
+                "groups": [
+                    {
+                        "type": "or",
+                        "keywords": [
+                            "rice pyramid",
+                            "lake rice"
+                        ]
+                    }
+                ]
+            },
+            "category": "agriculture"
+        },
+        "farmer_sentiment_distress": {
+            "name": "Farmer Sentiment & Distress",
+            "description": "The welfare and challenges of Nigerian farmers. Covers farmer poverty, debt, displacement due to conflict (herdsmen/farmer clashes), lack of support, and general livelihood struggles.",
+            "keywords": [
+                "farmer",
+                "smallholder farmer",
+                "peasant farmer",
+                "farmer debt",
+                "farmer poverty",
+                "farming community",
+                "farmer displacement",
+                "herdsmen attack",
+                "farmer clash",
+                "banditry farm"
+            ],
+            "category": "agriculture"
+        },
+        "agricultural_inputs": {
+            "name": "Agricultural Inputs: Fertilizer, Seeds & Fuel",
+            "description": "Access to and cost of essential farming inputs. Includes Fertilizer (NPK, Urea), improved seeds, seedlings, tractors, farm machinery, and fuel/diesel costs for mechanized farming.",
+            "keywords": [
+                "fertilizer",
+                "NPK",
+                "Urea",
+                "seedlings",
+                "improved seeds",
+                "hybrid seeds",
+                "tractor",
+                "farm machinery",
+                "mechanized farming",
+                "farm inputs",
+                "agro-chemicals",
+                "pesticides",
+                "herbicides"
+            ],
+            "category": "agriculture"
+        },
+        "food_prices_market_dynamics": {
+            "name": "Food Prices & Market Dynamics",
+            "description": "Market prices of food items and inflation. Covers the cost of a bag of rice, garri, tomatoes, onions, market inflation, rising food costs, and consumer purchasing power regarding food.",
+            "keywords": [
+                "food price",
+                "price of rice",
+                "cost of garri",
+                "food inflation",
+                "market price",
+                "expensive food",
+                "rising cost of food",
+                "tomatoes price",
+                "onions price",
+                "food market"
+            ],
+            "category": "agriculture"
+        },
+        "climate_agricultural_disasters": {
+            "name": "Climate & Agricultural Disasters",
+            "description": "Environmental impact on agriculture. Includes floods destroying farmlands, drought, desertification, climate change effects, and pest infestations (locusts, quelea birds).",
+            "keywords": [
+                "flood farm",
+                "farmland destroyed",
+                "drought",
+                "desertification",
+                "climate change agriculture",
+                "pest infestation",
+                "locust",
+                "quelea bird",
+                "armyworm",
+                "delayed rain",
+                "dry spell"
+            ],
+            "category": "agriculture"
+        },
+        "government_policy_programs": {
+            "name": "Government Policy & Agricultural Programs",
+            "description": "Government intervention in agriculture. Includes the Anchor Borrowers Programme, CBN agricultural loans, Green Imperative, Ministry of Agriculture initiatives, and agricultural policy frameworks.",
+            "keywords": [
+                "Anchor Borrowers",
+                "CBN loan agriculture",
+                "Green Imperative",
+                "Ministry of Agriculture",
+                "agricultural policy",
+                "agric intervention",
+                "NIRSAL",
+                "Bank of Agriculture",
+                "agricultural subsidy"
+            ],
+            "category": "agriculture"
+        },
+        "livestock_fisheries": {
+            "name": "Livestock & Fisheries",
+            "description": "Animal husbandry and aquaculture. Covers Cattle rearing, Poultry farming, Fishery, Piggery, Ranching, Grazing reserves, NLTP (National Livestock Transformation Plan), and poultry feed costs.",
+            "keywords": [
+                "livestock",
+                "cattle",
+                "poultry",
+                "fishery",
+                "aquaculture",
+                "piggery",
+                "ranching",
+                "grazing reserve",
+                "NLTP",
+                "National Livestock Transformation Plan",
+                "animal husbandry",
+                "poultry feed",
+                "fish farming"
+            ],
+            "category": "agriculture"
+        },
+        "trade_supply_chain": {
+            "name": "Trade & Agricultural Supply Chain",
+            "description": "Import and export of agricultural goods. Includes food importation bans, border closures affecting food trade, export of cash crops (Cocoa, Cashew, Sesame), and logistics of moving food from farm to market.",
+            "keywords": [
+                "food import",
+                "food export",
+                "rice import",
+                "border closure",
+                "cocoa export",
+                "cashew export",
+                "sesame export",
+                "agric trade",
+                "food logistics",
+                "food transport",
+                "food haulage"
+            ],
+            "category": "agriculture"
+        },
+        "public_unrest_food_related": {
+            "name": "Public Unrest & Political Risk (Food-Related)",
+            "description": "Social unrest driven by food scarcity or cost. Includes food riots, looting of palliatives or warehouses, protests over hunger, and political instability tied to food security.",
+            "keywords": [
+                "food riot",
+                "looting warehouse",
+                "hunger protest",
+                "palliative looting",
+                "fight for food",
+                "stampede food",
+                "hijack food truck"
+            ],
+            "keyword_groups": {
+                "groups": [
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "protest",
+                            "hunger"
+                        ]
+                    },
+                    {
+                        "type": "and",
+                        "keywords": [
+                            "protest",
+                            "food"
+                        ]
+                    }
+                ]
+            },
+            "category": "agriculture"
+        },
+        "health_governance_policy": {
+            "name": "Governance & Health Policy",
+            "description": "Strategic leadership and regulation of the health sector. Includes the National Health Act, health financing, budget allocation for health, NHIS (National Health Insurance Scheme), Basic Health Care Provision Fund (BHCPF), and Ministry of Health policies.",
+            "keywords": [
+                "National Health Act",
+                "NHIS",
+                "National Health Insurance",
+                "health budget",
+                "health financing",
+                "BHCPF",
+                "Basic Health Care Provision Fund",
+                "Ministry of Health",
+                "health policy",
+                "health reform",
+                "universal health coverage",
+                "UHC"
+            ],
+            "category": "health"
+        },
+        "disease_outbreaks_surveillance": {
+            "name": "Disease Outbreaks & Surveillance",
+            "description": "Monitoring and response to epidemic-prone diseases. Covers Lassa Fever, Cholera, COVID-19, Meningitis, Monkeypox, Ebola, and NCDC (Nigeria Centre for Disease Control) surveillance activities.",
+            "keywords": [
+                "Lassa Fever",
+                "Cholera",
+                "COVID-19",
+                "Meningitis",
+                "Monkeypox",
+                "Ebola",
+                "Diphtheria",
+                "NCDC",
+                "disease outbreak",
+                "epidemic",
+                "pandemic",
+                "surveillance",
+                "contact tracing"
+            ],
+            "category": "health"
+        },
+        "endemic_infectious_diseases": {
+            "name": "Endemic & Infectious Diseases",
+            "description": "Ongoing management of burden diseases. Includes Malaria, Tuberculosis (TB), HIV/AIDS, Neglected Tropical Diseases (NTDs), and treatment programs for these conditions.",
+            "keywords": [
+                "Malaria",
+                "Tuberculosis",
+                "TB",
+                "HIV",
+                "AIDS",
+                "antiretroviral",
+                "ART",
+                "malaria treatment",
+                "typhoid",
+                "hepatitis",
+                "NTD",
+                "neglected tropical disease"
+            ],
+            "category": "health"
+        },
+        "antimicrobial_resistance": {
+            "name": "Antimicrobial Resistance & Hospital Infections",
+            "description": "Issues related to drug resistance and hospital safety. Covers antibiotic resistance, superbugs, rational use of medicines, and hospital-acquired infections.",
+            "keywords": [
+                "antimicrobial resistance",
+                "AMR",
+                "antibiotic resistance",
+                "superbug",
+                "drug resistance",
+                "rational use of medicine",
+                "hospital infection",
+                "nosocomial"
+            ],
+            "category": "health"
+        },
+        "hospitals_healthcare_facilities": {
+            "name": "Hospitals & Healthcare Facilities",
+            "description": "Infrastructure and state of medical centers. Includes Teaching Hospitals, Federal Medical Centres (FMCs), General Hospitals, Primary Healthcare Centers (PHCs), hospital equipment, and facility conditions.",
+            "keywords": [
+                "Teaching Hospital",
+                "Federal Medical Centre",
+                "FMC",
+                "General Hospital",
+                "PHC",
+                "Primary Healthcare Center",
+                "hospital equipment",
+                "hospital infrastructure",
+                "health center",
+                "clinic",
+                "hospital ward"
+            ],
+            "category": "health"
+        },
+        "health_workforce": {
+            "name": "Health Workforce",
+            "description": "Human resources for health. Includes Doctors, Nurses, Pharmacists, Lab Scientists, brain drain ('Japa'), shortage of staff, and recruitment of health workers.",
+            "keywords": [
+                "doctor",
+                "nurse",
+                "pharmacist",
+                "lab scientist",
+                "medical staff",
+                "health worker",
+                "brain drain",
+                "japa doctor",
+                "shortage of doctors",
+                "medical consultant",
+                "resident doctor"
+            ],
+            "category": "health"
+        },
+        "workforce_strikes_protests": {
+            "name": "Workforce Strikes & Protests",
+            "description": "Industrial actions by health unions. Covers strikes by NMA (Nigerian Medical Association), NARD (National Association of Resident Doctors), JOHESU, and demands for salary arrears or hazard allowance.",
+            "keywords": [
+                "NMA",
+                "NARD",
+                "JOHESU",
+                "NANNM",
+                "doctors strike",
+                "health worker strike",
+                "hazard allowance",
+                "salary arrears",
+                "resident doctors strike"
+            ],
+            "category": "health"
+        },
+        "drugs_pharmaceuticals": {
+            "name": "Drugs & Pharmaceuticals",
+            "description": "Regulation and supply of medicines. Includes NAFDAC activities, fake/substandard drugs, drug supply chains, pharmacy regulation, and cost of medication.",
+            "keywords": [
+                "NAFDAC",
+                "fake drugs",
+                "substandard drugs",
+                "counterfeit drugs",
+                "pharmaceutical",
+                "drug supply",
+                "cost of drugs",
+                "medication",
+                "pharmacy",
+                "drug enforcement"
+            ],
+            "category": "health"
+        },
+        "vaccines_immunization": {
+            "name": "Vaccines & Immunization",
+            "description": "Vaccination programs and coverage. Includes NPHCDA (National Primary Health Care Development Agency), routine immunization, polio eradication, measles vaccine, and vaccine storage/cold chain.",
+            "keywords": [
+                "vaccine",
+                "immunization",
+                "vaccination",
+                "NPHCDA",
+                "polio",
+                "measles vaccine",
+                "cold chain",
+                "routine immunization",
+                "yellow fever card"
+            ],
+            "category": "health"
+        },
+        "maternal_child_health": {
+            "name": "Maternal & Child Health",
+            "description": "Health of mothers and children. Covers maternal mortality, infant mortality, antenatal care, delivery services, family planning, and reproductive health.",
+            "keywords": [
+                "maternal health",
+                "child health",
+                "maternal mortality",
+                "infant mortality",
+                "antenatal",
+                "delivery",
+                "childbirth",
+                "family planning",
+                "reproductive health",
+                "midwife",
+                "under-5 mortality"
+            ],
+            "category": "health"
+        },
+        "nutrition_food_security": {
+            "name": "Nutrition & Food Security",
+            "description": "Nutritional status of the population. Covers malnutrition, stunting in children, wasting, micronutrient deficiency, and severe acute malnutrition (SAM).",
+            "keywords": [
+                "malnutrition",
+                "stunting",
+                "wasting",
+                "severe acute malnutrition",
+                "SAM",
+                "ready to use therapeutic food",
+                "RUTF",
+                "micronutrient",
+                "nutritional status"
+            ],
+            "category": "health"
+        },
+        "public_sentiment_complaints": {
+            "name": "Public Sentiment & Complaints",
+            "description": "General public feedback on health services. Includes negligence, poor attitude of staff, rejection of patients (especially gunshot victims), and patient satisfaction.",
+            "keywords": [
+                "medical negligence",
+                "hospital negligence",
+                "poor treatment",
+                "rejection of patient",
+                "gunshot victim hospital",
+                "doctor attitude",
+                "nurse attitude",
+                "hospital complaint"
+            ],
+            "category": "health"
+        },
+        "health_misinformation_rumors": {
+            "name": "Health Misinformation & Rumors",
+            "description": "Spread of false health information. Includes vaccine hesitancy, fake cures, herbal remedy myths, and conspiracy theories affecting public health.",
+            "keywords": [
+                "fake cure",
+                "herbal cure claim",
+                "vaccine conspiracy",
+                "health rumor",
+                "health myth",
+                "anti-vax",
+                "vaccine hesitancy"
+            ],
+            "category": "health"
+        },
+        "health_emergencies_disasters": {
+            "name": "Health Emergencies & Disasters",
+            "description": "Mass casualty events and acute health crises. Includes building collapses, explosions, mass accidents requiring emergency response, and ambulance services.",
+            "keywords": [
+                "mass casualty",
+                "emergency response",
+                "ambulance",
+                "paramedic",
+                "building collapse health",
+                "explosion victim",
+                "casualty ward",
+                "emergency room",
+                "accident victim"
+            ],
+            "category": "health"
+        },
+        "transport_governance": {
+            "name": "Ministry, Leadership & Governance",
+            "description": "Activities of the Federal Ministry of Transportation. Includes policy announcements, ministerial inspections, transport budgets, and regulatory frameworks governing the sector.",
+            "keywords": [
+                "Ministry of Transportation",
+                "Minister of Transport",
+                "transport policy",
+                "transport budget",
+                "transport regulation",
+                "federal executive council transport"
+            ],
+            "category": "transport"
+        },
+        "road_transport_highways": {
+            "name": "Road Transport & Highways",
+            "description": "Condition and management of federal roads and highways. Covers potholes, road rehabilitation, FERMA (Federal Roads Maintenance Agency), and major expressways (Lagos-Ibadan, Abuja-Kano).",
+            "keywords": [
+                "FERMA",
+                "federal road",
+                "expressway",
+                "highway",
+                "pothole",
+                "bad road",
+                "road rehabilitation",
+                "road construction",
+                "Lagos-Ibadan expressway",
+                "Abuja-Kaduna road",
+                "Second Niger Bridge"
+            ],
+            "category": "transport"
+        },
+        "rail_transport": {
+            "name": "Rail Transport",
+            "description": "Railway services and infrastructure. Includes NRC (Nigeria Railway Corporation), train schedules, ticket handling, Abuja-Kaduna train, Lagos-Ibadan rail, and Warri-Itakpe line.",
+            "keywords": [
+                "NRC",
+                "Nigeria Railway Corporation",
+                "train service",
+                "railway",
+                "Abuja-Kaduna train",
+                "Lagos-Ibadan rail",
+                "rail line",
+                "train station",
+                "train ticket",
+                "e-ticketing"
+            ],
+            "category": "transport"
+        },
+        "aviation_airports": {
+            "name": "Aviation & Airports",
+            "description": "Air travel sector. Covers FAAN, NCAA, airport conditions (MMIA, Nnamdi Azikiwe), flight delays, airline operations (Air Peace, etc.), and aviation fuel scarcity.",
+            "keywords": [
+                "FAAN",
+                "NCAA",
+                "airport",
+                "flight delay",
+                "airline",
+                "aviation fuel",
+                "Jet A1",
+                "domestic flight",
+                "international terminal",
+                "Muritala Muhammed Airport",
+                "Nnamdi Azikiwe Airport"
+            ],
+            "category": "transport"
+        },
+        "maritime_ports": {
+            "name": "Maritime, Ports & Logistics",
+            "description": "Sea transport and ports authority. Includes NPA (Nigerian Ports Authority), NIMASA, Apapa Port, Tin Can Island, port congestion, customs clearance, and waterways.",
+            "keywords": [
+                "NPA",
+                "Nigerian Ports Authority",
+                "NIMASA",
+                "Apapa Port",
+                "Tin Can Island",
+                "Lekki Deep Sea Port",
+                "port congestion",
+                "clearing agent",
+                "customs transport",
+                "inland waterways",
+                "NIWA"
+            ],
+            "category": "transport"
+        },
+        "transport_safety_accidents": {
+            "name": "Safety, Accidents & Emergencies",
+            "description": "Transport safety and road crashes. Includes FRSC (Federal Road Safety Corps), road accidents, tanker explosions, train derailments, and air crashes/incidents.",
+            "keywords": [
+                "FRSC",
+                "Road Safety",
+                "road accident",
+                "auto crash",
+                "tanker explosion",
+                "train derailment",
+                "plane crash",
+                "emergency response transport",
+                "fatality road"
+            ],
+            "category": "transport"
+        },
+        "infrastructure_projects_delivery": {
+            "name": "Infrastructure Projects & Delivery",
+            "description": "Major transport infrastructure projects. Covers completion of rail lines, new airport terminals, bridge construction, and project timelines.",
+            "keywords": [
+                "rail project",
+                "airport terminal project",
+                "road project",
+                "infrastructure delivery",
+                "commissioning transport",
+                "construction delay",
+                "contractor road"
+            ],
+            "category": "transport"
+        },
+        "urban_transport_fares": {
+            "name": "Urban Transport, Fares & Green Mobility",
+            "description": "Intra-city commuting and costs. Includes transport fares (T-fare), BRT buses, Okada/Keke bans, Danfo, CNG buses (Compressed Natural Gas), and electric vehicle initiatives.",
+            "keywords": [
+                "transport fare",
+                "t-fare",
+                "bus fare",
+                "BRT",
+                "Danfo",
+                "Okada ban",
+                "Keke NAPEP",
+                "CNG bus",
+                "transport cost",
+                "commuter",
+                "traffic jam",
+                "go-slow"
+            ],
+            "category": "transport"
+        },
+        "transport_labour_unions": {
+            "name": "Public Sentiment, Labour & Media",
+            "description": "Transport unions and worker sentiment. Covers NURTW (National Union of Road Transport Workers), RTEAN, NARTO, transport strikes, and public complaints.",
+            "keywords": [
+                "NURTW",
+                "RTEAN",
+                "NARTO",
+                "road transport union",
+                "transport strike",
+                "agbero",
+                "park management",
+                "driver union",
+                "railway worker strike"
+            ],
+            "category": "transport"
+        },
+        "transport_crisis_signals": {
+            "name": "Early Warning & Crisis Signals",
+            "description": "Security risks in transport. Includes kidnapping on highways, attacks on trains, robbery in traffic (one chance), and blockades of roads.",
+            "keywords": [
+                "kidnap road",
+                "highway robbery",
+                "train attack",
+                "one chance",
+                "traffic robbery",
+                "road blockade",
+                "travel risk",
+                "unsafe road"
+            ],
+            "category": "transport"
+        },
+        "youth_sports_governance": {
+            "name": "Ministry Leadership & Governance",
+            "description": "Governance of the Youth and Sports Development sector. Includes Ministry policies, Minister's activities, sports federation elections, and administrative decisions.",
+            "keywords": [
+                "Minister of Youth",
+                "Sports Minister",
+                "Ministry of Youth and Sports",
+                "sports policy",
+                "youth policy",
+                "sports federation election",
+                "NFF president"
+            ],
+            "category": "youth"
+        },
+        "youth_affairs_core": {
+            "name": "Youth Affairs Core Issues",
+            "description": "General issues affecting the youth demographic. Includes youth demographics, 'Not Too Young To Run', youth inclusion in governance, and national youth conferences.",
+            "keywords": [
+                "Nigerian youth",
+                "youth inclusion",
+                "not too young to run",
+                "National Youth Council",
+                "NYCN",
+                "youth leader",
+                "youth participation"
+            ],
+            "category": "youth"
+        },
+        "youth_employment_empowerment": {
+            "name": "Youth Employment, Skills & Empowerment",
+            "description": "Economic opportunities for youth. Covers unemployment, N-Power, skills acquisition programs, tech empowerment, entrepreneurship grants, and job creation.",
+            "keywords": [
+                "youth unemployment",
+                "N-Power",
+                "skills acquisition",
+                "youth empowerment",
+                "youth grant",
+                "job creation",
+                "tech skills",
+                "digital skill",
+                "youth entrepreneur"
+            ],
+            "category": "youth"
+        },
+        "youth_education_nysc": {
+            "name": "Education to Employment & NYSC",
+            "description": "Transition from school to work and National Youth Service Corps. Includes NYSC orientation camps, PPA (Place of Primary Assignment), corpers' allowance (allawee), and graduate employability.",
+            "keywords": [
+                "NYSC",
+                "National Youth Service Corps",
+                "corper",
+                "orientation camp",
+                "PPA",
+                "allawee",
+                "youth service",
+                "passing out parade",
+                "POP",
+                "CDS"
+            ],
+            "category": "youth"
+        },
+        "youth_protests_activism": {
+            "name": "Youth Protests, Activism & Movements",
+            "description": "Youth-led social movements and demonstrations. Includes EndSARS, protests against police brutality, student protests, and online activism.",
+            "keywords": [
+                "EndSARS",
+                "youth protest",
+                "police brutality",
+                "soro soke",
+                "youth movement",
+                "student protest",
+                "online activism",
+                "occupy"
+            ],
+            "category": "youth"
+        },
+        "youth_social_risks": {
+            "name": "Mental Health, Drugs & Social Risks",
+            "description": "Social challenges facing youth. Includes drug abuse (Codeine, Tramadol, Mkpuru Mmiri), cybercrime (Yahoo Yahoo), cultism, and mental health struggles.",
+            "keywords": [
+                "drug abuse",
+                "substance abuse",
+                "tramadol",
+                "codeine",
+                "mkpuru mmiri",
+                "yahoo yahoo",
+                "cybercrime",
+                "cultism",
+                "youth depression",
+                "mental health youth"
+            ],
+            "category": "youth"
+        },
+        "sports_national_international": {
+            "name": "Sports: National & International",
+            "description": "General participation in major sporting events. Includes Olympics, Commonwealth Games, All Africa Games, and National Sports Festival.",
+            "keywords": [
+                "Olympics",
+                "Commonwealth Games",
+                "All Africa Games",
+                "National Sports Festival",
+                "Team Nigeria",
+                "gold medal",
+                "international tournament"
+            ],
+            "category": "youth"
+        },
+        "football_high_sensitivity": {
+            "name": "Football: High Sensitivity Area",
+            "description": "Football-specific discussions, which are highly emotional in Nigeria. Covers Super Eagles, Super Falcons, NFF (Nigeria Football Federation), World Cup qualifiers, AFCON, and local leagues (NPFL).",
+            "keywords": [
+                "Super Eagles",
+                "Super Falcons",
+                "NFF",
+                "Nigeria Football Federation",
+                "AFCON",
+                "World Cup qualifier",
+                "NPFL",
+                "Enyimba",
+                "Kano Pillars",
+                "football match"
+            ],
+            "category": "youth"
+        },
+        "other_major_sports": {
+            "name": "Other Major Sports",
+            "description": "Non-football sports with significant following. Includes Basketball (D'Tigress/D'Tigers), Athletics (Track & Field), Boxing, and Table Tennis.",
+            "keywords": [
+                "D'Tigress",
+                "D'Tigers",
+                "basketball nigeria",
+                "athletics nigeria",
+                "Tobi Amusan",
+                "boxing nigeria",
+                "table tennis nigeria",
+                "Aruna Quadri"
+            ],
+            "category": "youth"
+        },
+        "sports_infrastructure": {
+            "name": "Sports Infrastructure & Facilities",
+            "description": "State of stadiums and training facilities. Includes National Stadium Lagos/Abuja, decaying infrastructure, pitch conditions, and renovation projects.",
+            "keywords": [
+                "National Stadium",
+                "Surulere Stadium",
+                "Moshood Abiola Stadium",
+                "bad pitch",
+                "stadium renovation",
+                "sports facility",
+                "training pitch"
+            ],
+            "category": "youth"
+        },
+        "sports_funding_integrity": {
+            "name": "Sports Funding, Governance & Integrity",
+            "description": "Financial management in sports. Covers corruption allegations, funding for tournaments, unpaid match bonuses, and leadership tussles in federations.",
+            "keywords": [
+                "sports corruption",
+                "NFF scandal",
+                "unpaid bonus",
+                "owing player",
+                "sports budget",
+                "missing fund",
+                "sports ministry funding"
+            ],
+            "category": "youth"
+        },
+        "athletes_officials_welfare": {
+            "name": "Athletes, Coaches & Officials",
+            "description": "Welfare of sports personnel. Includes hiring/firing of coaches (e.g., Super Eagles coach), player welfare, and treatment of athletes.",
+            "keywords": [
+                "Super Eagles Coach",
+                "Jose Peseiro",
+                "Finidi George",
+                "athlete welfare",
+                "owing salary coach",
+                "technical adviser",
+                "foreign coach"
+            ],
+            "category": "youth"
+        },
+        "fan_sentiment_risk": {
+            "name": "Fan Sentiment, Violence & Matchday Risks",
+            "description": "Crowd behavior and safety. Includes stadium violence, hooliganism, pitch invasion, and angry fan reactions.",
+            "keywords": [
+                "stadium violence",
+                "pitch invasion",
+                "hooliganism",
+                "angry fan",
+                "match fixing",
+                "referee attack"
+            ],
+            "category": "youth"
+        },
+        "youth_digital_trends": {
+            "name": "Social Media & Influencer Monitoring",
+            "description": "Youth culture on digital platforms. Includes trends on Twitter/X, TikTok, influential voices, and viral challenges.",
+            "keywords": [
+                "twitter influencer",
+                "viral trend",
+                "youth challenge",
+                "tiktok nigeria",
+                "social media trend",
+                "influencer marketing"
+            ],
+            "category": "youth"
+        },
+        "youth_media_reputation": {
+            "name": "Media Reputation & Crisis Signals",
+            "description": "Public perception of the ministry/minister in media. Includes press releases, controversies, and viral negative stories.",
+            "keywords": [
+                "minister scandal",
+                "ministry statement",
+                "press release youth",
+                "viral video minister",
+                "youth minister trend"
+            ],
+            "category": "youth"
+        },
+        "youth_regional_demographics": {
+            "name": "Regional & Demographic Signals",
+            "description": "Youth issues specific to regions (North vs South) or demographics (Rural vs Urban youth).",
+            "keywords": [
+                "northern youth",
+                "southern youth",
+                "arewa youth",
+                "ohanaeze youth",
+                "rural youth",
+                "urban youth"
+            ],
+            "category": "youth"
+        },
+        "youth_future_trends": {
+            "name": "Future Facing & Strategic Signals",
+            "description": "Emerging long-term issues for youth. Includes future of work, tech adoption, and generational shifts (Gen Z).",
+            "keywords": [
+                "future of work",
+                "Gen Z nigeria",
+                "tech adoption",
+                "digital economy youth",
+                "youth migration"
+            ],
+            "category": "youth"
+        },
+        "youth_early_warning": {
+            "name": "Early Warning & Escalation Keywords",
+            "description": "Keywords indicating imminent youth unrest or crisis. Includes mobilization for protests, threats of violence, or hashtags calling for action.",
+            "keywords": [
+                "occupy lekki",
+                "shutdown",
+                "mass action",
+                "revolution now",
+                "youth uprising",
+                "mobilize protest"
+            ],
+            "category": "youth"
+        },
+        "finance_leadership_governance": {
+            "name": "Leadership & Governance",
+            "description": "Leadership of the Federal Ministry of Finance and related agencies. Includes the Minister of Finance, CBN Governor, monetary policy decisions, and economic management team activities.",
+            "keywords": [
+                "Minister of Finance",
+                "Wale Edun",
+                "CBN Governor",
+                "Yemi Cardoso",
+                "Ministry of Finance",
+                "Central Bank of Nigeria",
+                "Monetary Policy Committee",
+                "MPC meeting",
+                "economic team"
+            ],
+            "category": "finance"
+        },
+        "macroeconomic_indicators": {
+            "name": "Macroeconomic Indicators",
+            "description": "Key indicators of the Nigerian economy. Covers inflation rate, GDP growth, exchange rate (Naira vs Dollar), external reserves, and unemployment rate.",
+            "keywords": [
+                "inflation rate",
+                "GDP growth",
+                "exchange rate",
+                "naira value",
+                "dollar rate",
+                "FX crisis",
+                "external reserves",
+                "economic recession",
+                "cost of living crisis",
+                "food inflation finance"
+            ],
+            "category": "finance"
+        },
+        "revenue_taxation": {
+            "name": "Revenue & Taxation",
+            "description": "Government revenue generation and tax administration. Includes FIRS (Federal Inland Revenue Service), VAT, Company Income Tax, Stamp Duty, and TSA (Treasury Single Account).",
+            "keywords": [
+                "FIRS",
+                "tax collection",
+                "VAT",
+                "Value Added Tax",
+                "Company Income Tax",
+                "Stamp Duty",
+                "tax revenue",
+                "TSA",
+                "Treasury Single Account",
+                "revenue generation",
+                "tax evasion",
+                "FACC allocation"
+            ],
+            "category": "finance"
+        },
+        "development_finance_institutions": {
+            "name": "Development Finance Institutions",
+            "description": "State-owned financial institutions supporting development. Includes Bank of Industry (BOI), NEXIM Bank, Development Bank of Nigeria (DBN), and Bank of Agriculture interventions.",
+            "keywords": [
+                "Bank of Industry",
+                "BOI",
+                "NEXIM Bank",
+                "Development Bank of Nigeria",
+                "DBN",
+                "DFI",
+                "Bank of Agriculture loan",
+                "SME funding"
+            ],
+            "category": "finance"
+        },
+        "digital_finance_fintech": {
+            "name": "Digital Finance & Fintech",
+            "description": "Financial technology and digital currency. Covers eNaira, cashless policy, crypto regulation, fintech startups, and electronic payment systems.",
+            "keywords": [
+                "eNaira",
+                "CBDC",
+                "fintech nigeria",
+                "mobile money",
+                "POS charges",
+                "cashless policy",
+                "cryptocurrency ban",
+                "crypto regulation",
+                "digital banking",
+                "NIBSS"
+            ],
+            "category": "finance"
+        },
+        "infrastructure_priority_sectors": {
+            "name": "Infrastructure & Priority Sectors Funding",
+            "description": "Financing for major infrastructure and critical sectors. Includes Sukuk bonds, Eurobonds, sovereign debt for rail/power projects, and infrastructure funds.",
+            "keywords": [
+                "Sukuk bond",
+                "Eurobond",
+                "infrastructure financing",
+                "Green bond",
+                "sovereign debt",
+                "borrowing for infrastructure",
+                "Chinese loan"
+            ],
+            "category": "finance"
+        },
+        "nigeria_fiscal_terms": {
+            "name": "Nigeria-Specific Fiscal Terms",
+            "description": "Specific terminology related to Nigerian fiscal management. Includes FAAC (Federation Account Allocation Committee), budget deficit, debt servicing, and subsidy removal impact.",
+            "keywords": [
+                "FAAC",
+                "federation account",
+                "budget deficit",
+                "debt servicing",
+                "subsidy removal",
+                "fuel subsidy finance",
+                "supplementary budget",
+                "appropriation bill",
+                "fiscal policy"
+            ],
+            "category": "finance"
+        },
+        "interior_core_identity": {
+            "name": "Ministry of Interior \u2013 Core Identity",
+            "description": "General activities and leadership of the Ministry of Interior. Includes the Minister's engagements, policy announcements, and strategic direction of the ministry.",
+            "keywords": [
+                "Minister of Interior",
+                "Olubunmi Tunji-Ojo",
+                "Ministry of Interior",
+                "interior ministry policy",
+                "federal ministry of interior"
+            ],
+            "category": "interior"
+        },
+        "interior_strategic_reform": {
+            "name": "Ministry Strategic & Reform Agenda",
+            "description": "Reform initiatives within the ministry. Includes passport process automation, prison decongestion reforms, and internal security strategy.",
+            "keywords": [
+                "passport reform",
+                "prison reform",
+                "interior ministry reform",
+                "decongestion strategy",
+                "border security reform"
+            ],
+            "category": "interior"
+        },
+        "interior_digital_assets": {
+            "name": "Official Digital Assets & Hashtags",
+            "description": "Official online presence and campaigns. Includes monitoring of official hashtags like #NewPassportProcess, #InteriorReform, and viral social media discussions.",
+            "keywords": [
+                "#NewPassportProcess",
+                "interior ministry handle",
+                "#ReformInterior",
+                "official hashtag interior"
+            ],
+            "category": "interior"
+        },
+        "nigeria_immigration_service": {
+            "name": "Nigeria Immigration Service (NIS)",
+            "description": "Immigration and border control. Covers passport issuance, backlog clearance, visa on arrival, boarder patrol, and illegal migration.",
+            "keywords": [
+                "NIS",
+                "Nigeria Immigration Service",
+                "Nigerian passport",
+                "passport booklet",
+                "passport renewal",
+                "immigration officer",
+                "border patrol",
+                "visa on arrival"
+            ],
+            "category": "interior"
+        },
+        "nigerian_correctional_service": {
+            "name": "Nigerian Correctional Service (NCoS)",
+            "description": "Prison management and inmate welfare. Covers jailbreaks, prison congestion, inmate rehabilitation, and the change from 'Prisons' to 'Correctional Service'.",
+            "keywords": [
+                "NCoS",
+                "Correctional Service",
+                "Nigerian Prison",
+                "prison congestion",
+                "jailbreak",
+                "inmate welfare",
+                "correctional centre",
+                "Kuje prison",
+                "Kirikiri"
+            ],
+            "category": "interior"
+        },
+        "nscdc_civil_defence": {
+            "name": "Nigeria Security & Civil Defence Corps (NSCDC)",
+            "description": "Civil defence and critical infrastructure protection. Covers Agro-Rangers, pipeline vandalism, protecting national assets, and private guard regulation.",
+            "keywords": [
+                "NSCDC",
+                "Civil Defence",
+                "Agro-Rangers",
+                "pipeline vandalism",
+                "critical infrastructure protection",
+                "private guard company",
+                "civil defence officer"
+            ],
+            "category": "interior"
+        },
+        "federal_fire_service": {
+            "name": "Federal Fire Service",
+            "description": "Fire prevention and emergency response. Covers market fires, fire outbreaks, fire safety regulation, and equipment procurement.",
+            "keywords": [
+                "Federal Fire Service",
+                "fire outbreak",
+                "market fire",
+                "fire fighter",
+                "fire truck",
+                "emergency fire response"
+            ],
+            "category": "interior"
+        },
+        "cdcfib_oversight": {
+            "name": "CDCFIB Oversight Body",
+            "description": "Civil Defence, Correctional, Fire and Immigration Services Board. Covers recruitment, promotion, and discipline of officers in the paramilitary agencies.",
+            "keywords": [
+                "CDCFIB",
+                "Civil Defence Board",
+                "Immigration Board",
+                "paramilitary recruitment",
+                "officer promotion interior"
+            ],
+            "category": "interior"
+        },
+        "nigeria_evisa_system": {
+            "name": "Nigeria E-Visa System",
+            "description": "Electronic visa processing and administration. Covers online visa applications, business visa on arrival functionality, and tourist e-visas.",
+            "keywords": [
+                "e-visa",
+                "electronic visa",
+                "visa on arrival business",
+                "online visa application",
+                "nigeria visa portal"
+            ],
+            "category": "interior"
+        },
+        "expatriate_residence_permit": {
+            "name": "Expatriate Residence Permit (CERPAC)",
+            "description": "Regulations for foreigners in Nigeria. Covers CERPAC (Combined Expatriate Residence Permit and Aliens Card), expatriate quota, and monthly quota limits.",
+            "keywords": [
+                "CERPAC",
+                "expatriate quota",
+                "residence permit",
+                "aliens card",
+                "foreign worker permit"
+            ],
+            "category": "interior"
+        },
+        "interior_emergency_travel": {
+            "name": "Emergency Travel Documents",
+            "description": "Issuance of Emergency Travel Certificates (ETC) for Nigerians abroad needed to return home urgently.",
+            "keywords": [
+                "Emergency Travel Certificate",
+                "ETC document",
+                "emergency travel document",
+                "repatriation document"
+            ],
+            "category": "interior"
+        },
+        "interas_governance": {
+            "name": "INTERAS Digital Governance",
+            "description": "Technological governance systems within the ministry. Covers internal portals and integrated service delivery platforms.",
+            "keywords": [
+                "INTERAS",
+                "interior ministry portal",
+                "integrated service platform"
+            ],
+            "category": "interior"
+        },
+        "interior_performance_management": {
+            "name": "Performance Management System",
+            "description": "Tracking and evaluation of ministry performance. Covers KPI monitoring for officers and agencies.",
+            "keywords": [
+                "performance management interior",
+                "KPI tracking interior",
+                "ministry appraisal"
+            ],
+            "category": "interior"
+        },
+        "interior_legal_regulatory": {
+            "name": "Legal & Regulatory Framework",
+            "description": "Laws governing interior affairs. Includes the Immigration Act, Correctional Service Act, and Marriage Act (Federal Marriage Registry).",
+            "keywords": [
+                "Immigration Act",
+                "Correctional Service Act",
+                "Marriage Registry",
+                "court marriage",
+                "Ikoyi registry"
+            ],
+            "category": "interior"
+        },
+        "power_governance": {
+            "name": "Ministry, Leadership & Governance",
+            "description": "Leadership and policy direction of the Ministry of Power. Includes the Minister of Power's activities, NERC (Nigerian Electricity Regulatory Commission) regulations, and electricity acts.",
+            "keywords": [
+                "Minister of Power",
+                "Adebayo Adelabu",
+                "Ministry of Power",
+                "NERC",
+                "Electricity Act",
+                "power sector regulation",
+                "electricity policy"
+            ],
+            "category": "power"
+        },
+        "electricity_gen_trans_dist": {
+            "name": "Electricity Generation, Transmission & Distribution",
+            "description": "The entire power value chain. Covers GenCos (Generation Companies), TCN (Transmission Company of Nigeria), DisCos (Distribution Companies), national grid stability, and power plants (Egbin, Kainji, Shiroro).",
+            "keywords": [
+                "TCN",
+                "Transmission Company of Nigeria",
+                "National Grid",
+                "grid collapse",
+                "GenCo",
+                "DisCo",
+                "Egbin Power",
+                "Kainji Dam",
+                "Shiroro power",
+                "Ikeja Electric",
+                "Eko Disco",
+                "Abuja Disco",
+                "Enugu Disco",
+                "Kano Disco",
+                "power generation",
+                "power transmission"
+            ],
+            "category": "power"
+        },
+        "power_fuel_gas_supply": {
+            "name": "Fuel & Gas Supply for Power",
+            "description": "Gas supply to power plants. Covers gas shortages, pipeline vandalism affecting power, and agreements with gas suppliers.",
+            "keywords": [
+                "gas supply power",
+                "gas shortage power",
+                "thermal station",
+                "gas pipeline vandalism",
+                "gas to power"
+            ],
+            "category": "power"
+        },
+        "energy_pricing_tariffs": {
+            "name": "Energy Pricing, Tariffs & Subsidy",
+            "description": "Cost of electricity. Covers Band A, Band B tariffs, electricity subsidy removal, estimated billing, and prepaid meters.",
+            "keywords": [
+                "Band A tariff",
+                "electricity tariff",
+                "tariff increase",
+                "prepaid meter",
+                "estimated billing",
+                "crazy bill",
+                "electricity subsidy",
+                "MYTO",
+                "Multi-Year Tariff Order",
+                "cost of electricity"
+            ],
+            "category": "power"
+        },
+        "renewable_energy_transition": {
+            "name": "Renewable Energy & Energy Transition",
+            "description": "Clean energy initiatives. Covers solar power, mini-grids, REA (Rural Electrification Agency), hydroelectricity, and Nigeria's energy transition plan.",
+            "keywords": [
+                "solar power",
+                "renewable energy",
+                "mini-grid",
+                "REA",
+                "Rural Electrification Agency",
+                "clean energy",
+                "hydro power",
+                "Zungeru Hydro",
+                "Mambilla Plateau project"
+            ],
+            "category": "power"
+        },
+        "power_public_sentiment": {
+            "name": "Public Sentiment & Citizen Complaints",
+            "description": "Public reaction to power supply. Covers blackouts, load shedding, 'up nepa', 'no light', and complaints about DisCos.",
+            "keywords": [
+                "no light",
+                "blackout",
+                "load shedding",
+                "up nepa",
+                "restore light",
+                "power outage",
+                "darkness",
+                "transformer bad"
+            ],
+            "category": "power"
+        },
+        "power_projects_infrastructure": {
+            "name": "Projects, Infrastructure & Reforms",
+            "description": "Major power projects and reforms. Includes the Siemens Presidential Power Initiative (PPI), construction of new substations, and transmission lines.",
+            "keywords": [
+                "Siemens power deal",
+                "Presidential Power Initiative",
+                "PPI Siemens",
+                "power project",
+                "new substation",
+                "transmission line construction"
+            ],
+            "category": "power"
+        },
+        "power_infrastructure_security": {
+            "name": "Critical Infrastructure Security",
+            "description": "Protection of power assets. Covers vandalism of transmission towers, theft of transformers, and sabotage.",
+            "keywords": [
+                "vandalism power tower",
+                "cable theft",
+                "transformer theft",
+                "grid sabotage",
+                "power infrastructure attack"
+            ],
+            "category": "power"
+        },
+        "power_media_narrative": {
+            "name": "Media, Opposition & Political Narrative",
+            "description": "Political discourse around power. Includes opposition criticism of power failure and media editorials on the energy crisis.",
+            "keywords": [
+                "power sector crisis",
+                "failed power reform",
+                "opposition power criticism",
+                "energy crisis editorial"
+            ],
+            "category": "power"
+        },
+        "power_regional_issues": {
+            "name": "State & Regional Energy Issues",
+            "description": "State government involvement in power (following the new Electricity Act allowing states to generate power).",
+            "keywords": [
+                "state power project",
+                "Aba Power",
+                "Geometrics Power",
+                "state electricity market",
+                "Lagos power market"
+            ],
+            "category": "power"
+        },
+        "power_investments_partnerships": {
+            "name": "Investments & International Partnerships",
+            "description": "Funding and loans for power. Includes World Bank loans, AfDB support, and private sector investment.",
+            "keywords": [
+                "World Bank power loan",
+                "AfDB power",
+                "power sector investment",
+                "electricity loan"
+            ],
+            "category": "power"
+        },
+        "power_operational_metrics": {
+            "name": "Operational Metrics & Performance",
+            "description": "Technical performance data. Covers peak generation (MW), system collapse frequency, and metering gap.",
+            "keywords": [
+                "megawatts generated",
+                "peak generation",
+                "metering gap",
+                "system collapse count",
+                "allocated MW"
+            ],
+            "category": "power"
+        },
+        "comms_minister_leadership": {
+            "name": "Minister Ministry & Leadership",
+            "description": "Leadership of the Ministry of Communications, Innovation and Digital Economy. Includes the Minister's roadmap (3MTT), policy announcements, and strategic vision.",
+            "keywords": [
+                "Minister of Communications",
+                "Bosun Tijani",
+                "Ministry of Digital Economy",
+                "communications minister",
+                "digital economy policy",
+                "FMCIDE"
+            ],
+            "category": "communications"
+        },
+        "telecom_connectivity": {
+            "name": "Telecom & Connectivity",
+            "description": "Telecommunications sector. Covers MTN, Glo, Airtel, 9mobile, NCC (Nigerian Communications Commission), 5G rollout, network quality, and dropped calls.",
+            "keywords": [
+                "MTN Nigeria",
+                "Glo network",
+                "Airtel Nigeria",
+                "9mobile",
+                "NCC",
+                "Nigerian Communications Commission",
+                "5G network",
+                "telecom service",
+                "poor network",
+                "call drop",
+                "Starlink nigeria"
+            ],
+            "category": "communications"
+        },
+        "internet_digital_access": {
+            "name": "Internet & Digital Access",
+            "description": "Internet penetration and broadband. Covers broadband plan, right of way for fibre optics, cost of data, and ISP services.",
+            "keywords": [
+                "internet access",
+                "broadband penetration",
+                "fibre optic",
+                "cost of data",
+                "data price",
+                "ISP",
+                "internet speed"
+            ],
+            "category": "communications"
+        },
+        "digital_id_platforms": {
+            "name": "Digital ID & National Platforms",
+            "description": "Identity management. Covers NIMC (National Identity Management Commission), NIN (National Identification Number), NIN-SIM linkage, and national database.",
+            "keywords": [
+                "NIMC",
+                "NIN",
+                "National Identification Number",
+                "NIN-SIM linkage",
+                "national identity card",
+                "digital ID"
+            ],
+            "category": "communications"
+        },
+        "cybersecurity_trust": {
+            "name": "Cybersecurity & Digital Trust",
+            "description": "Online safety and security. Covers cyber threats, phishing, awareness campaigns, and building trust in digital platforms.",
+            "keywords": [
+                "cybersecurity awareness",
+                "online safety",
+                "digital trust",
+                "cyber threat",
+                "hacking alert"
+            ],
+            "category": "communications"
+        },
+        "data_protection_regulation": {
+            "name": "Data Protection & Regulation",
+            "description": "Privacy laws and enforcement. Covers NDPC (Nigeria Data Protection Commission), GDPR compliance, and data breaches.",
+            "keywords": [
+                "NDPC",
+                "Data Protection Commission",
+                "data privacy",
+                "data breach",
+                "privacy violation",
+                "data regulation"
+            ],
+            "category": "communications"
+        },
+        "digital_economy_innovation": {
+            "name": "Digital Economy & Innovation",
+            "description": "Growth of the tech ecosystem. Includes startups, tech hubs, 3MTT (3 Million Technical Talent) program, and digital skills training.",
+            "keywords": [
+                "3MTT",
+                "tech talent",
+                "digital skills",
+                "Nigerian startup",
+                "tech ecosystem",
+                "digital economy growth",
+                "innovation hub"
+            ],
+            "category": "communications"
+        },
+        "egovernance_services": {
+            "name": "E-Governance & Digital Public Services",
+            "description": "Digitization of government services. Includes digital public infrastructure (DPI), e-government portals, and galaxy backbone.",
+            "keywords": [
+                "e-governance",
+                "digital public infrastructure",
+                "DPI",
+                "Galaxy Backbone",
+                "government portal",
+                "paperless government"
+            ],
+            "category": "communications"
+        },
+        "comms_fintech_payments": {
+            "name": "Fintech & Digital Payments",
+            "description": "Intersection of tech and finance from a digital economy perspective. Covers payment gateways, tech regulation for fintechs.",
+            "keywords": [
+                "fintech regulation",
+                "digital payment",
+                "tech startup finance",
+                "payment gateway"
+            ],
+            "category": "communications"
+        },
+        "cybersecurity_infrastructure_crisis": {
+            "name": "Cybersecurity Infrastructure & Crisis",
+            "description": "Major cyber incidents and infrastructure defense. Covers NITDA's role in crisis response and protection of critical digital assets.",
+            "keywords": [
+                "NITDA",
+                "cyber attack government",
+                "critical information infrastructure",
+                "CERRT"
+            ],
+            "category": "communications"
+        },
+        "digital_sovereignty": {
+            "name": "Digital Sovereignty & Future Infrastructure",
+            "description": "Control over national digital assets. Includes data localization, cloud sovereignty, and subsea cables.",
+            "keywords": [
+                "data localization",
+                "hosted in nigeria",
+                "subsea cable",
+                "mainone cable",
+                "digital sovereignty"
+            ],
+            "category": "communications"
+        },
+        "ai_future_policy": {
+            "name": "AI & Future Policy",
+            "description": "Artificial Intelligence strategies. Includes National AI Strategy, robotics, and emerging tech regulation.",
+            "keywords": [
+                "National AI Strategy",
+                "Artificial Intelligence Nigeria",
+                "AI regulation",
+                "emerging technology"
+            ],
+            "category": "communications"
+        },
+        "internet_governance_rights": {
+            "name": "Internet Governance & Digital Rights",
+            "description": "Rights of internet users. Includes freedom of expression online, internet shutdowns, and social media regulation bills.",
+            "keywords": [
+                "digital rights",
+                "internet freedom",
+                "social media bill",
+                "internet shutdown",
+                "online hate speech bill"
+            ],
+            "category": "communications"
+        },
+        "comms_misinformation": {
+            "name": "Misinformation & Information Integrity",
+            "description": "Combating fake news. Includes fact-checking initiatives and government response to viral falsehoods.",
+            "keywords": [
+                "fake news",
+                "misinformation",
+                "disinformation",
+                "fact check",
+                "information integrity"
+            ],
+            "category": "communications"
+        },
+        "comms_media_stakeholders": {
+            "name": "Media & Stakeholders",
+            "description": "Relationship with tech media and stakeholders. Includes interactions with ALTON (Association of Licensed Telecom Operators of Nigeria) and ATCON.",
+            "keywords": [
+                "ALTON",
+                "ATCON",
+                "telecom union",
+                "tech news",
+                "industry stakeholder communication"
+            ],
+            "category": "communications"
+        },
+        "comms_public_sentiment": {
+            "name": "Public Sentiment & Policy Perception",
+            "description": "General public view of digital policies. Includes reaction to NIN-SIM blocking and data prices.",
+            "keywords": [
+                "NIN blocked",
+                "SIM blocked",
+                "data expensive",
+                "comms policy complaint"
+            ],
+            "category": "communications"
+        },
+        "comms_economic_impact": {
+            "name": "Economic Impact",
+            "description": "Contribution of ICT to GDP. Includes telecom sector revenue and digital job creation.",
+            "keywords": [
+                "ICT contribution to GDP",
+                "telecom revenue",
+                "digital job creation",
+                "tech sector growth"
+            ],
+            "category": "communications"
+        },
+        "comms_regional_local": {
+            "name": "Regional & Local Signals",
+            "description": "Digital access in rural vs urban areas.",
+            "keywords": [
+                "rural telephony",
+                "underserved area internet",
+                "digital divide nigeria"
+            ],
+            "category": "communications"
+        },
+        "defence_leadership_governance": {
+            "name": "Ministry Leadership & Governance",
+            "description": "Leadership of the defense sector. Includes the Minister of Defence, Chief of Defence Staff (CDS), and Defence Headquarters (DHQ) strategic communications.",
+            "keywords": [
+                "Minister of Defence",
+                "Badaru Abubakar",
+                "Bello Matawalle",
+                "Chief of Defence Staff",
+                "CDS",
+                "Defence Headquarters",
+                "DHQ",
+                "defence budget",
+                "military hierarchy"
+            ],
+            "category": "defence"
+        },
+        "defence_operations_command": {
+            "name": "Defence Operations Command Structure",
+            "description": "Operational command and control. Covers different theatre commands, Operation Hadin Kai, Operation Whirl Stroke, and military restructuring.",
+            "keywords": [
+                "Theatre Command",
+                "Operation Hadin Kai",
+                "Operation Whirl Stroke",
+                "Operation Safe Haven",
+                "Operation Delta Safe",
+                "JTF",
+                "Joint Task Force",
+                "GOC",
+                "General Officer Commanding"
+            ],
+            "category": "defence"
+        },
+        "counter_insurgency_northeast": {
+            "name": "Counter-Insurgency \u2013 Northeast",
+            "description": "War against terrorism in the Northest (Borno, Yobe, Adamawa). Covers Boko Haram, ISWAP (Islamic State West Africa Province), Sambisa Forest operations, and terrorist surrender.",
+            "keywords": [
+                "Boko Haram",
+                "ISWAP",
+                "terrorist",
+                "insurgent",
+                "Sambisa Forest",
+                "Lake Chad region",
+                "terrorist surrender",
+                "repentant boko haram",
+                "IED attack",
+                "ambush soldier"
+            ],
+            "category": "defence"
+        },
+        "counter_insurgency_northwest": {
+            "name": "Counter-Insurgency \u2013 Northwest",
+            "description": "Security operations in Northwest (Zamfara, Kaduna, Katsina, Sokoto). Covers banditry, kidnapping, cattle rustling, and military raids on bandit camps.",
+            "keywords": [
+                "bandit",
+                "banditry",
+                "kidnapper",
+                "cattle rustler",
+                "forest raid",
+                "bandit kingpin",
+                "Turji",
+                "military airstrike bandit"
+            ],
+            "category": "defence"
+        },
+        "counter_insurgency_middle_belt": {
+            "name": "Counter-Insurgency \u2013 Middle Belt",
+            "description": "Conflict in North Central (Plateau, Benue, Niger). Covers farmer-herder crisis, communal clashes, and military peacekeeping.",
+            "keywords": [
+                "herdsmen attack",
+                "communal clash",
+                "Plateau killing",
+                "Benue attack",
+                "military peacekeeper",
+                "militia attack"
+            ],
+            "category": "defence"
+        },
+        "multinational_regional_ops": {
+            "name": "Multinational & Regional Operations",
+            "description": "Cross-border military cooperation. Includes MNJTF (Multinational Joint Task Force) operating in Lake Chad Basin.",
+            "keywords": [
+                "MNJTF",
+                "Multinational Joint Task Force",
+                "Lake Chad Basin",
+                "regional security",
+                "cross-border operation"
+            ],
+            "category": "defence"
+        },
+        "nigerian_army_operations": {
+            "name": "Nigerian Army Operations & Divisions",
+            "description": "Activities specific to the Nigerian Army. Includes Chief of Army Staff (COAS), infantry operations, and recruitment.",
+            "keywords": [
+                "Nigerian Army",
+                "COAS",
+                "Chief of Army Staff",
+                "soldier",
+                "army recruitment",
+                "army checkpoint",
+                "army division"
+            ],
+            "category": "defence"
+        },
+        "nigerian_navy_maritime": {
+            "name": "Nigerian Navy & Maritime Operations",
+            "description": "Naval operations in the Niger Delta and Gulf of Guinea. Covers oil theft, illegal refining, privacy, pipeline protection, and Chief of Naval Staff (CNS).",
+            "keywords": [
+                "Nigerian Navy",
+                "CNS",
+                "Chief of Naval Staff",
+                "oil theft",
+                "illegal refinery",
+                "bunkering",
+                "sea pirate",
+                "Gulf of Guinea",
+                "naval operation"
+            ],
+            "category": "defence"
+        },
+        "nigerian_air_force": {
+            "name": "Nigerian Air Force Operations",
+            "description": "Air operations and aerial bombardment. Covers Chief of Air Staff (CAS), Super Tucano jets, airstrikes on terrorist camps, and UAV deployment.",
+            "keywords": [
+                "Nigerian Air Force",
+                "NAF",
+                "CAS",
+                "Chief of Air Staff",
+                "airstrike",
+                "Super Tucano",
+                "fighter jet",
+                "aerial bombardment",
+                "NAF helicopter"
+            ],
+            "category": "defence"
+        },
+        "military_equipment_procurement": {
+            "name": "Military Equipment & Defence Procurement",
+            "description": "Acquisition of arms and logistics. Includes purchase of fighter jets, armored personnel carriers (APCs), DICON (Defence Industries Corporation of Nigeria), and budget allocation for weapons.",
+            "keywords": [
+                "arms procurement",
+                "military hardware",
+                "fighter jet purchase",
+                "APC",
+                "armored vehicle",
+                "DICON",
+                "weapon purchase",
+                "defence spending"
+            ],
+            "category": "defence"
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

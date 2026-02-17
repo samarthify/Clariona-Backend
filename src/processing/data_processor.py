@@ -379,15 +379,16 @@ class DataProcessor:
             logger.error(f"Error detecting issues for topic {topic_key}: {e}", exc_info=True)
             return []
     
-    def detect_issues_for_all_topics(self, limit_per_topic: Optional[int] = None) -> Dict[str, List[Dict[str, Any]]]:
+    def detect_issues_for_all_topics(self, limit_per_topic: Optional[int] = None, max_workers: int = 5) -> Dict[str, List[Dict[str, Any]]]:
         """
         Detect issues for all topics that have mentions (Week 4: Issue Detection System).
         
         This method processes all topics that have mentions and detects issues for each.
-        Useful for batch processing or periodic issue detection runs.
+        Uses parallel processing to reduce total cycle time.
         
         Args:
             limit_per_topic: Optional limit on number of mentions to process per topic
+            max_workers: Number of parallel topics to process
         
         Returns:
             Dictionary mapping topic_key to list of issue dictionaries
@@ -407,22 +408,90 @@ class DataProcessor:
             topics_with_mentions = session.query(MentionTopic.topic_key).distinct().all()
             topic_keys = [t[0] for t in topics_with_mentions]
             
-            logger.info(f"Detecting issues for {len(topic_keys)} topics")
+            logger.info(f"Detecting issues for {len(topic_keys)} topics (Parallel: {max_workers} workers)")
             
-            for topic_key in topic_keys:
-                try:
-                    issues = self.detect_issues_for_topic(topic_key, limit=limit_per_topic)
-                    results[topic_key] = issues
-                except Exception as e:
-                    logger.error(f"Error detecting issues for topic {topic_key}: {e}", exc_info=True)
-                    results[topic_key] = []
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                # Submit all tasks
+                future_to_topic = {
+                    executor.submit(self.detect_issues_for_topic, topic, limit_per_topic): topic 
+                    for topic in topic_keys
+                }
+                
+                # Gather results as they complete
+                for future in as_completed(future_to_topic):
+                    topic_key = future_to_topic[future]
+                    try:
+                        issues = future.result()
+                        results[topic_key] = issues
+                    except Exception as e:
+                        logger.error(f"Error detecting issues for topic {topic_key}: {e}", exc_info=True)
+                        results[topic_key] = []
             
-            logger.info(f"Issue detection complete for {len(topic_keys)} topics")
+            logger.info(
+                f"Issue detection complete for {len(topic_keys)} topics. "
+                f"Total clusters persisted: {sum(len(issues) for issues in results.values())} "
+            )
             return results
             
         except Exception as e:
             logger.error(f"Error in detect_issues_for_all_topics: {e}", exc_info=True)
             return {}
+        finally:
+            session.close()
+
+    def promote_issues_for_all_topics(self, max_active_issues: int = 30, top_n: int = 3, max_workers: int = 5) -> int:
+        """
+        Promote clusters to issues for all topics in parallel.
+        
+        Args:
+            max_active_issues: Global limit on active issues
+            top_n: Number of clusters to promote per topic
+            max_workers: Parallelism
+            
+        Returns:
+            Total number of promoted/updated issues
+        """
+        if not self.issue_detection_engine:
+            return 0
+            
+        from api.database import SessionLocal
+        from api.models import MentionTopic, TopicIssue
+        
+        session = SessionLocal()
+        total_promoted = 0
+        
+        try:
+            # Check global limit first
+            current_active = session.query(TopicIssue).filter(TopicIssue.is_active == True).count()
+            if current_active >= max_active_issues:
+                logger.info(f"Promote Issues: At global limit ({current_active}/{max_active_issues}). Skipping promotion.")
+                return 0
+                
+            # Get topics
+            topics = session.query(MentionTopic.topic_key).distinct().all()
+            topic_keys = [t[0] for t in topics]
+            
+            logger.info(f"Promoting issues for {len(topic_keys)} topics (Parallel: {max_workers} workers)")
+            
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                future_to_topic = {
+                    executor.submit(self.issue_detection_engine.promote_clusters_for_topic, topic, top_n): topic
+                    for topic in topic_keys
+                }
+                
+                for future in as_completed(future_to_topic):
+                    topic = future_to_topic[future]
+                    try:
+                        promoted_items = future.result()
+                        if promoted_items:
+                            total_promoted += len(promoted_items)
+                    except Exception as e:
+                        logger.error(f"Error promoting issues for topic {topic}: {e}")
+            
+            return total_promoted
+        except Exception as e:
+            logger.error(f"Error in promote_issues_for_all_topics: {e}")
+            return 0
         finally:
             session.close()
 

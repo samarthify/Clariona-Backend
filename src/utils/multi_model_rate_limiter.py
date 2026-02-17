@@ -28,7 +28,7 @@ def _get_model_rate_limits():
         # Default rate limits if not in config
         default_limits = {
             "gpt-5-mini": 500000,  # 500k TPM
-            "gpt-5-nano": 200000,  # 200k TPM
+            "gpt-5-nano": 10000000,  # 10M TPM
             "gpt-4.1-mini": 200000,  # 200k TPM
             "gpt-4.1-nano": 200000,  # 200k TPM
         }
@@ -38,7 +38,7 @@ def _get_model_rate_limits():
         logger.warning(f"Could not load ConfigManager for model rate limits, using defaults: {e}")
         return {
             "gpt-5-mini": 500000,  # 500k TPM
-            "gpt-5-nano": 200000,  # 200k TPM
+            "gpt-5-nano": 10000000,  # 10M TPM
             "gpt-4.1-mini": 200000,  # 200k TPM
             "gpt-4.1-nano": 200000,  # 200k TPM
         }

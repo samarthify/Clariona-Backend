@@ -3,11 +3,17 @@ import os
 import asyncio
 import json
 from datetime import datetime
+from pathlib import Path
 from dotenv import load_dotenv
 from apify_client import ApifyClientAsync
 
-# Load environment variables
-load_dotenv(os.path.join(os.path.dirname(__file__), '..', 'collectors', '.env'))
+# Load environment variables (prefer config/.env, fallback to collectors/.env)
+ENV_PATHS = [
+    Path(__file__).resolve().parent.parent / 'config' / '.env',
+    Path(__file__).resolve().parent.parent / 'collectors' / '.env',
+]
+for env_path in ENV_PATHS:
+    load_dotenv(env_path, override=False)
 
 APIFY_TOKEN = os.getenv("APIFY_API_TOKEN")
 

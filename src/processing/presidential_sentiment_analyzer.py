@@ -156,23 +156,16 @@ class PresidentialSentimentAnalyzer:
             
             # Get prompt templates from config
             prompt_config = config.get("processing.prompts.presidential_sentiment", {})
-            system_message_template = prompt_config.get("system_message", "You are a strategic advisor to {president_name} analyzing media impact.")
-            user_template = prompt_config.get("user_template", """Analyze media from {president_name}'s perspective. Evaluate: Does this help or hurt the President's power/reputation/governance?
+            system_message_template = prompt_config.get("system_message", "You advise {president_name} on media impact.")
+            user_template = prompt_config.get("user_template", """Classify this text for {president_name}'s agenda impact.
 
-Categories:
-- POSITIVE: Strengthens image/agenda, builds political capital
-- NEGATIVE: Threatens image/agenda, creates problems
-- NEUTRAL: No material impact
-
-Response format:
-Sentiment: [POSITIVE/NEGATIVE/NEUTRAL]
-Sentiment Score: [-1.0 to 1.0] (POSITIVE: 0.2-1.0, NEGATIVE: -1.0 to -0.2, NEUTRAL: -0.2 to 0.2)
-Justification: [Brief strategic reasoning]
-Topics: [comma-separated topics]
+Sentiment: [positive/negative/neutral]
+Sentiment Score: [-1.0 to 1.0]
+Justification: [<=25 words]
 
 Text: "{text}"
 """)
-            text_truncate_length = prompt_config.get("text_truncate_length", 800)
+            text_truncate_length = prompt_config.get("text_truncate_length", 600)
             
             # Truncate text
             truncated_text = text[:text_truncate_length] if len(text) > text_truncate_length else text
@@ -379,11 +372,10 @@ Text: "{truncated_text}"
         # Get presidential sentiment analysis
         sentiment, confidence, justification, topics = self._call_openai_for_presidential_sentiment(str(text))
         
-        # Generate issue mapping fields (using simple fallback - governance analyzer provides actual labels)
-        # Note: We removed _generate_issue_label() API call to save tokens - governance analyzer's label is used instead
-        issue_label = topics[0].replace('_', ' ').title() if topics else 'General Issue'
+        # Generate issue mapping fields (fallback only; governance analyzer provides actual labels)
+        issue_label = 'General Issue'
         issue_slug = self._normalize_to_slug(issue_label)
-        issue_keywords = self._extract_keywords(text, topics)
+        issue_keywords = self._extract_keywords(text, [])
         issue_confidence = self._calculate_issue_confidence(text, sentiment, confidence)
         ministry_hint = self._infer_ministry(text, topics)
         

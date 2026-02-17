@@ -12,6 +12,7 @@ from pathlib import Path
 
 # Third-party imports
 import numpy as np
+from sklearn.cluster import DBSCAN
 from sqlalchemy.orm import Session
 
 # Local imports - config (first)
@@ -58,26 +59,32 @@ class IssueClusteringService:
             min_cluster_size: Minimum mentions per cluster. 
                             If None, loads from ConfigManager. Default: 3
             time_window_hours: Time window for clustering (hours). 
-                              If None, loads from ConfigManager. Default: 24
+                              If None, loads from ConfigManager. Default: 168 (1 week)
             db_session: Optional database session. If None, creates sessions as needed.
         """
         # Load configuration from ConfigManager
         try:
             config = ConfigManager()
             self.similarity_threshold = similarity_threshold or config.get_float(
-                'processing.issue.clustering.similarity_threshold', 0.75
+                'processing.issue.clustering.similarity_threshold', 0.5
             )
             self.min_cluster_size = min_cluster_size or config.get_int(
-                'processing.issue.clustering.min_cluster_size', 3
+                'processing.issue.clustering.min_cluster_size', 10
             )
             self.time_window_hours = time_window_hours or config.get_int(
-                'processing.issue.clustering.time_window_hours', 24
+                'processing.issue.clustering.time_window_hours', 168
             )
+            self.use_dbscan = config.get_bool('processing.issue.dbscan.enabled', True)
+            self.dbscan_eps = config.get_float('processing.issue.dbscan.eps', 0.3)
+            self.dbscan_min_samples = config.get_int('processing.issue.dbscan.min_samples', 10)
         except Exception as e:
             logger.warning(f"Could not load ConfigManager for clustering settings: {e}. Using defaults.")
-            self.similarity_threshold = similarity_threshold or 0.75
-            self.min_cluster_size = min_cluster_size or 3
-            self.time_window_hours = time_window_hours or 24
+            self.similarity_threshold = similarity_threshold or 0.5
+            self.min_cluster_size = min_cluster_size or 10
+            self.time_window_hours = time_window_hours or 168
+            self.use_dbscan = True
+            self.dbscan_eps = 0.3
+            self.dbscan_min_samples = 10
         
         self.db = db_session
         
@@ -127,17 +134,28 @@ class IssueClusteringService:
         mentions_with_embeddings = self._ensure_embeddings(mentions)
         
         if not mentions_with_embeddings:
-            logger.warning(f"No mentions with embeddings for topic: {topic_key}")
+            logger.warning(
+                f"No mentions with valid (non-zero) embeddings for topic: {topic_key}. "
+                f"Total mentions: {len(mentions)}. "
+                f"This may indicate OpenAI API connectivity issues or missing embeddings."
+            )
             return []
+        
+        logger.info(f"After embedding filter: {len(mentions_with_embeddings)}/{len(mentions)} mentions have valid embeddings")
         
         # Group by time windows (optional - can cluster across time if needed)
         time_groups = self._group_by_time_window(mentions_with_embeddings)
+        logger.info(f"Grouped {len(mentions_with_embeddings)} mentions into {len(time_groups)} time windows")
         
         # Cluster within each time group
         all_clusters = []
-        for time_group in time_groups:
-            clusters = self._cluster_by_similarity(time_group)
+        for i, time_group in enumerate(time_groups):
+            logger.debug(f"Clustering time group {i+1}/{len(time_groups)} with {len(time_group)} mentions")
+            clusters = self._cluster_time_group(time_group)
+            logger.debug(f"Time group {i+1} produced {len(clusters)} clusters")
             all_clusters.extend(clusters)
+        
+        logger.info(f"DBSCAN produced {len(all_clusters)} total clusters before size filtering")
         
         # Filter by minimum size
         valid_clusters = [
@@ -148,12 +166,60 @@ class IssueClusteringService:
         # Sort by size (largest first)
         valid_clusters.sort(key=len, reverse=True)
         
+        if len(all_clusters) > 0 and len(valid_clusters) == 0:
+            cluster_sizes = [len(c) for c in all_clusters]
+            logger.warning(
+                f"All {len(all_clusters)} clusters filtered out by min_size={self.min_cluster_size}. "
+                f"Cluster sizes: min={min(cluster_sizes)}, max={max(cluster_sizes)}, avg={sum(cluster_sizes)/len(cluster_sizes):.1f}"
+            )
+        
         logger.info(
             f"Clustered {len(mentions)} mentions into {len(valid_clusters)} clusters "
-            f"(min_size={self.min_cluster_size})"
+            f"(min_size={self.min_cluster_size}, raw_clusters={len(all_clusters)})"
         )
         
         return valid_clusters
+
+    def _cluster_time_group(self, time_group: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]:
+        """Cluster a single time-group using DBSCAN (preferred) or fallback."""
+        if not time_group:
+            return []
+        if self.use_dbscan:
+            return self._cluster_dbscan(time_group)
+        return self._cluster_by_similarity(time_group)
+
+    def _cluster_dbscan(self, mentions: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]:
+        """Cluster mentions using DBSCAN with cosine metric."""
+        if not mentions:
+            return []
+        embeddings = []
+        for m in mentions:
+            emb = m.get('embedding')
+            if emb is None:
+                continue
+            emb_array = np.array(emb, dtype=np.float32)
+            embeddings.append(emb_array)
+        if not embeddings:
+            return []
+        X = np.stack(embeddings, axis=0)
+
+        db = DBSCAN(
+            eps=self.dbscan_eps,
+            min_samples=self.dbscan_min_samples,
+            metric='cosine',
+            n_jobs=-1
+        )
+        labels = db.fit_predict(X)
+
+        clusters = []
+        unique_labels = set(labels)
+        for label in unique_labels:
+            if label == -1:  # noise
+                continue
+            indices = np.where(labels == label)[0]
+            cluster = [mentions[i] for i in indices]
+            clusters.append(cluster)
+        return clusters
     
     def _ensure_embeddings(self, mentions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -179,6 +245,12 @@ class IssueClusteringService:
                         embedding = json.loads(embedding)
                     
                     if isinstance(embedding, list) and len(embedding) == 1536:
+                        # Check if embedding is a zero vector (all zeros)
+                        import numpy as np
+                        emb_array = np.array(embedding, dtype=np.float32)
+                        if np.allclose(emb_array, 0.0):
+                            logger.debug(f"Zero vector detected for mention {mention.get('entry_id')}, skipping")
+                            continue
                         mention['embedding'] = embedding
                         mentions_with_embeddings.append(mention)
                         continue
@@ -201,6 +273,12 @@ class IssueClusteringService:
                         embedding = embedding_record.embedding
                     
                     if isinstance(embedding, list) and len(embedding) == 1536:
+                        # Check if embedding is a zero vector (all zeros)
+                        import numpy as np
+                        emb_array = np.array(embedding, dtype=np.float32)
+                        if np.allclose(emb_array, 0.0):
+                            logger.debug(f"Zero vector detected for mention {entry_id}, skipping")
+                            continue
                         mention['embedding'] = embedding
                         mentions_with_embeddings.append(mention)
                     else:

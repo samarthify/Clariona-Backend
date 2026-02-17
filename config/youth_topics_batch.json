@@ -1,0 +1,259 @@
+{
+    "youth_sports_governance": {
+        "name": "Ministry Leadership & Governance",
+        "description": "Governance of the Youth and Sports Development sector. Includes Ministry policies, Minister's activities, sports federation elections, and administrative decisions.",
+        "keywords": [
+            "Minister of Youth",
+            "Sports Minister",
+            "Ministry of Youth and Sports",
+            "sports policy",
+            "youth policy",
+            "sports federation election",
+            "NFF president"
+        ],
+        "category": "youth"
+    },
+    "youth_affairs_core": {
+        "name": "Youth Affairs Core Issues",
+        "description": "General issues affecting the youth demographic. Includes youth demographics, 'Not Too Young To Run', youth inclusion in governance, and national youth conferences.",
+        "keywords": [
+            "Nigerian youth",
+            "youth inclusion",
+            "not too young to run",
+            "National Youth Council",
+            "NYCN",
+            "youth leader",
+            "youth participation"
+        ],
+        "category": "youth"
+    },
+    "youth_employment_empowerment": {
+        "name": "Youth Employment, Skills & Empowerment",
+        "description": "Economic opportunities for youth. Covers unemployment, N-Power, skills acquisition programs, tech empowerment, entrepreneurship grants, and job creation.",
+        "keywords": [
+            "youth unemployment",
+            "N-Power",
+            "skills acquisition",
+            "youth empowerment",
+            "youth grant",
+            "job creation",
+            "tech skills",
+            "digital skill",
+            "youth entrepreneur"
+        ],
+        "category": "youth"
+    },
+    "youth_education_nysc": {
+        "name": "Education to Employment & NYSC",
+        "description": "Transition from school to work and National Youth Service Corps. Includes NYSC orientation camps, PPA (Place of Primary Assignment), corpers' allowance (allawee), and graduate employability.",
+        "keywords": [
+            "NYSC",
+            "National Youth Service Corps",
+            "corper",
+            "orientation camp",
+            "PPA",
+            "allawee",
+            "youth service",
+            "passing out parade",
+            "POP",
+            "CDS"
+        ],
+        "category": "youth"
+    },
+    "youth_protests_activism": {
+        "name": "Youth Protests, Activism & Movements",
+        "description": "Youth-led social movements and demonstrations. Includes EndSARS, protests against police brutality, student protests, and online activism.",
+        "keywords": [
+            "EndSARS",
+            "youth protest",
+            "police brutality",
+            "soro soke",
+            "youth movement",
+            "student protest",
+            "online activism",
+            "occupy"
+        ],
+        "category": "youth"
+    },
+    "youth_social_risks": {
+        "name": "Mental Health, Drugs & Social Risks",
+        "description": "Social challenges facing youth. Includes drug abuse (Codeine, Tramadol, Mkpuru Mmiri), cybercrime (Yahoo Yahoo), cultism, and mental health struggles.",
+        "keywords": [
+            "drug abuse",
+            "substance abuse",
+            "tramadol",
+            "codeine",
+            "mkpuru mmiri",
+            "yahoo yahoo",
+            "cybercrime",
+            "cultism",
+            "youth depression",
+            "mental health youth"
+        ],
+        "category": "youth"
+    },
+    "sports_national_international": {
+        "name": "Sports: National & International",
+        "description": "General participation in major sporting events. Includes Olympics, Commonwealth Games, All Africa Games, and National Sports Festival.",
+        "keywords": [
+            "Olympics",
+            "Commonwealth Games",
+            "All Africa Games",
+            "National Sports Festival",
+            "Team Nigeria",
+            "gold medal",
+            "international tournament"
+        ],
+        "category": "youth"
+    },
+    "football_high_sensitivity": {
+        "name": "Football: High Sensitivity Area",
+        "description": "Football-specific discussions, which are highly emotional in Nigeria. Covers Super Eagles, Super Falcons, NFF (Nigeria Football Federation), World Cup qualifiers, AFCON, and local leagues (NPFL).",
+        "keywords": [
+            "Super Eagles",
+            "Super Falcons",
+            "NFF",
+            "Nigeria Football Federation",
+            "AFCON",
+            "World Cup qualifier",
+            "NPFL",
+            "Enyimba",
+            "Kano Pillars",
+            "football match"
+        ],
+        "category": "youth"
+    },
+    "other_major_sports": {
+        "name": "Other Major Sports",
+        "description": "Non-football sports with significant following. Includes Basketball (D'Tigress/D'Tigers), Athletics (Track & Field), Boxing, and Table Tennis.",
+        "keywords": [
+            "D'Tigress",
+            "D'Tigers",
+            "basketball nigeria",
+            "athletics nigeria",
+            "Tobi Amusan",
+            "boxing nigeria",
+            "table tennis nigeria",
+            "Aruna Quadri"
+        ],
+        "category": "youth"
+    },
+    "sports_infrastructure": {
+        "name": "Sports Infrastructure & Facilities",
+        "description": "State of stadiums and training facilities. Includes National Stadium Lagos/Abuja, decaying infrastructure, pitch conditions, and renovation projects.",
+        "keywords": [
+            "National Stadium",
+            "Surulere Stadium",
+            "Moshood Abiola Stadium",
+            "bad pitch",
+            "stadium renovation",
+            "sports facility",
+            "training pitch"
+        ],
+        "category": "youth"
+    },
+    "sports_funding_integrity": {
+        "name": "Sports Funding, Governance & Integrity",
+        "description": "Financial management in sports. Covers corruption allegations, funding for tournaments, unpaid match bonuses, and leadership tussles in federations.",
+        "keywords": [
+            "sports corruption",
+            "NFF scandal",
+            "unpaid bonus",
+            "owing player",
+            "sports budget",
+            "missing fund",
+            "sports ministry funding"
+        ],
+        "category": "youth"
+    },
+    "athletes_officials_welfare": {
+        "name": "Athletes, Coaches & Officials",
+        "description": "Welfare of sports personnel. Includes hiring/firing of coaches (e.g., Super Eagles coach), player welfare, and treatment of athletes.",
+        "keywords": [
+            "Super Eagles Coach",
+            "Jose Peseiro",
+            "Finidi George",
+            "athlete welfare",
+            "owing salary coach",
+            "technical adviser",
+            "foreign coach"
+        ],
+        "category": "youth"
+    },
+    "fan_sentiment_risk": {
+        "name": "Fan Sentiment, Violence & Matchday Risks",
+        "description": "Crowd behavior and safety. Includes stadium violence, hooliganism, pitch invasion, and angry fan reactions.",
+        "keywords": [
+            "stadium violence",
+            "pitch invasion",
+            "hooliganism",
+            "angry fan",
+            "match fixing",
+            "referee attack"
+        ],
+        "category": "youth"
+    },
+    "youth_digital_trends": {
+        "name": "Social Media & Influencer Monitoring",
+        "description": "Youth culture on digital platforms. Includes trends on Twitter/X, TikTok, influential voices, and viral challenges.",
+        "keywords": [
+            "twitter influencer",
+            "viral trend",
+            "youth challenge",
+            "tiktok nigeria",
+            "social media trend",
+            "influencer marketing"
+        ],
+        "category": "youth"
+    },
+    "youth_media_reputation": {
+        "name": "Media Reputation & Crisis Signals",
+        "description": "Public perception of the ministry/minister in media. Includes press releases, controversies, and viral negative stories.",
+        "keywords": [
+            "minister scandal",
+            "ministry statement",
+            "press release youth",
+            "viral video minister",
+            "youth minister trend"
+        ],
+        "category": "youth"
+    },
+    "youth_regional_demographics": {
+        "name": "Regional & Demographic Signals",
+        "description": "Youth issues specific to regions (North vs South) or demographics (Rural vs Urban youth).",
+        "keywords": [
+            "northern youth",
+            "southern youth",
+            "arewa youth",
+            "ohanaeze youth",
+            "rural youth",
+            "urban youth"
+        ],
+        "category": "youth"
+    },
+    "youth_future_trends": {
+        "name": "Future Facing & Strategic Signals",
+        "description": "Emerging long-term issues for youth. Includes future of work, tech adoption, and generational shifts (Gen Z).",
+        "keywords": [
+            "future of work",
+            "Gen Z nigeria",
+            "tech adoption",
+            "digital economy youth",
+            "youth migration"
+        ],
+        "category": "youth"
+    },
+    "youth_early_warning": {
+        "name": "Early Warning & Escalation Keywords",
+        "description": "Keywords indicating imminent youth unrest or crisis. Includes mobilization for protests, threats of violence, or hashtags calling for action.",
+        "keywords": [
+            "occupy lekki",
+            "shutdown",
+            "mass action",
+            "revolution now",
+            "youth uprising",
+            "mobilize protest"
+        ],
+        "category": "youth"
+    }
+}

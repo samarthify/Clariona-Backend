@@ -44,7 +44,7 @@ class YouTubeAPICollector:
         self.session = SessionLocal()
         self.ingestor = DataIngestor(self.session, user_id=user_id)
 
-        # Load .env from collectors folder first, then root directory as fallback
+        # Load .env from multiple locations in order of priority
         collectors_env_path = Path(__file__).parent / '.env'
         
         # Add src directory to path to allow imports from config
@@ -55,22 +55,33 @@ class YouTubeAPICollector:
             
         from src.config.path_manager import PathManager
         self.path_manager = PathManager()
+        config_env_path = self.path_manager.base_path / 'config' / '.env'
         root_env_path = self.path_manager.base_path / '.env'
         
         logger.info(f"Current file location: {Path(__file__)}")
         logger.info(f"Checking for .env in collectors folder: {collectors_env_path}")
+        logger.info(f"Checking for .env in config folder: {config_env_path}")
         logger.info(f"Checking for .env in root directory: {root_env_path}")
         
-        # Try to load from collectors folder first
+        # Try to load from collectors folder first, then config, then root
+        env_loaded = False
         if collectors_env_path.exists():
             load_dotenv(collectors_env_path)
             logger.info(f"✅ Loaded .env from collectors folder: {collectors_env_path}")
+            env_loaded = True
+        elif config_env_path.exists():
+            load_dotenv(config_env_path)
+            logger.info(f"✅ Loaded .env from config folder: {config_env_path}")
+            env_loaded = True
         elif root_env_path.exists():
             load_dotenv(root_env_path)
             logger.info(f"✅ Loaded .env from root directory: {root_env_path}")
-        else:
+            env_loaded = True
+        
+        if not env_loaded:
             logger.warning(f"❌ No .env file found. Checked:")
             logger.warning(f"  - Collectors folder: {collectors_env_path}")
+            logger.warning(f"  - Config folder: {config_env_path}")
             logger.warning(f"  - Root directory: {root_env_path}")
         
         self.base_path = self.path_manager.base_path
@@ -413,15 +424,20 @@ class YouTubeAPICollector:
                             video_data = {
                                 'video_id': video_id,
                                 'title': snippet.get('title', 'Unknown Title'),
+                                'text': snippet.get('description', ''),  # Map description to text for DB
                                 'description': snippet.get('description', ''),
+                                'user_name': snippet.get('channelTitle', 'Unknown Channel'),  # Map channel to user_name
                                 'channel_title': snippet.get('channelTitle', 'Unknown Channel'),
                                 'channel_id': channel_id,
                                 'published_at': snippet.get('publishedAt', ''),
-                                'view_count': video_info['statistics'].get('viewCount', 0),
-                                'like_count': video_info['statistics'].get('likeCount', 0),
-                                'comment_count': video_info['statistics'].get('commentCount', 0),
+                                'view_count': video_info['statistics'].get('viewCount', 0),  # DataIngestor will map to direct_reach
+                                'like_count': video_info['statistics'].get('likeCount', 0),  # DataIngestor will map to likes
+                                'comment_count': video_info['statistics'].get('commentCount', 0),  # DataIngestor will map to comments
                                 'duration': video_info['contentDetails'].get('duration', ''),
                                 'url': f"https://www.youtube.com/watch?v={video_id}",
+                                'platform': 'youtube',  # Explicitly set platform
+                                'source': snippet.get('channelTitle', 'Unknown Channel'),
+                                'source_type': 'youtube_tv',
                                 'thumbnail': self._get_thumbnail_url(snippet.get('thumbnails', {})),
                                 'search_query': query
                             }

@@ -1,0 +1,22 @@
+{
+    "owner": "minister_finance",
+    "owner_name": "Minister of Finance",
+    "owner_type": "minister",
+    "topics": [
+        "finance_leadership_governance",
+        "macroeconomic_indicators",
+        "revenue_taxation",
+        "development_finance_institutions",
+        "digital_finance_fintech",
+        "infrastructure_priority_sectors",
+        "nigeria_fiscal_terms"
+    ],
+    "priority_topics": [
+        "macroeconomic_indicators",
+        "revenue_taxation",
+        "finance_leadership_governance"
+    ],
+    "is_active": true,
+    "created_at": "2026-01-12",
+    "updated_at": "2026-01-12"
+}

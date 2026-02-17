@@ -1,0 +1,222 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.x.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Filtered Stream
+
+> Stream real-time Posts matching your filter rules
+
+export const Button = ({href, children}) => {
+  return <div className="not-prose group">
+    <a href={href}>
+      <button className="flex items-center space-x-2.5 py-1 px-4 bg-primary-dark dark:bg-white text-white dark:text-gray-950 rounded-full group-hover:opacity-[0.9] font-medium">
+        <span>
+          {children}
+        </span>
+        <svg width="3" height="24" viewBox="0 -9 3 24" class="h-6 rotate-0 overflow-visible"><path d="M0 0L3 3L0 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+      </button>
+    </a>
+  </div>;
+};
+
+The Filtered Stream endpoints let you receive real-time Posts that match your filter rules. Create rules using powerful operators, then connect to a persistent stream to receive matching Posts as they're published.
+
+## Overview
+
+<CardGroup cols={2}>
+  <Card title="Real-time delivery" icon="bolt">
+    Receive Posts within seconds of publication
+  </Card>
+
+  <Card title="Persistent rules" icon="filter">
+    Add and remove rules without disconnecting
+  </Card>
+
+  <Card title="Powerful operators" icon="magnifying-glass">
+    Match on keywords, hashtags, users, and more
+  </Card>
+
+  <Card title="Webhook delivery" icon="webhook">
+    Optionally receive Posts via webhooks
+  </Card>
+</CardGroup>
+
+***
+
+## How it works
+
+1. **Create rules** — Define filter rules using operators
+2. **Connect to stream** — Establish a persistent HTTP connection
+3. **Receive Posts** — Get matching Posts in real-time
+
+```
+┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+│ Create/     │      │ Connect to  │      │ Receive     │
+│ manage      │  →   │ streaming   │  →   │ matching    │
+│ rules       │      │ endpoint    │      │ Posts       │
+└─────────────┘      └─────────────┘      └─────────────┘
+```
+
+***
+
+## Endpoints
+
+| Method | Endpoint                                                             | Description           |
+| :----- | :------------------------------------------------------------------- | :-------------------- |
+| GET    | [`/2/tweets/search/stream`](/x-api/stream/stream-filtered-posts)     | Connect to the stream |
+| POST   | [`/2/tweets/search/stream/rules`](/x-api/stream/update-stream-rules) | Add or delete rules   |
+| GET    | [`/2/tweets/search/stream/rules`](/x-api/stream/get-stream-rules)    | List current rules    |
+
+***
+
+## Access levels
+
+| Feature           | Pay-per-use | Enterprise  |
+| :---------------- | :---------- | :---------- |
+| Rules per project | 1,000       | 25,000+     |
+| Rule length       | 1,024 chars | 2,048 chars |
+| Connections       | 1           | Multiple    |
+| All operators     | ✓           | ✓           |
+
+<Card title="Contact for Enterprise" icon="building" href="https://developer.x.com/en/products/x-api/enterprise/enterprise-api-interest-form">
+  Get higher limits and additional features
+</Card>
+
+***
+
+## Building rules
+
+Rules use the same operators as search queries:
+
+```
+(AI OR "machine learning") lang:en -is:retweet
+```
+
+### Example rules
+
+| Rule                               | Matches                      |
+| :--------------------------------- | :--------------------------- |
+| `#python`                          | Posts with #python hashtag   |
+| `from:elonmusk`                    | Posts by @elonmusk           |
+| `"breaking news" has:images`       | Posts with phrase and images |
+| `(@XDevelopers OR @X) -is:retweet` | Mentions, excluding retweets |
+
+<Card title="Build a rule" icon="filter" href="/x-api/posts/filtered-stream/integrate/build-a-rule">
+  Learn rule syntax and operators
+</Card>
+
+***
+
+## Connecting to the stream
+
+Establish a persistent HTTP connection to receive Posts:
+
+```python  theme={null}
+import requests
+
+def stream_posts(bearer_token):
+    url = "https://api.x.com/2/tweets/search/stream"
+    headers = {"Authorization": f"Bearer {bearer_token}"}
+    
+    response = requests.get(url, headers=headers, stream=True)
+    
+    for line in response.iter_lines():
+        if line:
+            print(line.decode("utf-8"))
+```
+
+### Keep-alive signals
+
+The stream sends blank lines (`\r\n`) every 20 seconds to maintain the connection. If you don't receive data or a keep-alive for 20 seconds, reconnect.
+
+<CardGroup cols={2}>
+  <Card title="Handling disconnections" icon="plug" href="/x-api/posts/filtered-stream/integrate/handling-disconnections">
+    Reconnect gracefully
+  </Card>
+
+  <Card title="Consuming streaming data" icon="stream" href="/x-api/posts/filtered-stream/integrate/consuming-streaming-data">
+    Process Posts efficiently
+  </Card>
+</CardGroup>
+
+***
+
+## Webhook delivery
+
+Instead of maintaining a persistent connection, you can receive Posts via webhooks:
+
+<Card title="Webhook delivery" icon="webhook" href="/x-api/webhooks/stream/introduction">
+  Set up webhook delivery for filtered stream
+</Card>
+
+***
+
+## Post edits
+
+The stream delivers edited Posts with their edit history. Each edit creates a new Post ID:
+
+```json  theme={null}
+{
+  "data": {
+    "id": "1234567893",
+    "text": "Hello world! (edited)",
+    "edit_history_tweet_ids": ["1234567890", "1234567891", "1234567893"]
+  }
+}
+```
+
+<Card title="Edit Posts fundamentals" icon="clock-rotate-left" href="/x-api/fundamentals/edit-posts">
+  Learn more about Post edits
+</Card>
+
+***
+
+## Getting started
+
+<Note>
+  **Prerequisites**
+
+  * An approved [developer account](https://developer.x.com/en/portal/petition/essential/basic-info)
+  * A [Project and App](/resources/fundamentals/developer-apps) in the Developer Console
+  * Your App's [Bearer Token](/resources/fundamentals/authentication)
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/x-api/posts/filtered-stream/quickstart">
+    Connect to the stream in minutes
+  </Card>
+
+  <Card title="Build a rule" icon="filter" href="/x-api/posts/filtered-stream/integrate/build-a-rule">
+    Learn rule syntax
+  </Card>
+
+  <Card title="Operator reference" icon="list-check" href="/x-api/posts/filtered-stream/integrate/operators">
+    All available operators
+  </Card>
+
+  <Card title="Sample code" icon="github" href="https://github.com/xdevplatform/Twitter-API-v2-sample-code">
+    Working code examples
+  </Card>
+</CardGroup>
+
+***
+
+## Advanced topics
+
+<CardGroup cols={2}>
+  <Card title="Handling disconnections" icon="plug" href="/x-api/posts/filtered-stream/integrate/handling-disconnections">
+    Reconnect gracefully
+  </Card>
+
+  <Card title="High volume capacity" icon="gauge-high" href="/x-api/posts/filtered-stream/integrate/handling-high-volume-capacity">
+    Handle high throughput
+  </Card>
+
+  <Card title="Recovery and redundancy" icon="shield" href="/x-api/posts/filtered-stream/integrate/recovery-and-redundancy-features">
+    Build resilient applications
+  </Card>
+
+  <Card title="Matching returned Posts" icon="crosshairs" href="/x-api/posts/filtered-stream/integrate/matching-returned-tweets">
+    Identify which rules matched
+  </Card>
+</CardGroup>

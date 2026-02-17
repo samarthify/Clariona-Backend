@@ -21,10 +21,10 @@ import warnings
 from urllib3.exceptions import InsecureRequestWarning
 import json
 
-# Import our new modules
-from .rss_feed_health_monitor import RSSFeedHealthMonitor
-from .rss_feed_validator import RSSFeedValidator
-from .rss_ssl_handler import RSSSSLHandler
+# Import our new modules - use absolute imports for script execution
+from src.collectors.rss_feed_health_monitor import RSSFeedHealthMonitor
+from src.collectors.rss_feed_validator import RSSFeedValidator
+from src.collectors.rss_ssl_handler import RSSSSLHandler
 from src.api.database import SessionLocal
 from src.services.data_ingestor import DataIngestor
 
@@ -438,12 +438,22 @@ class NigerianQatarIndianRSSCollector:
                     # Determine source region based on URL
                     source_region = self._determine_source_region(feed_url)
                     
+                    # Get published date from RSS feed entry, checking multiple possible fields
+                    # RSS feeds may use 'published', 'updated', or 'pubDate'
+                    # Let data ingestor handle fallback to run_timestamp if date is missing
+                    published_date = (
+                        entry.get('published') or 
+                        entry.get('updated') or 
+                        entry.get('pubDate') or 
+                        None
+                    )
+                    
                     article = {
                         'title': self._clean_text(title),
                         'description': self._clean_text(description),
                         'content': self._clean_text(content),
                         'url': entry.get('link', ''),
-                        'published_date': entry.get('published', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+                        'published_date': published_date,  # None if not available - data ingestor will use run_timestamp
                         'source': feed.feed.get('title', feed_url),
                         'source_url': feed_url,
                         'source_region': source_region,

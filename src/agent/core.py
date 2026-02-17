@@ -189,14 +189,7 @@ class SentimentAnalysisAgent:
         self.config = self.load_config() # Load config from file (excluding target)
         self.status = "idle"
         self.last_run_times = {"collect": None, "process": None, "cleanup": None}
-        self.data_history = {
-            "collected": [], 
-            "processed": [], 
-            "sentiment_trends": [], 
-            "events": [], 
-            "data_quality_metrics": [],
-            "system_health": []
-        }
+
         
         # Legacy parallel processing configuration removed - not used by AnalysisWorker
         # Legacy scheduler configuration removed - not used by AnalysisWorker

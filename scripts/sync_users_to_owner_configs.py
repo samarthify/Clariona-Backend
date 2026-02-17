@@ -199,6 +199,13 @@ MINISTRY_TO_TOPICS = {
         'power_outages',
         'energy_policy',
         'electricity'
+    ],
+    # Dashboard users (pre-configured via minister_configs JSON; sync must not overwrite topics)
+    'economy_dashboard': [
+        'economy_of_nigeria'
+    ],
+    'insecurity_dashboard': [
+        'insecurity_in_nigeria'
     ]
 }
 

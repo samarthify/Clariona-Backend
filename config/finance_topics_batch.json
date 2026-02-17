@@ -1,0 +1,116 @@
+{
+    "finance_leadership_governance": {
+        "name": "Leadership & Governance",
+        "description": "Leadership of the Federal Ministry of Finance and related agencies. Includes the Minister of Finance, CBN Governor, monetary policy decisions, and economic management team activities.",
+        "keywords": [
+            "Minister of Finance",
+            "Wale Edun",
+            "CBN Governor",
+            "Yemi Cardoso",
+            "Ministry of Finance",
+            "Central Bank of Nigeria",
+            "Monetary Policy Committee",
+            "MPC meeting",
+            "economic team"
+        ],
+        "category": "finance"
+    },
+    "macroeconomic_indicators": {
+        "name": "Macroeconomic Indicators",
+        "description": "Key indicators of the Nigerian economy. Covers inflation rate, GDP growth, exchange rate (Naira vs Dollar), external reserves, and unemployment rate.",
+        "keywords": [
+            "inflation rate",
+            "GDP growth",
+            "exchange rate",
+            "naira value",
+            "dollar rate",
+            "FX crisis",
+            "external reserves",
+            "economic recession",
+            "cost of living crisis",
+            "food inflation finance"
+        ],
+        "category": "finance"
+    },
+    "revenue_taxation": {
+        "name": "Revenue & Taxation",
+        "description": "Government revenue generation and tax administration. Includes FIRS (Federal Inland Revenue Service), VAT, Company Income Tax, Stamp Duty, and TSA (Treasury Single Account).",
+        "keywords": [
+            "FIRS",
+            "tax collection",
+            "VAT",
+            "Value Added Tax",
+            "Company Income Tax",
+            "Stamp Duty",
+            "tax revenue",
+            "TSA",
+            "Treasury Single Account",
+            "revenue generation",
+            "tax evasion",
+            "FACC allocation"
+        ],
+        "category": "finance"
+    },
+    "development_finance_institutions": {
+        "name": "Development Finance Institutions",
+        "description": "State-owned financial institutions supporting development. Includes Bank of Industry (BOI), NEXIM Bank, Development Bank of Nigeria (DBN), and Bank of Agriculture interventions.",
+        "keywords": [
+            "Bank of Industry",
+            "BOI",
+            "NEXIM Bank",
+            "Development Bank of Nigeria",
+            "DBN",
+            "DFI",
+            "Bank of Agriculture loan",
+            "SME funding"
+        ],
+        "category": "finance"
+    },
+    "digital_finance_fintech": {
+        "name": "Digital Finance & Fintech",
+        "description": "Financial technology and digital currency. Covers eNaira, cashless policy, crypto regulation, fintech startups, and electronic payment systems.",
+        "keywords": [
+            "eNaira",
+            "CBDC",
+            "fintech nigeria",
+            "mobile money",
+            "POS charges",
+            "cashless policy",
+            "cryptocurrency ban",
+            "crypto regulation",
+            "digital banking",
+            "NIBSS"
+        ],
+        "category": "finance"
+    },
+    "infrastructure_priority_sectors": {
+        "name": "Infrastructure & Priority Sectors Funding",
+        "description": "Financing for major infrastructure and critical sectors. Includes Sukuk bonds, Eurobonds, sovereign debt for rail/power projects, and infrastructure funds.",
+        "keywords": [
+            "Sukuk bond",
+            "Eurobond",
+            "infrastructure financing",
+            "Green bond",
+            "sovereign debt",
+            "borrowing for infrastructure",
+            "Chinese loan"
+        ],
+        "category": "finance"
+    },
+    "nigeria_fiscal_terms": {
+        "name": "Nigeria-Specific Fiscal Terms",
+        "description": "Specific terminology related to Nigerian fiscal management. Includes FAAC (Federation Account Allocation Committee), budget deficit, debt servicing, and subsidy removal impact.",
+        "keywords": [
+            "FAAC",
+            "federation account",
+            "budget deficit",
+            "debt servicing",
+            "subsidy removal",
+            "fuel subsidy finance",
+            "supplementary budget",
+            "appropriation bill",
+            "fiscal policy"
+        ],
+        "category": "finance"
+    }
+}

@@ -1,0 +1,239 @@
+{
+    "health_governance_policy": {
+        "name": "Governance & Health Policy",
+        "description": "Strategic leadership and regulation of the health sector. Includes the National Health Act, health financing, budget allocation for health, NHIS (National Health Insurance Scheme), Basic Health Care Provision Fund (BHCPF), and Ministry of Health policies.",
+        "keywords": [
+            "National Health Act",
+            "NHIS",
+            "National Health Insurance",
+            "health budget",
+            "health financing",
+            "BHCPF",
+            "Basic Health Care Provision Fund",
+            "Ministry of Health",
+            "health policy",
+            "health reform",
+            "universal health coverage",
+            "UHC"
+        ],
+        "category": "health"
+    },
+    "disease_outbreaks_surveillance": {
+        "name": "Disease Outbreaks & Surveillance",
+        "description": "Monitoring and response to epidemic-prone diseases. Covers Lassa Fever, Cholera, COVID-19, Meningitis, Monkeypox, Ebola, and NCDC (Nigeria Centre for Disease Control) surveillance activities.",
+        "keywords": [
+            "Lassa Fever",
+            "Cholera",
+            "COVID-19",
+            "Meningitis",
+            "Monkeypox",
+            "Ebola",
+            "Diphtheria",
+            "NCDC",
+            "disease outbreak",
+            "epidemic",
+            "pandemic",
+            "surveillance",
+            "contact tracing"
+        ],
+        "category": "health"
+    },
+    "endemic_infectious_diseases": {
+        "name": "Endemic & Infectious Diseases",
+        "description": "Ongoing management of burden diseases. Includes Malaria, Tuberculosis (TB), HIV/AIDS, Neglected Tropical Diseases (NTDs), and treatment programs for these conditions.",
+        "keywords": [
+            "Malaria",
+            "Tuberculosis",
+            "TB",
+            "HIV",
+            "AIDS",
+            "antiretroviral",
+            "ART",
+            "malaria treatment",
+            "typhoid",
+            "hepatitis",
+            "NTD",
+            "neglected tropical disease"
+        ],
+        "category": "health"
+    },
+    "antimicrobial_resistance": {
+        "name": "Antimicrobial Resistance & Hospital Infections",
+        "description": "Issues related to drug resistance and hospital safety. Covers antibiotic resistance, superbugs, rational use of medicines, and hospital-acquired infections.",
+        "keywords": [
+            "antimicrobial resistance",
+            "AMR",
+            "antibiotic resistance",
+            "superbug",
+            "drug resistance",
+            "rational use of medicine",
+            "hospital infection",
+            "nosocomial"
+        ],
+        "category": "health"
+    },
+    "hospitals_healthcare_facilities": {
+        "name": "Hospitals & Healthcare Facilities",
+        "description": "Infrastructure and state of medical centers. Includes Teaching Hospitals, Federal Medical Centres (FMCs), General Hospitals, Primary Healthcare Centers (PHCs), hospital equipment, and facility conditions.",
+        "keywords": [
+            "Teaching Hospital",
+            "Federal Medical Centre",
+            "FMC",
+            "General Hospital",
+            "PHC",
+            "Primary Healthcare Center",
+            "hospital equipment",
+            "hospital infrastructure",
+            "health center",
+            "clinic",
+            "hospital ward"
+        ],
+        "category": "health"
+    },
+    "health_workforce": {
+        "name": "Health Workforce",
+        "description": "Human resources for health. Includes Doctors, Nurses, Pharmacists, Lab Scientists, brain drain ('Japa'), shortage of staff, and recruitment of health workers.",
+        "keywords": [
+            "doctor",
+            "nurse",
+            "pharmacist",
+            "lab scientist",
+            "medical staff",
+            "health worker",
+            "brain drain",
+            "japa doctor",
+            "shortage of doctors",
+            "medical consultant",
+            "resident doctor"
+        ],
+        "category": "health"
+    },
+    "workforce_strikes_protests": {
+        "name": "Workforce Strikes & Protests",
+        "description": "Industrial actions by health unions. Covers strikes by NMA (Nigerian Medical Association), NARD (National Association of Resident Doctors), JOHESU, and demands for salary arrears or hazard allowance.",
+        "keywords": [
+            "NMA",
+            "NARD",
+            "JOHESU",
+            "NANNM",
+            "doctors strike",
+            "health worker strike",
+            "hazard allowance",
+            "salary arrears",
+            "resident doctors strike"
+        ],
+        "category": "health"
+    },
+    "drugs_pharmaceuticals": {
+        "name": "Drugs & Pharmaceuticals",
+        "description": "Regulation and supply of medicines. Includes NAFDAC activities, fake/substandard drugs, drug supply chains, pharmacy regulation, and cost of medication.",
+        "keywords": [
+            "NAFDAC",
+            "fake drugs",
+            "substandard drugs",
+            "counterfeit drugs",
+            "pharmaceutical",
+            "drug supply",
+            "cost of drugs",
+            "medication",
+            "pharmacy",
+            "drug enforcement"
+        ],
+        "category": "health"
+    },
+    "vaccines_immunization": {
+        "name": "Vaccines & Immunization",
+        "description": "Vaccination programs and coverage. Includes NPHCDA (National Primary Health Care Development Agency), routine immunization, polio eradication, measles vaccine, and vaccine storage/cold chain.",
+        "keywords": [
+            "vaccine",
+            "immunization",
+            "vaccination",
+            "NPHCDA",
+            "polio",
+            "measles vaccine",
+            "cold chain",
+            "routine immunization",
+            "yellow fever card"
+        ],
+        "category": "health"
+    },
+    "maternal_child_health": {
+        "name": "Maternal & Child Health",
+        "description": "Health of mothers and children. Covers maternal mortality, infant mortality, antenatal care, delivery services, family planning, and reproductive health.",
+        "keywords": [
+            "maternal health",
+            "child health",
+            "maternal mortality",
+            "infant mortality",
+            "antenatal",
+            "delivery",
+            "childbirth",
+            "family planning",
+            "reproductive health",
+            "midwife",
+            "under-5 mortality"
+        ],
+        "category": "health"
+    },
+    "nutrition_food_security": {
+        "name": "Nutrition & Food Security",
+        "description": "Nutritional status of the population. Covers malnutrition, stunting in children, wasting, micronutrient deficiency, and severe acute malnutrition (SAM).",
+        "keywords": [
+            "malnutrition",
+            "stunting",
+            "wasting",
+            "severe acute malnutrition",
+            "SAM",
+            "ready to use therapeutic food",
+            "RUTF",
+            "micronutrient",
+            "nutritional status"
+        ],
+        "category": "health"
+    },
+    "public_sentiment_complaints": {
+        "name": "Public Sentiment & Complaints",
+        "description": "General public feedback on health services. Includes negligence, poor attitude of staff, rejection of patients (especially gunshot victims), and patient satisfaction.",
+        "keywords": [
+            "medical negligence",
+            "hospital negligence",
+            "poor treatment",
+            "rejection of patient",
+            "gunshot victim hospital",
+            "doctor attitude",
+            "nurse attitude",
+            "hospital complaint"
+        ],
+        "category": "health"
+    },
+    "health_misinformation_rumors": {
+        "name": "Health Misinformation & Rumors",
+        "description": "Spread of false health information. Includes vaccine hesitancy, fake cures, herbal remedy myths, and conspiracy theories affecting public health.",
+        "keywords": [
+            "fake cure",
+            "herbal cure claim",
+            "vaccine conspiracy",
+            "health rumor",
+            "health myth",
+            "anti-vax",
+            "vaccine hesitancy"
+        ],
+        "category": "health"
+    },
+    "health_emergencies_disasters": {
+        "name": "Health Emergencies & Disasters",
+        "description": "Mass casualty events and acute health crises. Includes building collapses, explosions, mass accidents requiring emergency response, and ambulance services.",
+        "keywords": [
+            "mass casualty",
+            "emergency response",
+            "ambulance",
+            "paramedic",
+            "building collapse health",
+            "explosion victim",
+            "casualty ward",
+            "emergency room",
+            "accident victim"
+        ],
+        "category": "health"
+    }
+}

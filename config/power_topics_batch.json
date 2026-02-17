@@ -1,0 +1,170 @@
+{
+    "power_governance": {
+        "name": "Ministry, Leadership & Governance",
+        "description": "Leadership and policy direction of the Ministry of Power. Includes the Minister of Power's activities, NERC (Nigerian Electricity Regulatory Commission) regulations, and electricity acts.",
+        "keywords": [
+            "Minister of Power",
+            "Adebayo Adelabu",
+            "Ministry of Power",
+            "NERC",
+            "Electricity Act",
+            "power sector regulation",
+            "electricity policy"
+        ],
+        "category": "power"
+    },
+    "electricity_gen_trans_dist": {
+        "name": "Electricity Generation, Transmission & Distribution",
+        "description": "The entire power value chain. Covers GenCos (Generation Companies), TCN (Transmission Company of Nigeria), DisCos (Distribution Companies), national grid stability, and power plants (Egbin, Kainji, Shiroro).",
+        "keywords": [
+            "TCN",
+            "Transmission Company of Nigeria",
+            "National Grid",
+            "grid collapse",
+            "GenCo",
+            "DisCo",
+            "Egbin Power",
+            "Kainji Dam",
+            "Shiroro power",
+            "Ikeja Electric",
+            "Eko Disco",
+            "Abuja Disco",
+            "Enugu Disco",
+            "Kano Disco",
+            "power generation",
+            "power transmission"
+        ],
+        "category": "power"
+    },
+    "power_fuel_gas_supply": {
+        "name": "Fuel & Gas Supply for Power",
+        "description": "Gas supply to power plants. Covers gas shortages, pipeline vandalism affecting power, and agreements with gas suppliers.",
+        "keywords": [
+            "gas supply power",
+            "gas shortage power",
+            "thermal station",
+            "gas pipeline vandalism",
+            "gas to power"
+        ],
+        "category": "power"
+    },
+    "energy_pricing_tariffs": {
+        "name": "Energy Pricing, Tariffs & Subsidy",
+        "description": "Cost of electricity. Covers Band A, Band B tariffs, electricity subsidy removal, estimated billing, and prepaid meters.",
+        "keywords": [
+            "Band A tariff",
+            "electricity tariff",
+            "tariff increase",
+            "prepaid meter",
+            "estimated billing",
+            "crazy bill",
+            "electricity subsidy",
+            "MYTO",
+            "Multi-Year Tariff Order",
+            "cost of electricity"
+        ],
+        "category": "power"
+    },
+    "renewable_energy_transition": {
+        "name": "Renewable Energy & Energy Transition",
+        "description": "Clean energy initiatives. Covers solar power, mini-grids, REA (Rural Electrification Agency), hydroelectricity, and Nigeria's energy transition plan.",
+        "keywords": [
+            "solar power",
+            "renewable energy",
+            "mini-grid",
+            "REA",
+            "Rural Electrification Agency",
+            "clean energy",
+            "hydro power",
+            "Zungeru Hydro",
+            "Mambilla Plateau project"
+        ],
+        "category": "power"
+    },
+    "power_public_sentiment": {
+        "name": "Public Sentiment & Citizen Complaints",
+        "description": "Public reaction to power supply. Covers blackouts, load shedding, 'up nepa', 'no light', and complaints about DisCos.",
+        "keywords": [
+            "no light",
+            "blackout",
+            "load shedding",
+            "up nepa",
+            "restore light",
+            "power outage",
+            "darkness",
+            "transformer bad"
+        ],
+        "category": "power"
+    },
+    "power_projects_infrastructure": {
+        "name": "Projects, Infrastructure & Reforms",
+        "description": "Major power projects and reforms. Includes the Siemens Presidential Power Initiative (PPI), construction of new substations, and transmission lines.",
+        "keywords": [
+            "Siemens power deal",
+            "Presidential Power Initiative",
+            "PPI Siemens",
+            "power project",
+            "new substation",
+            "transmission line construction"
+        ],
+        "category": "power"
+    },
+    "power_infrastructure_security": {
+        "name": "Critical Infrastructure Security",
+        "description": "Protection of power assets. Covers vandalism of transmission towers, theft of transformers, and sabotage.",
+        "keywords": [
+            "vandalism power tower",
+            "cable theft",
+            "transformer theft",
+            "grid sabotage",
+            "power infrastructure attack"
+        ],
+        "category": "power"
+    },
+    "power_media_narrative": {
+        "name": "Media, Opposition & Political Narrative",
+        "description": "Political discourse around power. Includes opposition criticism of power failure and media editorials on the energy crisis.",
+        "keywords": [
+            "power sector crisis",
+            "failed power reform",
+            "opposition power criticism",
+            "energy crisis editorial"
+        ],
+        "category": "power"
+    },
+    "power_regional_issues": {
+        "name": "State & Regional Energy Issues",
+        "description": "State government involvement in power (following the new Electricity Act allowing states to generate power).",
+        "keywords": [
+            "state power project",
+            "Aba Power",
+            "Geometrics Power",
+            "state electricity market",
+            "Lagos power market"
+        ],
+        "category": "power"
+    },
+    "power_investments_partnerships": {
+        "name": "Investments & International Partnerships",
+        "description": "Funding and loans for power. Includes World Bank loans, AfDB support, and private sector investment.",
+        "keywords": [
+            "World Bank power loan",
+            "AfDB power",
+            "power sector investment",
+            "electricity loan"
+        ],
+        "category": "power"
+    },
+    "power_operational_metrics": {
+        "name": "Operational Metrics & Performance",
+        "description": "Technical performance data. Covers peak generation (MW), system collapse frequency, and metering gap.",
+        "keywords": [
+            "megawatts generated",
+            "peak generation",
+            "metering gap",
+            "system collapse count",
+            "allocated MW"
+        ],
+        "category": "power"
+    }
+}

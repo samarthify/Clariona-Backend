@@ -1,0 +1,151 @@
+{
+    "education_institutions_agencies": {
+        "name": "Education Institutions & Agencies",
+        "description": "Government agencies, boards, and regulatory bodies overseeing education in Nigeria, including the National Universities Commission (NUC), Universal Basic Education Commission (UBEC), TETFund, JAMB, WAEC, NECO, and SUBEB. Also includes discussions about specific universities, polytechnics, colleges of education, and unity schools.",
+        "keywords": [
+            "NUC", "UBEC", "TETFund", "JAMB", "WAEC", "NECO", "SUBEB", "NABTEB", 
+            "TRCN", "NCCE", "NBTE", "National Universities Commission", 
+            "Universal Basic Education Commission", "Joint Admissions and Matriculation Board",
+            "Federal Ministry of Education", "State Ministry of Education"
+        ],
+        "keyword_groups": {
+            "groups": [
+                {
+                    "type": "or",
+                    "keywords": ["university", "polytechnic", "college of education", "unity school", "federal college", "federal university"]
+                }
+            ]
+        },
+        "category": "education"
+    },
+    "education_policies_frameworks": {
+        "name": "Education Policies & Frameworks",
+        "description": "Educational laws, acts, policies, and regulatory frameworks governing the Nigerian education sector. Includes the National Policy on Education, education funding acts, university autonomy bills, student loan policies, and government white papers on education reform.",
+        "keywords": [
+            "National Policy on Education", "education act", "university autonomy", 
+            "student loan act", "education reform", "education bill", "education law",
+            "education budget", "education policy"
+        ],
+        "keyword_groups": {
+            "groups": [
+                {
+                    "type": "and",
+                    "keywords": ["bill", "education"]
+                },
+                {
+                    "type": "and",
+                    "keywords": ["policy", "school"]
+                },
+                 {
+                    "type": "and",
+                    "keywords": ["act", "university"]
+                }
+            ]
+        },
+        "category": "education"
+    },
+    "education_programs_initiatives": {
+        "name": "Education Programs & Initiatives",
+        "description": "Government-led educational programs, intervention schemes, and scholarship initiatives. Includes the Almajiri Education Programme, Safe School Initiative, Home Grown School Feeding Programme, BESDA (Better Education Service Delivery for All), and various federal and state scholarship boards.",
+        "keywords": [
+            "Almajiri Education", "Safe School Initiative", "School Feeding Programme",
+            "BESDA", "Scholarship Board", "Federal Scholarship Board", "PTDF", 
+            "education intervention", "scholarship scheme", "bursary"
+        ],
+        "keyword_groups": {
+            "groups": [
+                {
+                    "type": "and",
+                    "keywords": ["program", "education"]
+                },
+                 {
+                    "type": "and",
+                    "keywords": ["initiative", "school"]
+                },
+                 {
+                    "type": "and",
+                    "keywords": ["project", "literacy"]
+                }
+            ]
+        },
+        "category": "education"
+    },
+    "exams_assessments": {
+        "name": "Exams & Assessments",
+        "description": "Standardized testing, entrance examinations, and academic assessments in Nigeria. Covers UTME, POST-UTME, WASSCE, NECO, NABTEB, Common Entrance Examination, and issues related to exam malpractice, result releases, and cut-off marks.",
+        "keywords": [
+            "UTME", "POST-UTME", "WASSCE", "SSCE", "Common Entrance", 
+            "cut-off mark", "exam malpractice", "exam centers", "admission list",
+            "matriculation", "JAMB result", "WAEC result"
+        ],
+        "category": "education"
+    },
+    "education_levels_school_types": {
+        "name": "Education Levels & School Types",
+        "description": "Discussions specific to different tiers of the education system: Early Childhood Care and Development (ECCD), Primary Education, Secondary Education (JSS/SSS), Tertiary Education, Vocational/Technical Education, and Special Needs Education.",
+        "keywords": [
+            "primary school", "secondary school", "tertiary institution", 
+            "kindergarten", "nursery school", "vocational school", "technical college",
+            "special education", "basic education", "higher education", 
+            "post-primary", "undergraduate", "postgraduate"
+        ],
+        "category": "education"
+    },
+    "curriculum_academics": {
+        "name": "Curriculum & Academics",
+        "description": "The content of education, teaching standards, syllabus, and academic subjects. Includes discussions on STEAM (Science, Technology, Engineering, Arts, Math), entrepreneurship education, indigenous language teaching, and curriculum updates by NERDC.",
+        "keywords": [
+            "curriculum", "syllabus", "NERDC", "scheme of work", "academic calendar",
+            "STEAM", "STEM", "vocational training", "entrepreneurship education"
+        ],
+         "keyword_groups": {
+            "groups": [
+                {
+                    "type": "and",
+                    "keywords": ["teaching", "subject"]
+                },
+                {
+                    "type": "and",
+                    "keywords": ["learning", "standard"]
+                }
+            ]
+        },
+        "category": "education"
+    },
+    "education_stakeholders_roles": {
+        "name": "Education Stakeholders & Roles",
+        "description": "Key actors in the education sector including students, teachers, lecturers, Vice-Chancellors, Rectors, parents, and unions like ASUU (Academic Staff Union of Universities), NUT (Nigeria Union of Teachers), NASU, and SSANU. Covers strikes, salary disputes, and welfare.",
+        "keywords": [
+            "ASUU", "NUT", "NASU", "SSANU", "COEASU", "NANS", "Vice-Chancellor", 
+            "Rector", "Provost", "Headmaster", "Principal", "Teacher", "Lecturer",
+            "Professor", "Student Union", "PTA", "Parents Teachers Association"
+        ],
+        "keyword_groups": {
+            "groups": [
+                {
+                    "type": "and",
+                    "keywords": ["strike", "lecturer"]
+                },
+                {
+                    "type": "and",
+                    "keywords": ["strike", "teacher"]
+                },
+                 {
+                    "type": "and",
+                    "keywords": ["salary", "teacher"]
+                }
+            ]
+        },
+        "category": "education"
+    },
+    "education_geography_administration": {
+        "name": "Education Geography & Administration",
+        "description": "Administrative structures and geographic distribution of education. Includes Local Government Education Authorities (LGEA), State Universal Basic Education Boards (SUBEB), school districts, catchment areas, and educationally disadvantaged states (EDS).",
+        "keywords": [
+            "LGEA", "SUBEB", "catchment area", "inspectorate", "ministry of education",
+            "commissioner for education", "school board", "education secretary",
+            "education district"
+        ],
+        "category": "education"
+    }
+}

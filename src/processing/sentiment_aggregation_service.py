@@ -279,7 +279,7 @@ class SentimentAggregationService:
                 'confidence_weight': record.confidence_weight or 1.0,
                 'sentiment_label': record.sentiment_label,
                 'emotion_label': record.emotion_label,
-                'emotion_distribution': json.loads(record.emotion_distribution) if record.emotion_distribution else None
+                'emotion_distribution': self._parse_json_field(record.emotion_distribution)
             })
         
         return mentions
@@ -315,10 +315,39 @@ class SentimentAggregationService:
                 'confidence_weight': record.confidence_weight or 1.0,
                 'sentiment_label': record.sentiment_label,
                 'emotion_label': record.emotion_label,
-                'emotion_distribution': json.loads(record.emotion_distribution) if record.emotion_distribution else None
+                'emotion_distribution': self._parse_json_field(record.emotion_distribution)
             })
         
         return mentions
+    
+    def _parse_json_field(self, value: Any) -> Optional[Dict[str, Any]]:
+        """
+        Parse a JSONB field that may be a dict (already parsed) or a string (needs parsing).
+        
+        Args:
+            value: The field value (dict, str, or None)
+        
+        Returns:
+            Parsed dict or None
+        """
+        if value is None:
+            return None
+        
+        # If already a dict (JSONB from PostgreSQL), return as-is
+        if isinstance(value, dict):
+            return value
+        
+        # If it's a string, try to parse it
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except (json.JSONDecodeError, TypeError):
+                logger.warning(f"Failed to parse JSON field: {type(value)}")
+                return None
+        
+        # If it's some other type, return None
+        logger.warning(f"Unexpected type for JSON field: {type(value)}")
+        return None
     
     def _calculate_aggregation(
         self,

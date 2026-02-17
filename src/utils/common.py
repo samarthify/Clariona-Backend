@@ -69,6 +69,19 @@ def parse_datetime(value: Optional[Any]) -> Optional[datetime]:
             return value.replace(tzinfo=None)
         return value
     
+    # Handle numeric epoch values (seconds or milliseconds)
+    if isinstance(value, (int, float)):
+        try:
+            epoch = float(value)
+            # Heuristic: > 1e12 implies milliseconds
+            if epoch > 1e12:
+                epoch = epoch / 1000.0
+            # Use UTC epoch conversion and return timezone-naive
+            return datetime.utcfromtimestamp(epoch)
+        except Exception as e:
+            logger.debug(f"Error parsing epoch value '{value}': {e}")
+            return None
+    
     # Handle non-string types
     if not isinstance(value, str):
         logger.debug(f"Unexpected type for date parsing: {type(value)}. Value: {value}")
@@ -81,9 +94,32 @@ def parse_datetime(value: Optional[Any]) -> Optional[datetime]:
     if not date_str or date_str.lower() in ['none', 'nan', '', 'unknown']:
         return None
     
+    # SAFEGUARD: Reject strings that are too long (likely text content, not a date field)
+    # Date fields should be relatively short (max ~100 chars for complex formats)
+    # If it's longer, it's probably article text with a date mentioned in it
+    if len(date_str) > 100:
+        logger.debug(f"Rejecting date string that's too long ({len(date_str)} chars) - likely text content: {date_str[:50]}...")
+        return None
+    
+    # SAFEGUARD: Reject strings that look like article text (contain multiple sentences, common words)
+    # Simple heuristic: if it contains multiple common words that appear in articles, it's probably text
+    text_indicators = [' the ', ' and ', ' a ', ' an ', ' in ', ' on ', ' at ', ' for ', ' with ', ' from ']
+    if any(indicator in date_str.lower() for indicator in text_indicators) and len(date_str) > 50:
+        logger.debug(f"Rejecting date string that looks like article text: {date_str[:80]}...")
+        return None
+    
     try:
         # Try to parse the date string in various formats
-        
+        # 0. Pure numeric string -> epoch detection
+        if date_str.isdigit():
+            try:
+                epoch = float(date_str)
+                if epoch > 1e12:
+                    epoch = epoch / 1000.0
+                return datetime.utcfromtimestamp(epoch)
+            except Exception:
+                pass
+                
         # 1. Twitter date format (e.g., Fri Nov 24 17:49:36 +0000 2023)
         twitter_pattern = r'[A-Za-z]{3}\s+[A-Za-z]{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+[+]\d{4}\s+\d{4}'
         if re.match(twitter_pattern, date_str):

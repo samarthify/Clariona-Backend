@@ -1,0 +1,174 @@
+{
+    "interior_core_identity": {
+        "name": "Ministry of Interior – Core Identity",
+        "description": "General activities and leadership of the Ministry of Interior. Includes the Minister's engagements, policy announcements, and strategic direction of the ministry.",
+        "keywords": [
+            "Minister of Interior",
+            "Olubunmi Tunji-Ojo",
+            "Ministry of Interior",
+            "interior ministry policy",
+            "federal ministry of interior"
+        ],
+        "category": "interior"
+    },
+    "interior_strategic_reform": {
+        "name": "Ministry Strategic & Reform Agenda",
+        "description": "Reform initiatives within the ministry. Includes passport process automation, prison decongestion reforms, and internal security strategy.",
+        "keywords": [
+            "passport reform",
+            "prison reform",
+            "interior ministry reform",
+            "decongestion strategy",
+            "border security reform"
+        ],
+        "category": "interior"
+    },
+    "interior_digital_assets": {
+        "name": "Official Digital Assets & Hashtags",
+        "description": "Official online presence and campaigns. Includes monitoring of official hashtags like #NewPassportProcess, #InteriorReform, and viral social media discussions.",
+        "keywords": [
+            "#NewPassportProcess",
+            "interior ministry handle",
+            "#ReformInterior",
+            "official hashtag interior"
+        ],
+        "category": "interior"
+    },
+    "nigeria_immigration_service": {
+        "name": "Nigeria Immigration Service (NIS)",
+        "description": "Immigration and border control. Covers passport issuance, backlog clearance, visa on arrival, boarder patrol, and illegal migration.",
+        "keywords": [
+            "NIS",
+            "Nigeria Immigration Service",
+            "Nigerian passport",
+            "passport booklet",
+            "passport renewal",
+            "immigration officer",
+            "border patrol",
+            "visa on arrival"
+        ],
+        "category": "interior"
+    },
+    "nigerian_correctional_service": {
+        "name": "Nigerian Correctional Service (NCoS)",
+        "description": "Prison management and inmate welfare. Covers jailbreaks, prison congestion, inmate rehabilitation, and the change from 'Prisons' to 'Correctional Service'.",
+        "keywords": [
+            "NCoS",
+            "Correctional Service",
+            "Nigerian Prison",
+            "prison congestion",
+            "jailbreak",
+            "inmate welfare",
+            "correctional centre",
+            "Kuje prison",
+            "Kirikiri"
+        ],
+        "category": "interior"
+    },
+    "nscdc_civil_defence": {
+        "name": "Nigeria Security & Civil Defence Corps (NSCDC)",
+        "description": "Civil defence and critical infrastructure protection. Covers Agro-Rangers, pipeline vandalism, protecting national assets, and private guard regulation.",
+        "keywords": [
+            "NSCDC",
+            "Civil Defence",
+            "Agro-Rangers",
+            "pipeline vandalism",
+            "critical infrastructure protection",
+            "private guard company",
+            "civil defence officer"
+        ],
+        "category": "interior"
+    },
+    "federal_fire_service": {
+        "name": "Federal Fire Service",
+        "description": "Fire prevention and emergency response. Covers market fires, fire outbreaks, fire safety regulation, and equipment procurement.",
+        "keywords": [
+            "Federal Fire Service",
+            "fire outbreak",
+            "market fire",
+            "fire fighter",
+            "fire truck",
+            "emergency fire response"
+        ],
+        "category": "interior"
+    },
+    "cdcfib_oversight": {
+        "name": "CDCFIB Oversight Body",
+        "description": "Civil Defence, Correctional, Fire and Immigration Services Board. Covers recruitment, promotion, and discipline of officers in the paramilitary agencies.",
+        "keywords": [
+            "CDCFIB",
+            "Civil Defence Board",
+            "Immigration Board",
+            "paramilitary recruitment",
+            "officer promotion interior"
+        ],
+        "category": "interior"
+    },
+    "nigeria_evisa_system": {
+        "name": "Nigeria E-Visa System",
+        "description": "Electronic visa processing and administration. Covers online visa applications, business visa on arrival functionality, and tourist e-visas.",
+        "keywords": [
+            "e-visa",
+            "electronic visa",
+            "visa on arrival business",
+            "online visa application",
+            "nigeria visa portal"
+        ],
+        "category": "interior"
+    },
+    "expatriate_residence_permit": {
+        "name": "Expatriate Residence Permit (CERPAC)",
+        "description": "Regulations for foreigners in Nigeria. Covers CERPAC (Combined Expatriate Residence Permit and Aliens Card), expatriate quota, and monthly quota limits.",
+        "keywords": [
+            "CERPAC",
+            "expatriate quota",
+            "residence permit",
+            "aliens card",
+            "foreign worker permit"
+        ],
+        "category": "interior"
+    },
+    "interior_emergency_travel": {
+        "name": "Emergency Travel Documents",
+        "description": "Issuance of Emergency Travel Certificates (ETC) for Nigerians abroad needed to return home urgently.",
+        "keywords": [
+            "Emergency Travel Certificate",
+            "ETC document",
+            "emergency travel document",
+            "repatriation document"
+        ],
+        "category": "interior"
+    },
+    "interas_governance": {
+        "name": "INTERAS Digital Governance",
+        "description": "Technological governance systems within the ministry. Covers internal portals and integrated service delivery platforms.",
+        "keywords": [
+            "INTERAS",
+            "interior ministry portal",
+            "integrated service platform"
+        ],
+        "category": "interior"
+    },
+    "interior_performance_management": {
+        "name": "Performance Management System",
+        "description": "Tracking and evaluation of ministry performance. Covers KPI monitoring for officers and agencies.",
+        "keywords": [
+            "performance management interior",
+            "KPI tracking interior",
+            "ministry appraisal"
+        ],
+        "category": "interior"
+    },
+    "interior_legal_regulatory": {
+        "name": "Legal & Regulatory Framework",
+        "description": "Laws governing interior affairs. Includes the Immigration Act, Correctional Service Act, and Marriage Act (Federal Marriage Registry).",
+        "keywords": [
+            "Immigration Act",
+            "Correctional Service Act",
+            "Marriage Registry",
+            "court marriage",
+            "Ikoyi registry"
+        ],
+        "category": "interior"
+    }
+}

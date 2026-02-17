@@ -151,6 +151,8 @@ class SentimentData(Base):
     __table_args__ = (
         Index('ix_sentiment_data_run_timestamp', 'run_timestamp'),
         Index('ix_sentiment_data_platform', 'platform'),
+        UniqueConstraint('url', name='uq_sentiment_data_url'),
+        UniqueConstraint('original_id', name='uq_sentiment_data_original_id'),
         # Add more indices if needed for frequent query patterns
     )
 
@@ -304,6 +306,7 @@ class TopicIssue(Base):
     issue_slug = Column(String(STRING_LENGTHS['long']), nullable=False, unique=True)  # Globally unique
     issue_label = Column(String(STRING_LENGTHS['very_long']), nullable=False)
     issue_title = Column(String(STRING_LENGTHS['very_long']), nullable=True)  # Auto-generated summary
+    issue_summary = Column(Text, nullable=True)  # LLM-generated detailed summary of the issue
     
     # Topic relationship
     topic_key = Column(String(STRING_LENGTHS['medium']), ForeignKey('topics.topic_key', ondelete='CASCADE'), nullable=False)
@@ -413,6 +416,19 @@ class MentionTopic(Base):
         CheckConstraint('topic_confidence >= 0.0 AND topic_confidence <= 1.0', name='check_confidence_range')
     )
 
+class XStreamRule(Base):
+    """X API Filtered Stream rules - stored in DB, synced to X API."""
+    __tablename__ = 'x_stream_rules'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    value = Column(Text, nullable=False)  # X API filterlang expression (max 1024 chars)
+    tag = Column(String(255), nullable=True)  # Optional label for matching Posts
+    is_active = Column(Boolean, nullable=False, default=True)
+    x_rule_id = Column(String(50), nullable=True)  # X API rule ID (for delete)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
 class OwnerConfig(Base):
     """Owner (president/minister) configurations for topic filtering."""
     __tablename__ = 'owner_configs'
@@ -492,6 +508,7 @@ class IssueMention(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     issue_id = Column(UUID(as_uuid=True), ForeignKey('topic_issues.id', ondelete='CASCADE'), nullable=False)
     mention_id = Column(Integer, ForeignKey('sentiment_data.entry_id', ondelete='CASCADE'), nullable=False)
+    cluster_id = Column(UUID(as_uuid=True), ForeignKey('processing_clusters.id', ondelete='SET NULL'), nullable=True)
     
     # Clustering metadata
     similarity_score = Column(Float, nullable=False)  # How similar to issue cluster
@@ -503,13 +520,15 @@ class IssueMention(Base):
     # Relationships
     issue = relationship("TopicIssue", back_populates="issue_mentions")
     mention = relationship("SentimentData")
+    cluster = relationship("ProcessingCluster", back_populates="issue_mentions")
     
     # Constraints
     __table_args__ = (
         UniqueConstraint('issue_id', 'mention_id', name='uq_issue_mention'),
         Index('idx_issue_mentions_issue', 'issue_id'),
         Index('idx_issue_mentions_mention', 'mention_id'),
-        Index('idx_issue_mentions_topic', 'topic_key')
+        Index('idx_issue_mentions_topic', 'topic_key'),
+        Index('idx_issue_mentions_cluster', 'cluster_id')
     )
 
 
@@ -538,6 +557,54 @@ class TopicIssueLink(Base):
         UniqueConstraint('topic_key', 'issue_id', name='uq_topic_issue_link'),
         Index('idx_topic_issue_links_topic', 'topic_key'),
         Index('idx_topic_issue_links_issue', 'issue_id')
+    )
+
+
+# ============================================
+# Cluster Persistence Models (Traceable clustering)
+# ============================================
+
+
+class ProcessingCluster(Base):
+    """Persisted clusters for traceable issue formation."""
+    __tablename__ = 'processing_clusters'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    topic_key = Column(String(STRING_LENGTHS['medium']), nullable=False)
+    cluster_type = Column(String(STRING_LENGTHS['short']), nullable=False, default='dynamic')  # 'static' | 'dynamic'
+    centroid = Column(JSONB, nullable=True)  # Stored as JSON array for portability
+    size = Column(Integer, default=0)
+    density_score = Column(Float, nullable=True)
+    status = Column(String(STRING_LENGTHS['short']), nullable=False, default='active')  # active|promoted|merged|expired|noise
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    cluster_mentions = relationship("ClusterMention", back_populates="cluster", cascade="all, delete-orphan")
+    issue_mentions = relationship("IssueMention", back_populates="cluster")
+
+    __table_args__ = (
+        Index('idx_processing_clusters_topic', 'topic_key'),
+        Index('idx_processing_clusters_status', 'status'),
+    )
+
+
+class ClusterMention(Base):
+    """Link mentions to clusters for audit and incremental updates."""
+    __tablename__ = 'cluster_mentions'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    cluster_id = Column(UUID(as_uuid=True), ForeignKey('processing_clusters.id', ondelete='CASCADE'), nullable=False)
+    mention_id = Column(Integer, ForeignKey('sentiment_data.entry_id', ondelete='CASCADE'), nullable=False)
+    similarity_score = Column(Float, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    cluster = relationship("ProcessingCluster", back_populates="cluster_mentions")
+    mention = relationship("SentimentData")
+
+    __table_args__ = (
+        UniqueConstraint('cluster_id', 'mention_id', name='uq_cluster_mention'),
+        Index('idx_cluster_mentions_cluster', 'cluster_id'),
+        Index('idx_cluster_mentions_mention', 'mention_id'),
     )
 
 

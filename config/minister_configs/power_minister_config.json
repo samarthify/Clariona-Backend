@@ -1,0 +1,28 @@
+{
+    "owner": "minister_power",
+    "owner_name": "Minister of Power",
+    "owner_type": "minister",
+    "topics": [
+        "power_governance",
+        "electricity_gen_trans_dist",
+        "power_fuel_gas_supply",
+        "energy_pricing_tariffs",
+        "renewable_energy_transition",
+        "power_public_sentiment",
+        "power_projects_infrastructure",
+        "power_infrastructure_security",
+        "power_media_narrative",
+        "power_regional_issues",
+        "power_investments_partnerships",
+        "power_operational_metrics"
+    ],
+    "priority_topics": [
+        "electricity_gen_trans_dist",
+        "energy_pricing_tariffs",
+        "power_public_sentiment",
+        "power_infrastructure_security"
+    ],
+    "is_active": true,
+    "created_at": "2026-01-12",
+    "updated_at": "2026-01-12"
+}

@@ -1,5 +1,5 @@
 """
-LocalScheduler - Schedules and runs local collectors (YouTube, Radio, RSS).
+LocalScheduler - Schedules and runs local collectors (YouTube, Radio, RSS, News API).
 
 This service uses APScheduler to trigger local collector scripts on a schedule.
 """
@@ -12,7 +12,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-logger = logging.getLogger(__name__)
+# Use dedicated logger for scheduler (writes to logs/scheduler.log)
+logger = logging.getLogger('services.scheduler')
 
 
 class LocalScheduler:
@@ -54,7 +55,16 @@ class LocalScheduler:
                 'schedule': {'hour': 8, 'minute': 0},  # Run at 8 AM daily
                 'enabled': True,
             },
+            'news_api': {
+                'script': 'src/collectors/collect_news_from_api.py',
+                'schedule': {'hour': 9, 'minute': 0},  # Run at 9 AM daily
+                'enabled': True,
+            },
         }
+        
+        # Ensure collectors log directory exists
+        self.collectors_log_dir = self.base_path / 'logs' / 'collectors'
+        self.collectors_log_dir.mkdir(parents=True, exist_ok=True)
     
     async def start(self):
         """
@@ -117,7 +127,7 @@ class LocalScheduler:
     
     async def _run_collector(self, name: str, script_path: str) -> bool:
         """
-        Run a collector script as a subprocess.
+        Run a collector script as a subprocess with separate log files.
         
         Args:
             name: Collector name (for logging).
@@ -135,31 +145,68 @@ class LocalScheduler:
         logger.info(f"Running collector: {name} ({script_path})")
         start_time = datetime.now()
         
+        # Create log file path with timestamp
+        timestamp = start_time.strftime("%Y%m%d_%H%M%S")
+        log_file = self.collectors_log_dir / f"{name}_{timestamp}.log"
+        
         try:
-            # Run as subprocess
+            # Open log file for writing (write mode since each run has unique timestamp)
+            log_file_handle = open(log_file, 'w', encoding='utf-8')
+            
+            # Write header to log file
+            log_file_handle.write(f"\n{'='*80}\n")
+            log_file_handle.write(f"Collector: {name}\n")
+            log_file_handle.write(f"Script: {script_path}\n")
+            log_file_handle.write(f"Started: {start_time.isoformat()}\n")
+            log_file_handle.write(f"{'='*80}\n\n")
+            log_file_handle.flush()
+            
+            # Run as subprocess with log file redirection
             process = await asyncio.create_subprocess_exec(
                 sys.executable,
                 str(full_path),
                 cwd=str(self.base_path),
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+                stdout=log_file_handle,
+                stderr=asyncio.subprocess.STDOUT,  # Redirect stderr to stdout
             )
             
-            stdout, stderr = await process.communicate()
+            await process.wait()
             
             duration = (datetime.now() - start_time).total_seconds()
             
+            # Write footer to log file
+            log_file_handle.write(f"\n{'='*80}\n")
+            log_file_handle.write(f"Completed: {datetime.now().isoformat()}\n")
+            log_file_handle.write(f"Duration: {duration:.1f}s\n")
+            log_file_handle.write(f"Exit Code: {process.returncode}\n")
+            log_file_handle.write(f"{'='*80}\n")
+            log_file_handle.close()
+            
             if process.returncode == 0:
-                logger.info(f"Collector '{name}' completed in {duration:.1f}s")
+                logger.info(f"Collector '{name}' completed in {duration:.1f}s (log: {log_file.name})")
                 return True
             else:
-                logger.error(f"Collector '{name}' failed (exit code {process.returncode})")
-                if stderr:
-                    logger.error(f"stderr: {stderr.decode()[:500]}")
+                logger.error(f"Collector '{name}' failed (exit code {process.returncode}, log: {log_file.name})")
+                # Read last 500 chars from log file for error summary
+                try:
+                    with open(log_file, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        if len(content) > 500:
+                            logger.error(f"Last 500 chars from log: {content[-500:]}")
+                        else:
+                            logger.error(f"Log content: {content}")
+                except Exception as read_err:
+                    logger.error(f"Could not read log file: {read_err}")
                 return False
                 
         except Exception as e:
             logger.error(f"Error running collector '{name}': {e}", exc_info=True)
+            # Try to close log file if it was opened
+            try:
+                if 'log_file_handle' in locals():
+                    log_file_handle.close()
+            except:
+                pass
             return False
     
     def get_next_run_times(self) -> Dict[str, Any]:

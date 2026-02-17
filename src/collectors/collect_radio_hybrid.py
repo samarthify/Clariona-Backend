@@ -531,8 +531,8 @@ class HybridRadioCollector:
                             'country': 'Nigeria',
                             'region': self.radio_stations[station_name]['region'],
                             'location': self.radio_stations[station_name]['location'],
-                            'date': datetime.now().strftime('%Y-%m-%d'),
-                            'published_date': datetime.now().strftime('%Y-%m-%d'),
+                            'date': None,  # Let data ingestor use run_timestamp as fallback
+                            'published_date': None,  # Let data ingestor use run_timestamp as fallback
                             'query': 'radio_collection',
                             'file_source': 'radio_hybrid',
                             'description': description[:200] + '...' if len(description) > 200 else description,
@@ -844,16 +844,19 @@ class HybridRadioCollector:
                     has_skip_keywords = any(skip in full_text for skip in skip_keywords)
                     
                     if has_news_keywords and not has_skip_keywords and len(title) > 10:
-                        # Parse published date
-                        published_date = datetime.now().strftime('%Y-%m-%d')
+                        # Parse published date from RSS feed entry
+                        # IMPORTANT: Only use actual publication date from RSS feed, don't default to today
+                        # Let data ingestor handle fallback to run_timestamp if date is missing
+                        published_date = None
                         if published:
                             try:
                                 # Try to parse various date formats
                                 import dateutil.parser
                                 parsed_date = dateutil.parser.parse(published)
                                 published_date = parsed_date.strftime('%Y-%m-%d')
-                            except:
-                                pass
+                            except Exception as e:
+                                logger.debug(f"Could not parse published date '{published}' from RSS feed: {e}")
+                                published_date = None
                         
                         article_data = {
                             'title': title,
@@ -867,8 +870,8 @@ class HybridRadioCollector:
                             'country': 'Nigeria',
                             'region': self.radio_stations[station_name]['region'],
                             'location': self.radio_stations[station_name]['location'],
-                            'date': published_date,
-                            'published_date': published_date,
+                            'date': published_date,  # May be None - data ingestor will use run_timestamp as fallback
+                            'published_date': published_date,  # May be None - data ingestor will use run_timestamp as fallback
                             'query': 'radio_collection',
                             'file_source': 'radio_hybrid',
                             'description': content[:200] + '...' if len(content) > 200 else content,
@@ -967,30 +970,32 @@ class HybridRadioCollector:
                 if link_element:
                     url = urljoin(base_url, link_element.get('href'))
             
-            # Extract date (look for common date patterns)
-            date = datetime.now().strftime('%Y-%m-%d')
-            date_text = element.get_text()
-            date_patterns = [
-                r'(\d{1,2}[/-]\d{1,2}[/-]\d{4})',
-                r'(\d{4}[/-]\d{1,2}[/-]\d{1,2})',
-                r'(\w+ \d{1,2}, \d{4})',
-                r'(\d{1,2} \w+ \d{4})'
-            ]
+            # Extract date - IMPORTANT: Don't extract dates from article text content
+            # This can incorrectly pick up dates mentioned in the article (e.g., "John 12/01/2026")
+            # Instead, try to find publication date in metadata, or leave None for data ingestor to handle
+            date = None
             
-            for pattern in date_patterns:
-                match = re.search(pattern, date_text)
-                if match:
+            # Try to find publication date in meta tags or structured data (not in article text)
+            # Look for common meta tag patterns for publication dates
+            meta_published = element.find('meta', {'property': 'article:published_time'}) or \
+                           element.find('meta', {'name': 'publishdate'}) or \
+                           element.find('meta', {'name': 'pubdate'}) or \
+                           element.find('meta', {'name': 'date'}) or \
+                           element.find('time', {'datetime': True})
+            
+            if meta_published:
+                date_attr = meta_published.get('content') or meta_published.get('datetime')
+                if date_attr:
                     try:
-                        parsed_date = datetime.strptime(match.group(1), '%m/%d/%Y')
+                        import dateutil.parser
+                        parsed_date = dateutil.parser.parse(date_attr)
                         date = parsed_date.strftime('%Y-%m-%d')
-                        break
-                    except:
-                        try:
-                            parsed_date = datetime.strptime(match.group(1), '%Y-%m-%d')
-                            date = parsed_date.strftime('%Y-%m-%d')
-                            break
-                        except:
-                            continue
+                    except Exception as e:
+                        logger.debug(f"Could not parse date from meta tag '{date_attr}': {e}")
+                        date = None
+            
+            # If no date found in metadata, leave as None
+            # Data ingestor will use run_timestamp as fallback, which is more accurate than extracting from text
             
             # Only return if we have meaningful content - more lenient requirements
             if title and len(title) > 8 and len(text) > 30:

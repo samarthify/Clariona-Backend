@@ -22,13 +22,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class NewsAPICollector:
-    def __init__(self):
+    def __init__(self, user_id: Optional[str] = None):
         # Load .env from collectors folder
         env_path = Path(__file__).parent / '.env'
         load_dotenv(env_path)
         from src.config.path_manager import PathManager
         self.path_manager = PathManager()
         self.base_path = self.path_manager.base_path
+        
+        # Initialize database session and ingestor
+        from src.api.database import SessionLocal
+        from src.services.data_ingestor import DataIngestor
+        self.session_db = SessionLocal()
+        self.user_id = user_id
+        self.ingestor = DataIngestor(self.session_db, user_id=user_id)
         
         # API Keys - Only keeping functional ones
         self.mediastack_key = os.getenv("MEDIASTACK_API_KEY")
@@ -207,13 +214,17 @@ class NewsAPICollector:
                         
                         articles.append({
                             "source": "News",
-                            "platform": article.get("source", "Mediastack"),
-                            "type": "post",
-                            "post_id": article.get("url", "").split("/")[-1],
-                            "date": article.get("published_at"),
+                            "platform": "website",  # News articles are from websites
+                            "source_type": "news_api",
+                            "title": article.get("title", ""),
                             "text": f"{article.get('title', '')} {article.get('description', '')}",
+                            "description": article.get("description", ""),
                             "url": article.get("url"),
-                            "country": country_name
+                            "published_at": article.get("published_at"),
+                            "published_date": article.get("published_at"),
+                            "date": article.get("published_at"),
+                            "country": country_name,
+                            "user_name": article.get("source", {}).get("name", "Mediastack") if isinstance(article.get("source"), dict) else article.get("source", "Mediastack")
                         })
             
             # Log breakdown by country
@@ -281,13 +292,17 @@ class NewsAPICollector:
                         
                         articles.append({
                             "source": "News",
-                            "platform": article.get("source", {}).get("name", "GNews"),
-                            "type": "post",
-                            "post_id": article.get("url", "").split("/")[-1],
-                            "date": article.get("publishedAt"),
+                            "platform": "website",  # News articles are from websites
+                            "source_type": "news_api",
+                            "title": article.get("title", ""),
                             "text": f"{article.get('title', '')} {article.get('description', '')}",
+                            "description": article.get("description", ""),
                             "url": article.get("url"),
-                            "country": country_name
+                            "published_at": article.get("publishedAt"),
+                            "published_date": article.get("publishedAt"),
+                            "date": article.get("publishedAt"),
+                            "country": country_name,
+                            "user_name": article.get("source", {}).get("name", "GNews") if isinstance(article.get("source"), dict) else "GNews"
                         })
             
             # Log breakdown by country
@@ -341,23 +356,45 @@ class NewsAPICollector:
             all_articles.extend(gnews_articles)
         
         if all_articles:
-            df = pd.DataFrame(all_articles)
+            # Remove duplicates based on URL (keep first occurrence)
+            unique_articles = {}
+            for article in all_articles:
+                url = article.get('url')
+                if url and url not in unique_articles:
+                    unique_articles[url] = article
             
-            # Remove duplicates based on URL and text
-            initial_count = len(df)
-            df = df.drop_duplicates(subset=['url'])
-            url_dedup_count = len(df)
-            df = df.drop_duplicates(subset=['text'])
-            final_count = len(df)
+            final_articles = list(unique_articles.values())
+            initial_count = len(all_articles)
+            final_count = len(final_articles)
             
-            # Save to CSV
-            if os.path.exists(output_file):
-                existing_df = pd.read_csv(output_file)
-                df = pd.concat([existing_df, df], ignore_index=True)
-                df = df.drop_duplicates(subset=['url'])
-                df = df.drop_duplicates(subset=['text'])
+            # Store to database using DataIngestor
+            ingested_count = 0
+            for article in final_articles:
+                try:
+                    result = self.ingestor.insert_record(article, commit=False)
+                    if result in ['inserted', 'updated']:
+                        ingested_count += 1
+                except Exception as e:
+                    logger.error(f"Error ingesting article {article.get('url', 'unknown')}: {e}")
+                    continue
             
-            df.to_csv(output_file, index=False)
+            # Commit all records
+            try:
+                self.session_db.commit()
+                logger.info(f"Ingested {ingested_count} articles to database")
+            except Exception as e:
+                logger.error(f"Error committing articles to database: {e}")
+                self.session_db.rollback()
+            
+            # Also save to CSV as backup
+            if final_articles:
+                df = pd.DataFrame(final_articles)
+                if os.path.exists(output_file):
+                    existing_df = pd.read_csv(output_file)
+                    df = pd.concat([existing_df, df], ignore_index=True)
+                    df = df.drop_duplicates(subset=['url'])
+                
+                df.to_csv(output_file, index=False)
             
             target_name = self.target_config.name if self.target_config else "Default Target"
             logger.info(f"\nCollection Summary for {target_name}:")
@@ -365,12 +402,11 @@ class NewsAPICollector:
             for source, count in source_counts.items():
                 logger.info(f"  - {source}: {count} articles")
             logger.info(f"Initial article count: {initial_count}")
-            logger.info(f"After URL deduplication: {url_dedup_count}")
-            logger.info(f"After text deduplication: {final_count}")
+            logger.info(f"After URL deduplication: {final_count}")
+            logger.info(f"Ingested {ingested_count} unique articles to database")
             logger.info(f"Saved {final_count} unique articles to {output_file}")
         else:
-            # logger.warning("No articles collected from any source")
-            pass # Added pass to avoid indentation error
+            logger.warning("No articles collected from any source")
 
 def main(target_and_variations: List[str], user_id: Optional[str] = None):
     """Main function called by run_collectors. Accepts target/variations list and user_id."""
@@ -378,16 +414,19 @@ def main(target_and_variations: List[str], user_id: Optional[str] = None):
         print("[News API] Error: No target/query variations provided.")
         return
     
+    # Get user_id from environment if not provided (for standalone runs)
     if not user_id:
-        print("[News API] Error: No user_id provided.")
-        return
+        user_id = os.getenv('COLLECTOR_USER_ID') or os.getenv('STREAMING_USER_ID')
+        if not user_id:
+            print("[News API] Warning: No user_id provided. Collector will run but data may not be associated with a user.")
+            # Continue anyway - collector can work without user_id
         
     target_name = target_and_variations[0]
     queries = target_and_variations[1:]
     print(f"[News API] Received Target: {target_name}, Queries: {queries}, User ID: {user_id}")
     
-    # Instantiate the collector
-    collector = NewsAPICollector()
+    # Instantiate the collector with user_id
+    collector = NewsAPICollector(user_id=user_id)
     
     # Try to determine target configuration
     try:
@@ -410,6 +449,12 @@ def main(target_and_variations: List[str], user_id: Optional[str] = None):
 
     # Call the collector's collect_all method
     collector.collect_all(queries=queries, output_file=str(output_file))
+    
+    # Close database session
+    try:
+        collector.session_db.close()
+    except:
+        pass
 
 # Keep __main__ block for testing
 if __name__ == "__main__":
@@ -441,6 +486,8 @@ if __name__ == "__main__":
             sys.exit(1)
     else:
         print("Running News API collector directly (without args)... Use run_collectors.py for proper execution.")
-        main(["Modi", "India", "BJP", "Election", "Politics"])
+        # Get user_id from environment or use None (collector will handle it)
+        user_id = os.getenv('COLLECTOR_USER_ID') or os.getenv('STREAMING_USER_ID')
+        main(["Modi", "India", "BJP", "Election", "Politics"], user_id=user_id)
 
     

@@ -1,0 +1,26 @@
+{
+    "owner": "minister_agriculture",
+    "owner_name": "Minister of Agriculture",
+    "owner_type": "minister",
+    "topics": [
+        "national_food_security_supply",
+        "staple_crops_production",
+        "farmer_sentiment_distress",
+        "agricultural_inputs",
+        "food_prices_market_dynamics",
+        "climate_agricultural_disasters",
+        "government_policy_programs",
+        "livestock_fisheries",
+        "trade_supply_chain",
+        "public_unrest_food_related"
+    ],
+    "priority_topics": [
+        "national_food_security_supply",
+        "food_prices_market_dynamics",
+        "climate_agricultural_disasters",
+        "government_policy_programs"
+    ],
+    "is_active": true,
+    "created_at": "2026-01-12",
+    "updated_at": "2026-01-12"
+}

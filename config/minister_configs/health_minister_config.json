@@ -1,0 +1,30 @@
+{
+    "owner": "minister_health",
+    "owner_name": "Minister of Health",
+    "owner_type": "minister",
+    "topics": [
+        "health_governance_policy",
+        "disease_outbreaks_surveillance",
+        "endemic_infectious_diseases",
+        "antimicrobial_resistance",
+        "hospitals_healthcare_facilities",
+        "health_workforce",
+        "workforce_strikes_protests",
+        "drugs_pharmaceuticals",
+        "vaccines_immunization",
+        "maternal_child_health",
+        "nutrition_food_security",
+        "public_sentiment_complaints",
+        "health_misinformation_rumors",
+        "health_emergencies_disasters"
+    ],
+    "priority_topics": [
+        "disease_outbreaks_surveillance",
+        "health_governance_policy",
+        "workforce_strikes_protests",
+        "maternal_child_health"
+    ],
+    "is_active": true,
+    "created_at": "2026-01-12",
+    "updated_at": "2026-01-12"
+}

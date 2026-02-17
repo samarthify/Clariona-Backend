@@ -5,7 +5,9 @@ Enhanced with spaCy NLP for better keyword matching (lemmatization, phrase match
 
 # Standard library imports
 import json
+import os
 import sys
+import threading
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Union, Any
 
@@ -26,21 +28,28 @@ from api.models import Topic, OwnerConfig
 # Local imports - utils
 from utils.similarity import cosine_similarity
 
-# Module-level setup
-logger = get_logger('TopicClassifier')
+# Module-level setup - use services.analysis_worker logger so logs appear together
+logger = get_logger('services.analysis_worker')
 
-# Try to import spaCy for enhanced NLP matching
-try:
-    import spacy
-    from spacy.matcher import Matcher
-    SPACY_AVAILABLE = True
-    logger.debug("spaCy available for enhanced NLP matching")
-except ImportError:
+# DISABLED: spaCy causes severe performance issues with 139 topics and many keywords
+# Each nlp() call takes 10+ seconds, making topic classification take hours per record
+# To re-enable in the future, set ENABLE_SPACY=1 (opt-in instead of opt-out)
+SPACY_ENABLED_BY_ENV = os.environ.get('ENABLE_SPACY', '').lower() in ('1', 'true', 'yes')
+if SPACY_ENABLED_BY_ENV:
+    try:
+        import spacy
+        from spacy.matcher import Matcher
+        SPACY_AVAILABLE = True
+        logger.info("spaCy ENABLED via ENABLE_SPACY environment variable")
+    except ImportError:
+        SPACY_AVAILABLE = False
+        logger.warning("spaCy not available - using basic keyword matching")
+    except Exception as e:
+        SPACY_AVAILABLE = False
+        logger.warning(f"spaCy import failed: {e} - using basic keyword matching")
+else:
     SPACY_AVAILABLE = False
-    logger.warning("spaCy not available - using basic keyword matching. Install with: pip install spacy && python -m spacy download en_core_web_sm")
-except Exception as e:
-    SPACY_AVAILABLE = False
-    logger.warning(f"spaCy import failed: {e} - using basic keyword matching")
+    logger.info("spaCy disabled (default) - using fast basic keyword matching. Set ENABLE_SPACY=1 to enable.")
 
 
 class TopicClassifier:
@@ -141,10 +150,12 @@ class TopicClassifier:
                 logger.warning(f"Failed to load spaCy model: {e} - using basic keyword matching")
                 self.use_spacy = False
         
+        # spaCy is not thread-safe; serialize classify() when multiple workers share this instance
+        self._classify_lock = threading.Lock() if self.use_spacy else None
         logger.info(
             f"TopicClassifier initialized with {len(self.master_topics)} topics, "
             f"{len(self.topic_embeddings)} embeddings loaded"
-            f"{', spaCy enabled' if self.use_spacy else ''}"
+            f"{', spaCy enabled (thread-safe lock)' if self.use_spacy else ''}"
         )
     
     def _get_db_session(self) -> Session:  # type: ignore[no-any-return]
@@ -288,19 +299,60 @@ class TopicClassifier:
             ]
         """
         if not text or not text.strip():
+            logger.debug("TopicClassifier.classify: Empty text, returning []")
             return []
         
-        # If no embedding provided, use keyword-only classification
-        if not text_embedding or len(text_embedding) != 1536:
-            logger.debug("Invalid or missing embedding provided, using keyword-only classification")
-            return self._classify_keyword_only(text)
-        
+        # spaCy nlp() is not thread-safe; serialize when multiple analysis workers share this classifier
+        lock = getattr(self, '_classify_lock', None)
+        logger.info(f"TopicClassifier.classify: Entering (lock={lock is not None}, use_spacy={getattr(self, 'use_spacy', False)})")
+        if lock:
+            logger.info("TopicClassifier.classify: Waiting to acquire lock...")
+            lock.acquire()
+            logger.info("TopicClassifier.classify: Lock acquired")
+        try:
+            # If no embedding provided, use keyword-only classification (also uses spaCy for keywords)
+            if not text_embedding or len(text_embedding) != 1536:
+                logger.info("TopicClassifier.classify: Invalid/missing embedding, using keyword-only")
+                result = self._classify_keyword_only(text)
+                logger.info(f"TopicClassifier.classify: keyword-only returned {len(result)} topics")
+                return result
+            logger.info("TopicClassifier.classify: Calling _classify_impl with embedding")
+            result = self._classify_impl(text, text_embedding)
+            logger.info(f"TopicClassifier.classify: _classify_impl returned {len(result)} topics")
+            return result
+        except Exception as e:
+            logger.error(f"TopicClassifier.classify: Exception in classify: {e}", exc_info=True)
+            raise
+        finally:
+            # Log spaCy call count if any
+            spacy_calls = getattr(self, '_spacy_call_count', 0)
+            if spacy_calls > 0:
+                logger.info(f"TopicClassifier.classify: Total spaCy calls this classify: {spacy_calls}")
+                self._spacy_call_count = 0  # Reset for next call
+            if lock:
+                logger.info("TopicClassifier.classify: Releasing lock")
+                lock.release()
+    
+    def _classify_impl(self, text: str, text_embedding: Optional[List[float]] = None) -> List[Dict[str, Any]]:
+        """Internal classify implementation (called with lock held when spaCy is enabled)."""
+        import time as _time
+        start_time = _time.time()
+        num_topics = len(self.master_topics)
+        logger.info(f"TopicClassifier._classify_impl: STARTED ({num_topics} topics to check)")
         text_embedding_array = np.array(text_embedding, dtype=np.float64)
         text_lower = text.lower()
+        logger.info(f"TopicClassifier._classify_impl: text prepared (len={len(text_lower)})")
         
         topic_scores = []
+        topics_checked = 0
         
         for topic_key, topic_data in self.master_topics.items():
+            topics_checked += 1
+            # Log progress every 10 topics
+            if topics_checked % 10 == 0:
+                elapsed = _time.time() - start_time
+                logger.info(f"TopicClassifier._classify_impl: checked {topics_checked}/{num_topics} topics ({elapsed:.1f}s elapsed)")
+            
             # Keyword matching with AND/OR support
             keyword_groups = topic_data.get('keyword_groups')
             keywords = topic_data.get('keywords', [])
@@ -349,7 +401,10 @@ class TopicClassifier:
         
         # Sort by confidence and return top N
         topic_scores.sort(key=lambda x: x['confidence'], reverse=True)
-        return topic_scores[:self.max_topics]
+        result = topic_scores[:self.max_topics]
+        elapsed = _time.time() - start_time
+        logger.info(f"TopicClassifier._classify_impl: DONE ({num_topics} topics -> {len(result)} results in {elapsed:.2f}s)")
+        return result
     
     def _keyword_match(self, text_lower: str, keywords: Optional[List[str]] = None, keyword_groups: Optional[Dict[Any, Any]] = None) -> float:
         """
@@ -540,8 +595,16 @@ class TopicClassifier:
         if not self.nlp:
             return False
         
+        # Track call count for debugging (increment counter)
+        if not hasattr(self, '_spacy_call_count'):
+            self._spacy_call_count = 0
+        self._spacy_call_count += 1
+        # Log every 50 calls to avoid flooding
+        if self._spacy_call_count % 50 == 1:
+            logger.info(f"_spacy_keyword_match: call #{self._spacy_call_count} (keyword='{keyword[:30]}...' if long)")
+        
         try:
-            # Process text and keyword with spaCy
+            # Process text and keyword with spaCy (this is the slow part!)
             doc = self.nlp(text)
             keyword_doc = self.nlp(keyword)
             

@@ -1,0 +1,166 @@
+{
+    "transport_governance": {
+        "name": "Ministry, Leadership & Governance",
+        "description": "Activities of the Federal Ministry of Transportation. Includes policy announcements, ministerial inspections, transport budgets, and regulatory frameworks governing the sector.",
+        "keywords": [
+            "Ministry of Transportation",
+            "Minister of Transport",
+            "transport policy",
+            "transport budget",
+            "transport regulation",
+            "federal executive council transport"
+        ],
+        "category": "transport"
+    },
+    "road_transport_highways": {
+        "name": "Road Transport & Highways",
+        "description": "Condition and management of federal roads and highways. Covers potholes, road rehabilitation, FERMA (Federal Roads Maintenance Agency), and major expressways (Lagos-Ibadan, Abuja-Kano).",
+        "keywords": [
+            "FERMA",
+            "federal road",
+            "expressway",
+            "highway",
+            "pothole",
+            "bad road",
+            "road rehabilitation",
+            "road construction",
+            "Lagos-Ibadan expressway",
+            "Abuja-Kaduna road",
+            "Second Niger Bridge"
+        ],
+        "category": "transport"
+    },
+    "rail_transport": {
+        "name": "Rail Transport",
+        "description": "Railway services and infrastructure. Includes NRC (Nigeria Railway Corporation), train schedules, ticket handling, Abuja-Kaduna train, Lagos-Ibadan rail, and Warri-Itakpe line.",
+        "keywords": [
+            "NRC",
+            "Nigeria Railway Corporation",
+            "train service",
+            "railway",
+            "Abuja-Kaduna train",
+            "Lagos-Ibadan rail",
+            "rail line",
+            "train station",
+            "train ticket",
+            "e-ticketing"
+        ],
+        "category": "transport"
+    },
+    "aviation_airports": {
+        "name": "Aviation & Airports",
+        "description": "Air travel sector. Covers FAAN, NCAA, airport conditions (MMIA, Nnamdi Azikiwe), flight delays, airline operations (Air Peace, etc.), and aviation fuel scarcity.",
+        "keywords": [
+            "FAAN",
+            "NCAA",
+            "airport",
+            "flight delay",
+            "airline",
+            "aviation fuel",
+            "Jet A1",
+            "domestic flight",
+            "international terminal",
+            "Muritala Muhammed Airport",
+            "Nnamdi Azikiwe Airport"
+        ],
+        "category": "transport"
+    },
+    "maritime_ports": {
+        "name": "Maritime, Ports & Logistics",
+        "description": "Sea transport and ports authority. Includes NPA (Nigerian Ports Authority), NIMASA, Apapa Port, Tin Can Island, port congestion, customs clearance, and waterways.",
+        "keywords": [
+            "NPA",
+            "Nigerian Ports Authority",
+            "NIMASA",
+            "Apapa Port",
+            "Tin Can Island",
+            "Lekki Deep Sea Port",
+            "port congestion",
+            "clearing agent",
+            "customs transport",
+            "inland waterways",
+            "NIWA"
+        ],
+        "category": "transport"
+    },
+    "transport_safety_accidents": {
+        "name": "Safety, Accidents & Emergencies",
+        "description": "Transport safety and road crashes. Includes FRSC (Federal Road Safety Corps), road accidents, tanker explosions, train derailments, and air crashes/incidents.",
+        "keywords": [
+            "FRSC",
+            "Road Safety",
+            "road accident",
+            "auto crash",
+            "tanker explosion",
+            "train derailment",
+            "plane crash",
+            "emergency response transport",
+            "fatality road"
+        ],
+        "category": "transport"
+    },
+    "infrastructure_projects_delivery": {
+        "name": "Infrastructure Projects & Delivery",
+        "description": "Major transport infrastructure projects. Covers completion of rail lines, new airport terminals, bridge construction, and project timelines.",
+        "keywords": [
+            "rail project",
+            "airport terminal project",
+            "road project",
+            "infrastructure delivery",
+            "commissioning transport",
+            "construction delay",
+            "contractor road"
+        ],
+        "category": "transport"
+    },
+    "urban_transport_fares": {
+        "name": "Urban Transport, Fares & Green Mobility",
+        "description": "Intra-city commuting and costs. Includes transport fares (T-fare), BRT buses, Okada/Keke bans, Danfo, CNG buses (Compressed Natural Gas), and electric vehicle initiatives.",
+        "keywords": [
+            "transport fare",
+            "t-fare",
+            "bus fare",
+            "BRT",
+            "Danfo",
+            "Okada ban",
+            "Keke NAPEP",
+            "CNG bus",
+            "transport cost",
+            "commuter",
+            "traffic jam",
+            "go-slow"
+        ],
+        "category": "transport"
+    },
+    "transport_labour_unions": {
+        "name": "Public Sentiment, Labour & Media",
+        "description": "Transport unions and worker sentiment. Covers NURTW (National Union of Road Transport Workers), RTEAN, NARTO, transport strikes, and public complaints.",
+        "keywords": [
+            "NURTW",
+            "RTEAN",
+            "NARTO",
+            "road transport union",
+            "transport strike",
+            "agbero",
+            "park management",
+            "driver union",
+            "railway worker strike"
+        ],
+        "category": "transport"
+    },
+    "transport_crisis_signals": {
+        "name": "Early Warning & Crisis Signals",
+        "description": "Security risks in transport. Includes kidnapping on highways, attacks on trains, robbery in traffic (one chance), and blockades of roads.",
+        "keywords": [
+            "kidnap road",
+            "highway robbery",
+            "train attack",
+            "one chance",
+            "traffic robbery",
+            "road blockade",
+            "travel risk",
+            "unsafe road"
+        ],
+        "category": "transport"
+    }
+}

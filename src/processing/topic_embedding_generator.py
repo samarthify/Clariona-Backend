@@ -7,7 +7,7 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 import openai
@@ -21,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from api.database import SessionLocal
 from api.models import Topic
 from utils.openai_rate_limiter import get_rate_limiter
+from src.config.path_manager import PathManager
 
 logger = logging.getLogger('TopicEmbeddingGenerator')
 
@@ -202,7 +203,7 @@ class TopicEmbeddingGenerator:
                 "version": "1.0",
                 "model": "text-embedding-3-small",
                 "embeddings": embeddings,
-                "last_generated": datetime.now(datetime.timezone.utc).isoformat(),
+                "last_generated": datetime.now(timezone.utc).isoformat(),
                 "topic_count": len(embeddings)
             }
             

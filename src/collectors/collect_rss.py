@@ -413,12 +413,22 @@ class RSSFeedCollector:
                     if not content:
                         content = entry.get('summary', description)
                     
+                    # Get published date from RSS feed entry, checking multiple possible fields
+                    # RSS feeds may use 'published', 'updated', or 'pubDate'
+                    # Let data ingestor handle fallback to run_timestamp if date is missing
+                    published_date = (
+                        entry.get('published') or 
+                        entry.get('updated') or 
+                        entry.get('pubDate') or 
+                        None
+                    )
+                    
                     article = {
                         'title': self._clean_text(title),
                         'description': self._clean_text(description),
                         'content': self._clean_text(content),
                         'url': entry.get('link', ''),
-                        'published_date': entry.get('published', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+                        'published_date': published_date,  # None if not available - data ingestor will use run_timestamp
                         'source': feed.feed.get('title', feed_url),
                         'source_url': feed_url,
                         'query': query,

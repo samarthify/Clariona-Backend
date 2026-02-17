@@ -184,25 +184,58 @@ class ConfigManager:
                     "negative_threshold": -0.2,
                     "default_neutral_score": 0.5
                 },
+                "issue": {
+                    "clustering": {
+                        "similarity_threshold": 0.5,
+                        "min_cluster_size": 20,  # Minimum mentions required per cluster
+                        "time_window_hours": 168
+                    },
+                    "dbscan": {
+                        "enabled": True,
+                        "eps": 0.3,  # Increased from 0.25 - allows slightly looser clusters (similarity >= 0.70)
+                        "min_samples": 10  # Lowered from 50 - DBSCAN core points (can grow to min_cluster_size)
+                    },
+                    "incremental": {
+                        "attach_similarity_threshold": 0.70,
+                        "cluster_expiry_hours": 336,  # 2 weeks
+                        "cluster_merge_enabled": True,
+                        "cluster_merge_max_clusters": 100  # Limit merge checks to avoid O(n²) slowdown
+                    },
+                    "detection": {
+                        "issue_similarity_threshold": 0.70
+                    },
+                    "promotion": {
+                        "enabled": True,
+                        "top_n": 5,
+                        "min_density_threshold": 0.0,
+                        "max_active_issues": 30  # Hard limit on total active issues
+                    },
+                    "creation": {
+                        "min_sentiment_magnitude": 0.0,
+                        "min_negative_sentiment_ratio": 0.0,
+                        "min_volume_current_window": 0,
+                        "min_velocity_percent": -100.0,
+                        "min_source_diversity": 0,  # Removed requirement - allow any source diversity
+                        "min_emotion_severity": 0.0,
+                        "require_negative_sentiment": False,
+                        "max_time_span_hours": None
+                    },
+                    "volume": {
+                        "time_window_hours": 24
+                    }
+                },
                 "prompts": {
                     "presidential_sentiment": {
-                        "system_message": "You are a strategic advisor to {president_name} analyzing media impact.",
-                        "user_template": """Analyze media from {president_name}'s perspective. Evaluate: Does this help or hurt the President's power/reputation/governance?
+                        "system_message": "You advise {president_name} on media impact.",
+                        "user_template": """Classify this text for {president_name}'s agenda impact.
 
-Categories:
-- POSITIVE: Strengthens image/agenda, builds political capital
-- NEGATIVE: Threatens image/agenda, creates problems
-- NEUTRAL: No material impact
-
-Response format:
-Sentiment: [POSITIVE/NEGATIVE/NEUTRAL]
-Sentiment Score: [-1.0 to 1.0] (POSITIVE: 0.2-1.0, NEGATIVE: -1.0 to -0.2, NEUTRAL: -0.2 to 0.2)
-Justification: [Brief strategic reasoning]
-Topics: [comma-separated topics]
+Sentiment: [positive/negative/neutral]
+Sentiment Score: [-1.0 to 1.0]
+Justification: [<=25 words]
 
 Text: "{text}"
 """,
-                        "text_truncate_length": 800
+                        "text_truncate_length": 600
                     },
                     "governance": {
                         "system_message": "You are a governance analyst specializing in Nigerian politics and policy.",
@@ -482,7 +515,7 @@ Return JSON:
                     "available": ["gpt-5-mini", "gpt-5-nano", "gpt-4.1-mini", "gpt-4.1-nano"],
                     "tpm_capacities": {
                         "gpt-5-mini": 500000,
-                        "gpt-5-nano": 200000,
+                        "gpt-5-nano": 10000000,
                         "gpt-4.1-mini": 200000,
                         "gpt-4.1-nano": 200000
                     }

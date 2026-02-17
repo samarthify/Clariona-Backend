@@ -8,16 +8,19 @@ triggers sentiment, location, and issue analysis in parallel.
 import asyncio
 import logging
 import time
+from datetime import datetime, timedelta
 import threading
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from typing import Optional, List
+from sqlalchemy import and_, desc, func
 
 # Local imports
 from src.api.database import SessionLocal
 from src.api import models
 from src.config.logging_config import get_logger
 
-logger = get_logger(__name__)
+# Use dedicated logger for analysis worker (writes to logs/analysis_worker.log)
+logger = get_logger('services.analysis_worker')
 
 
 class AnalysisWorker:
@@ -29,7 +32,7 @@ class AnalysisWorker:
     - No complex queue or connection state to manage.
     """
     
-    def __init__(self, max_workers: int = 10, poll_interval: float = 2.0, batch_size: int = 50):
+    def __init__(self, max_workers: int = 25, poll_interval: float = 2.0, batch_size: int = 50):
         """
         Initialize the AnalysisWorker.
         
@@ -123,96 +126,136 @@ class AnalysisWorker:
         except Exception as e:
             logger.error(f"AnalysisWorker: Failed to refresh issue cache: {e}")
     
-    def _fetch_unanalyzed_records(self, limit: int) -> List[int]:
-        """Fetch IDs of records that are missing sentiment analysis."""
+    def _run_with_timeout(self, timeout_sec: float, func, *args, **kwargs):
+        """Run a callable in a thread with a timeout; raise FuturesTimeoutError on timeout."""
+        import time as _time
+        from concurrent.futures import ThreadPoolExecutor
+        func_name = getattr(func, '__name__', str(func))
+        logger.info(f"_run_with_timeout: Starting {func_name} with timeout={timeout_sec}s")
+        start = _time.time()
+        with ThreadPoolExecutor(max_workers=1) as ex:
+            future = ex.submit(func, *args, **kwargs)
+            try:
+                result = future.result(timeout=timeout_sec)
+                elapsed = _time.time() - start
+                logger.info(f"_run_with_timeout: {func_name} completed in {elapsed:.2f}s")
+                return result
+            except Exception as e:
+                elapsed = _time.time() - start
+                logger.warning(f"_run_with_timeout: {func_name} failed/timed out after {elapsed:.2f}s: {e}")
+                raise
+    
+    def _fetch_unanalyzed_records(self, limit: int) -> List[dict]:
+        """
+        Fetch unanalyzed records and include text fields to avoid a second query
+        in the worker just to resolve content.
+        """
         try:
+            logger.info("AnalysisWorker: Creating database session...")
             with SessionLocal() as db:
-                # Query for records with no sentiment label
-                records = db.query(models.SentimentData.entry_id).filter(
-                    models.SentimentData.sentiment_label.is_(None)
+                logger.info("AnalysisWorker: Session created, executing query...")
+                # Calculate cutoff time (last 24 hours)
+                cutoff_time = datetime.now() - timedelta(days=1)
+                
+                rows = db.query(
+                    models.SentimentData.entry_id,
+                    models.SentimentData.text,
+                    models.SentimentData.content,
+                    models.SentimentData.title,
+                    models.SentimentData.description,
+                ).filter(
+                    models.SentimentData.sentiment_label.is_(None),
+                    # Only process records from the last 24 hours
+                    models.SentimentData.date >= cutoff_time
+                ).order_by(
+                    # Order by date
+                    desc(models.SentimentData.date),
+                    # Stable tiebreaker
+                    desc(models.SentimentData.entry_id)
                 ).limit(limit).all()
                 
-                return [r[0] for r in records]
+                logger.info(f"AnalysisWorker: Query executed, got {len(rows)} rows")
+                records: List[dict] = []
+                for row in rows:
+                    entry_id, text, content, title, description = row
+                    text_content = text or content or title or description
+                    records.append({
+                        "entry_id": entry_id,
+                        "text_content": text_content
+                    })
+                logger.info(f"AnalysisWorker: Prepared {len(records)} records, exiting context manager...")
+            # Context manager handles session close
+            logger.info("AnalysisWorker: Session auto-closed by context manager")
+            logger.info(f"AnalysisWorker: About to return {len(records)} records")
+            return records
         except Exception as e:
-            logger.error(f"AnalysisWorker: Error fetching records: {e}")
+            logger.error(f"AnalysisWorker: Error fetching records: {e}", exc_info=True)
             return []
     
-    def _analyze_record(self, entry_id: int):
+    def _analyze_record(self, record_stub: dict):
         """
         Analyze a single record (sentiment, location, issue).
         
         This runs in a thread pool to avoid blocking.
         """
+        entry_id = None
         try:
+            entry_id = record_stub.get("entry_id")
+            prefetched_text = record_stub.get("text_content")
+            logger.info(f"Worker: Starting analysis for entry_id={entry_id}")
+            
             with SessionLocal() as db:
                 record = db.query(models.SentimentData).filter(
                     models.SentimentData.entry_id == entry_id
                 ).first()
                 
                 if not record:
+                    logger.warning(f"Worker [{entry_id}]: Record not found in DB, skipping")
                     return
                 
                 # Double-check if already analyzed (race condition safety)
                 if record.sentiment_label is not None:
+                    logger.info(f"Worker [{entry_id}]: Already analyzed (race), skipping")
                     return
                 
                 # Get text content
-                text_content = record.text or record.content or record.title or record.description
+                text_content = prefetched_text or record.text or record.content or record.title or record.description
                 if not text_content:
-                    logger.warning(f"AnalysisWorker: Record {entry_id} has no text content")
-                    # Mark as processed effectively to avoid infinite loop
+                    logger.warning(f"Worker [{entry_id}]: No text content")
                     record.processing_status = 'failed'
-                    record.sentiment_label = 'neutral' # Fallback
+                    record.sentiment_label = 'neutral'
                     db.commit()
                     return
                 
                 agent = self._get_agent()
                 
-                # --- Location Classification (Phase 5 - Optimized to run first) ---
-                if record.location_label is None:
-                    try:
-                        if hasattr(agent, 'location_classifier') and agent.location_classifier:
-                            # Run local CPU-bound task before network-bound Sentiment Analysis
-                            loc_result = agent.location_classifier.classify(text_content)
-                            # logger.info(f"DEBUG: loc_result type: {type(loc_result)}, value: {loc_result}")
-                            
-                            if isinstance(loc_result, tuple):
-                                # Handle tuple return: likely (label, confidence)
-                                record.location_label = loc_result[0]
-                                conf = loc_result[1] if len(loc_result) > 1 else None
-                                record.location_confidence = float(conf) if conf is not None else None
-                            elif isinstance(loc_result, dict):
-                                # Handle both potential return formats
-                                record.location_label = loc_result.get('location_label') or loc_result.get('state')
-                                conf = loc_result.get('confidence')
-                                record.location_confidence = float(conf) if conf is not None else None
-                    except Exception as e:
-                        logger.error(f"AnalysisWorker: Location classification failed for {entry_id}: {e}")
-
                 # --- Sentiment Analysis ---
                 if record.sentiment_label is None:
                     try:
                         result = agent.sentiment_analyzer.analyze(text_content)
                         record.sentiment_label = result.get('sentiment_label')
                         record.sentiment_score = result.get('sentiment_score')
-                        record.sentiment_justification = result.get('sentiment_justification') # Fixed key
+                        record.sentiment_justification = result.get('sentiment_justification')
+                        
                         if 'embedding' in result:
-                            # FIX: record.embedding is a Relationship, not a Column.
-                            # We must assign a SentimentEmbedding object, not a list.
                             embedding_val = result.get('embedding')
                             if record.embedding:
                                 record.embedding.embedding = embedding_val
                             else:
-                                record.embedding = models.SentimentEmbedding(embedding=embedding_val)
+                                # Create new embedding with explicit entry_id
+                                record.embedding = models.SentimentEmbedding(
+                                    entry_id=entry_id,
+                                    embedding=embedding_val
+                                )
                         
                         # Optimization: Extract emotion data if already provided by sentiment analyzer
                         if result.get('emotion_label'):
                             record.emotion_label = result.get('emotion_label')
                             record.emotion_score = result.get('emotion_score')
                             record.emotion_distribution = result.get('emotion_distribution')
-                            # logger.info(f"AnalysisWorker: Optimization SUCCESS - Emotion data extracted from Phase 1 for record {entry_id}")
                     except Exception as e:
-                        logger.error(f"AnalysisWorker: Sentiment analysis failed for {entry_id}: {e}")
+                        logger.error(f"Worker [{entry_id}]: Sentiment analysis failed: {e}")
+                logger.info(f"Worker [{entry_id}]: Sentiment step done (label={getattr(record, 'sentiment_label', None)})")
 
                 # --- Emotion Analysis (Phase 2 - Disabled/Redundant) ---
                 # Optimization: Phase 1 now provides emotion data 99% of the time.
@@ -240,13 +283,26 @@ class AnalysisWorker:
                              if hasattr(record.embedding, 'embedding'):
                                  embedding = record.embedding.embedding
                         
-                        topic_results = agent.topic_classifier.classify(text_content, embedding)
+                        logger.info(f"Worker [{entry_id}]: Starting topic classification (embedding={'yes' if embedding else 'no'})...")
+                        try:
+                            # Run classify with timeout so one stuck call doesn't block the queue (spaCy can be slow with many topics)
+                            topic_results = self._run_with_timeout(
+                                90.0,
+                                agent.topic_classifier.classify,
+                                text_content,
+                                embedding,
+                            )
+                        except (FuturesTimeoutError, TimeoutError) as e:
+                            logger.warning(f"Worker [{entry_id}]: Topic classification timed out after 90s, skipping topics: {e}")
+                            topic_results = []
+                        logger.info(f"Worker [{entry_id}]: Topic classification returned ({len(topic_results) if topic_results else 0} topics)")
                         
                         # Store topics in MentionTopic table
                         if topic_results:
                             from src.api.models import MentionTopic
                             import uuid
                             
+                            new_topics = []
                             for topic in topic_results:
                                 # Check if already exists
                                 existing_topic = db.query(MentionTopic).filter(
@@ -255,170 +311,169 @@ class AnalysisWorker:
                                 ).first()
                                 
                                 if not existing_topic:
-                                    new_topic = MentionTopic(
+                                    new_topics.append(MentionTopic(
                                         mention_id=entry_id,
                                         topic_key=topic['topic'],
                                         topic_confidence=float(topic.get('confidence', 0.0)),
                                         keyword_score=float(topic.get('keyword_score', 0.0)),
                                         embedding_score=float(topic.get('embedding_score', 0.0))
-                                    )
-                                    db.add(new_topic)
+                                    ))
                                     current_topics.append(topic['topic'])
                                 else:
                                     current_topics.append(topic['topic'])
                             
-                            # Flush to get IDs/Confirm storage before issue detection
+                            if new_topics:
+                                db.add_all(new_topics)
                             db.flush()
                 except Exception as e:
-                     logger.error(f"AnalysisWorker: Topic classification failed for {entry_id}: {e}")
+                     logger.error(f"Worker [{entry_id}]: Topic classification failed: {e}")
+                logger.info(f"Worker [{entry_id}]: Topic classification done ({len(current_topics)} topics)")
 
-                # --- Issue Detection ---
-                # Now using the restored IssueDetectionEngine
-                try:
-                    if hasattr(agent, 'issue_detection_engine') and agent.issue_detection_engine:
-                        # Issue detection works per-topic. We run it for each detected topic.
-                        # This duplicates the logic from DataProcessor.detect_issues_for_topic
-                        # but adapted for a single record flow (real-time).
-                        
-                        # For real-time, we might want to just "add to cluster" or "check against existing issues".
-                        # But IssueDetectionEngine is designed for batch/windowed processing.
-                        # Best approach for streaming: 
-                        # 1. See if this mention matches any *active* issue for its topics.
-                        # 2. If yes, link it.
-                        # 3. If no, we leave it for the periodic "Issue Detection Job" to cluster new issues.
-                        #    (Trying to run full clustering on every single tweet is too expensive/slow).
-                        
-                        # However, user asked for "no gaps". So we will try to link to EXISTING issues immediately.
-                        
-                        from src.api.models import TopicIssue, IssueMention, TopicIssueLink
-                        from src.utils.similarity import cosine_similarity
-                        import json
-                        import numpy as np
-                        
-                        # Get embedding for similarity check
-                        embedding_vec = None
-                        
-                        # FIX: Handle relationship access correctly
-                        raw_embedding = None
-                        if hasattr(record, 'embedding') and record.embedding:
-                             # It's a relationship object
-                             if hasattr(record.embedding, 'embedding'):
-                                 raw_embedding = record.embedding.embedding
-                        
-                        if raw_embedding:
-                             if isinstance(raw_embedding, list):
-                                 embedding_vec = np.array(raw_embedding)
-                             elif isinstance(raw_embedding, str):
-                                 embedding_vec = np.array(json.loads(raw_embedding))
-
-                        if embedding_vec is not None and len(embedding_vec) > 0:
-                            for topic_key in current_topics:
-                                # Get active issues for this topic (FROM CACHE)
-                                active_issues_data = self._get_cached_issues(topic_key)
-                                
-                                best_issue_data = None
-                                best_sim = 0.70 # Threshold from config
-                                
-                                for issue_data in active_issues_data:
-                                    if issue_data['centroid']:
-                                        centroid = np.array(issue_data['centroid'])
-                                        sim = cosine_similarity(embedding_vec, centroid)
-                                        if sim > best_sim:
-                                            best_sim = sim
-                                            best_issue_data = issue_data
-                                
-                                if best_issue_data:
-                                    # Link immediately
-                                    new_link = IssueMention(
-                                        issue_id=best_issue_data['id'],
-                                        mention_id=entry_id,
-                                        similarity_score=float(best_sim),
-                                        topic_key=topic_key
-                                    )
-                                    db.add(new_link)
-                                    
-                                    # Update record for immediate UI feedback
-                                    record.issue_label = best_issue_data['label']
-                                    record.issue_slug = best_issue_data['slug']
-                                    record.issue_slug = best_issue_data['slug']
-                                    # logger.info(f"AnalysisWorker: Linked record {entry_id} to issue {best_issue_data['slug']}")
-                                    
-                                    # Update TopicIssueLink (Found gap: needed for full consistency)
-                                    topic_link = db.query(TopicIssueLink).filter(
-                                        TopicIssueLink.topic_key == topic_key,
-                                        TopicIssueLink.issue_id == best_issue_data['id']
-                                    ).first()
-                                    
-                                    current_count = best_issue_data['mention_count'] + 1 # Approximate increment
-                                    
-                                    if topic_link:
-                                        # Incremental update is safe here? Yes, mostly.
-                                        topic_link.mention_count += 1
-                                        topic_link.last_updated = datetime.now()
-                                    else:
-                                        new_topic_link = TopicIssueLink(
-                                            id=uuid.uuid4(),
-                                            topic_key=topic_key,
-                                            issue_id=best_issue_data['id'],
-                                            mention_count=current_count
-                                        )
-                                        db.add(new_topic_link)
-                                    
-                except Exception as e:
-                    logger.error(f"AnalysisWorker: Issue detection failed for {entry_id}: {e}")
-                
-                # Update processing status
+                # Update processing status and commit
                 record.processing_status = 'completed'
-                from datetime import datetime
                 record.processing_completed_at = datetime.now()
-                
-                db.commit()
                 db.commit()
                 
-                # Check for partial failures to be honest in logs
-                status_msg = "All Phases Done"
-                if record.location_label is None:
-                    status_msg = "Partial (Location Failed)"
-                
-                logger.info(f"AnalysisWorker: COMPLETED | Record {entry_id} | {status_msg}")
+                # Single completion log with summary
+                logger.info(f"✓ Analyzed [{entry_id}] | Sentiment: {record.sentiment_label} | Topics: {len(current_topics)}")
                 
         except Exception as e:
-            logger.error(f"AnalysisWorker: Error analyzing record {entry_id}: {e}", exc_info=True)
+            logger.error(f"✗ Failed [{entry_id}]: {e}", exc_info=True)
     
+    def _claim_records(self, limit: int) -> List[dict]:
+        """
+        Fetch and 'claim' pending records by setting status to 'processing'.
+        Atomic-like operation to allow multiple workers/overlapping batches.
+        """
+        claimed_records = []
+        try:
+            logger.info(f"AnalysisWorker: Claiming up to {limit} pending records (24h window)...")
+            with SessionLocal() as db:
+                # Calculate cutoff time (last 24 hours) - same as _fetch_unanalyzed_records
+                cutoff_time = datetime.now() - timedelta(days=1)
+                
+                # Find pending records — order by date DESC then entry_id DESC so newest
+                # (and newly ingested) records are claimed first; otherwise we drain old
+                # pending rows and new inserts (highest entry_id) never get picked in time.
+                subquery = db.query(models.SentimentData.entry_id).filter(
+                    models.SentimentData.processing_status == 'pending',
+                    models.SentimentData.date >= cutoff_time
+                ).order_by(
+                    desc(models.SentimentData.date),
+                    desc(models.SentimentData.entry_id),
+                ).limit(limit).subquery()
+
+                # Fetch full objects for the selected IDs
+                records_to_claim = db.query(models.SentimentData).filter(
+                    models.SentimentData.entry_id.in_(subquery)
+                ).all()
+
+                if not records_to_claim:
+                    logger.info("AnalysisWorker: No pending records in 24h window")
+                    return []
+
+                # Mark as processing immediately
+                claimed_ids = []
+                for record in records_to_claim:
+                    record.processing_status = 'processing'
+                    claimed_ids.append(record.entry_id)
+                    
+                    # Prepare stub
+                    text_content = record.text or record.content or record.title or record.description
+                    claimed_records.append({
+                        "entry_id": record.entry_id,
+                        "text_content": text_content
+                    })
+                
+                db.commit()
+                logger.info(f"AnalysisWorker: Claimed {len(claimed_records)} records: entry_ids={claimed_ids[:5]}{'...' if len(claimed_ids) > 5 else ''}")
+                return claimed_records
+        except Exception as e:
+            logger.error(f"AnalysisWorker: Error claiming records: {e}", exc_info=True)
+            return []
+
+    def _reset_stuck_processing(self) -> int:
+        """
+        Reset records stuck in 'processing' (e.g. after crash) back to 'pending'.
+        Returns the number of records reset.
+        """
+        try:
+            with SessionLocal() as db:
+                stuck = db.query(models.SentimentData).filter(
+                    and_(
+                        models.SentimentData.processing_status == 'processing',
+                        models.SentimentData.date >= datetime.now() - timedelta(days=1),
+                    )
+                ).all()
+                for r in stuck:
+                    r.processing_status = 'pending'
+                if stuck:
+                    db.commit()
+                    logger.info(f"AnalysisWorker: Reset {len(stuck)} stuck 'processing' record(s) to 'pending' for retry.")
+                return len(stuck)
+        except Exception as e:
+            logger.error(f"AnalysisWorker: Error resetting stuck records: {e}")
+            return 0
+
     async def run_forever(self):
-        """Run the polling loop continuously."""
+        """Run the polling loop continuously with flow control."""
         self._running = True
-        logger.info(f"AnalysisWorker: Starting polling loop (Interval: {self.poll_interval}s)")
-        
-        loop = asyncio.get_event_loop()
+        logger.info(f"AnalysisWorker: Starting continuous processing loop (Max Workers: {self.max_workers})")
+        # Reset any records left in 'processing' from a previous crash
+        await asyncio.to_thread(self._reset_stuck_processing)
+        active_futures = set()
         
         try:
+            loop = asyncio.get_running_loop()
+            last_heartbeat = time.time()
+            heartbeat_interval = 15.0  # log heartbeat every 15s when busy
+            
             while self._running:
-                # 1. Fetch Batch
-                # Run DB fetch in executor to avoid blocking main loop
-                entry_ids = await loop.run_in_executor(
-                    None, self._fetch_unanalyzed_records, self.batch_size
-                )
+                # 1. Clean up finished futures
+                done_futures = {f for f in active_futures if f.done()}
+                active_futures -= done_futures
+                if done_futures:
+                    logger.info(f"AnalysisWorker: {len(done_futures)} task(s) completed this cycle (Active now: {len(active_futures)})")
+                # Retrieve exceptions from done futures to log errors
+                for f in done_futures:
+                    try:
+                        f.result()  # Will raise if exception occurred
+                    except Exception as e:
+                        logger.error(f"AnalysisWorker: Task failed: {e}", exc_info=True)
+
+                # 2. Check capacity
+                capacity = self.max_workers - len(active_futures)
+                if capacity <= 0:
+                    # Full capacity, wait a bit; log heartbeat periodically
+                    now = time.time()
+                    if now - last_heartbeat >= heartbeat_interval:
+                        logger.info(f"AnalysisWorker: At capacity (Active: {len(active_futures)}), waiting for tasks to complete...")
+                        last_heartbeat = now
+                    await asyncio.sleep(0.1)
+                    continue
                 
-                if entry_ids:
-                    logger.info(f"AnalysisWorker: Found {len(entry_ids)} unanalyzed records. Processing...")
-                    
-                    # 2. Process in Parallel
-                    # Submit all tasks to thread pool
-                    futures = [
-                        loop.run_in_executor(self._executor, self._analyze_record, entry_id)
-                        for entry_id in entry_ids
-                    ]
-                    
-                    # Wait for this batch to complete
-                    await asyncio.gather(*futures)
-                    
-                    # Immediate loop if we found a full batch (there might be more)
-                    if len(entry_ids) == self.batch_size:
-                        continue
-                else:
-                    # 3. Sleep if no work
+                # 3. Fetch & Claim (Fetch only what we can handle)
+                fetch_limit = min(self.batch_size, capacity)
+                
+                try:
+                    new_stubs = await asyncio.to_thread(self._claim_records, fetch_limit)
+                except Exception as e:
+                    logger.error(f"AnalysisWorker: Fetch error: {e}", exc_info=True)
+                    await asyncio.sleep(1.0)
+                    continue
+                
+                if not new_stubs:
+                    # No work found, sleep longer
+                    logger.debug(f"AnalysisWorker: No work; sleeping {self.poll_interval}s (Active: {len(active_futures)})")
                     await asyncio.sleep(self.poll_interval)
+                    continue
+                
+                # 4. Submit Tasks
+                for stub in new_stubs:
+                    future = loop.run_in_executor(self._executor, self._analyze_record, stub)
+                    active_futures.add(future)
+                logger.info(f"AnalysisWorker: Submitted {len(new_stubs)} tasks (Active now: {len(active_futures)})")
+                last_heartbeat = time.time()
                     
         except Exception as e:
             logger.error(f"AnalysisWorker: Fatal error: {e}", exc_info=True)

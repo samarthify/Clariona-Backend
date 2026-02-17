@@ -1,0 +1,25 @@
+{
+    "owner": "minister_education",
+    "owner_name": "Minister of Education",
+    "owner_type": "minister",
+    "topics": [
+        "education_institutions_agencies",
+        "education_policies_frameworks",
+        "education_programs_initiatives",
+        "exams_assessments",
+        "education_levels_school_types",
+        "curriculum_academics",
+        "education_stakeholders_roles",
+        "education_geography_administration",
+        "education_funding",
+        "school_infrastructure"
+    ],
+    "priority_topics": [
+        "education_policies_frameworks",
+        "exams_assessments",
+        "education_stakeholders_roles"
+    ],
+    "is_active": true,
+    "created_at": "2026-01-12",
+    "updated_at": "2026-01-12"
+}

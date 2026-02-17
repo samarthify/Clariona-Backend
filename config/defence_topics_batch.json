@@ -1,0 +1,152 @@
+{
+    "defence_leadership_governance": {
+        "name": "Ministry Leadership & Governance",
+        "description": "Leadership of the defense sector. Includes the Minister of Defence, Chief of Defence Staff (CDS), and Defence Headquarters (DHQ) strategic communications.",
+        "keywords": [
+            "Minister of Defence",
+            "Badaru Abubakar",
+            "Bello Matawalle",
+            "Chief of Defence Staff",
+            "CDS",
+            "Defence Headquarters",
+            "DHQ",
+            "defence budget",
+            "military hierarchy"
+        ],
+        "category": "defence"
+    },
+    "defence_operations_command": {
+        "name": "Defence Operations Command Structure",
+        "description": "Operational command and control. Covers different theatre commands, Operation Hadin Kai, Operation Whirl Stroke, and military restructuring.",
+        "keywords": [
+            "Theatre Command",
+            "Operation Hadin Kai",
+            "Operation Whirl Stroke",
+            "Operation Safe Haven",
+            "Operation Delta Safe",
+            "JTF",
+            "Joint Task Force",
+            "GOC",
+            "General Officer Commanding"
+        ],
+        "category": "defence"
+    },
+    "counter_insurgency_northeast": {
+        "name": "Counter-Insurgency – Northeast",
+        "description": "War against terrorism in the Northest (Borno, Yobe, Adamawa). Covers Boko Haram, ISWAP (Islamic State West Africa Province), Sambisa Forest operations, and terrorist surrender.",
+        "keywords": [
+            "Boko Haram",
+            "ISWAP",
+            "terrorist",
+            "insurgent",
+            "Sambisa Forest",
+            "Lake Chad region",
+            "terrorist surrender",
+            "repentant boko haram",
+            "IED attack",
+            "ambush soldier"
+        ],
+        "category": "defence"
+    },
+    "counter_insurgency_northwest": {
+        "name": "Counter-Insurgency – Northwest",
+        "description": "Security operations in Northwest (Zamfara, Kaduna, Katsina, Sokoto). Covers banditry, kidnapping, cattle rustling, and military raids on bandit camps.",
+        "keywords": [
+            "bandit",
+            "banditry",
+            "kidnapper",
+            "cattle rustler",
+            "forest raid",
+            "bandit kingpin",
+            "Turji",
+            "military airstrike bandit"
+        ],
+        "category": "defence"
+    },
+    "counter_insurgency_middle_belt": {
+        "name": "Counter-Insurgency – Middle Belt",
+        "description": "Conflict in North Central (Plateau, Benue, Niger). Covers farmer-herder crisis, communal clashes, and military peacekeeping.",
+        "keywords": [
+            "herdsmen attack",
+            "communal clash",
+            "Plateau killing",
+            "Benue attack",
+            "military peacekeeper",
+            "militia attack"
+        ],
+        "category": "defence"
+    },
+    "multinational_regional_ops": {
+        "name": "Multinational & Regional Operations",
+        "description": "Cross-border military cooperation. Includes MNJTF (Multinational Joint Task Force) operating in Lake Chad Basin.",
+        "keywords": [
+            "MNJTF",
+            "Multinational Joint Task Force",
+            "Lake Chad Basin",
+            "regional security",
+            "cross-border operation"
+        ],
+        "category": "defence"
+    },
+    "nigerian_army_operations": {
+        "name": "Nigerian Army Operations & Divisions",
+        "description": "Activities specific to the Nigerian Army. Includes Chief of Army Staff (COAS), infantry operations, and recruitment.",
+        "keywords": [
+            "Nigerian Army",
+            "COAS",
+            "Chief of Army Staff",
+            "soldier",
+            "army recruitment",
+            "army checkpoint",
+            "army division"
+        ],
+        "category": "defence"
+    },
+    "nigerian_navy_maritime": {
+        "name": "Nigerian Navy & Maritime Operations",
+        "description": "Naval operations in the Niger Delta and Gulf of Guinea. Covers oil theft, illegal refining, privacy, pipeline protection, and Chief of Naval Staff (CNS).",
+        "keywords": [
+            "Nigerian Navy",
+            "CNS",
+            "Chief of Naval Staff",
+            "oil theft",
+            "illegal refinery",
+            "bunkering",
+            "sea pirate",
+            "Gulf of Guinea",
+            "naval operation"
+        ],
+        "category": "defence"
+    },
+    "nigerian_air_force": {
+        "name": "Nigerian Air Force Operations",
+        "description": "Air operations and aerial bombardment. Covers Chief of Air Staff (CAS), Super Tucano jets, airstrikes on terrorist camps, and UAV deployment.",
+        "keywords": [
+            "Nigerian Air Force",
+            "NAF",
+            "CAS",
+            "Chief of Air Staff",
+            "airstrike",
+            "Super Tucano",
+            "fighter jet",
+            "aerial bombardment",
+            "NAF helicopter"
+        ],
+        "category": "defence"
+    },
+    "military_equipment_procurement": {
+        "name": "Military Equipment & Defence Procurement",
+        "description": "Acquisition of arms and logistics. Includes purchase of fighter jets, armored personnel carriers (APCs), DICON (Defence Industries Corporation of Nigeria), and budget allocation for weapons.",
+        "keywords": [
+            "arms procurement",
+            "military hardware",
+            "fighter jet purchase",
+            "APC",
+            "armored vehicle",
+            "DICON",
+            "weapon purchase",
+            "defence spending"
+        ],
+        "category": "defence"
+    }
+}

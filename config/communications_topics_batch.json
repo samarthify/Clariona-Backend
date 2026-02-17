@@ -1,0 +1,225 @@
+{
+    "comms_minister_leadership": {
+        "name": "Minister Ministry & Leadership",
+        "description": "Leadership of the Ministry of Communications, Innovation and Digital Economy. Includes the Minister's roadmap (3MTT), policy announcements, and strategic vision.",
+        "keywords": [
+            "Minister of Communications",
+            "Bosun Tijani",
+            "Ministry of Digital Economy",
+            "communications minister",
+            "digital economy policy",
+            "FMCIDE"
+        ],
+        "category": "communications"
+    },
+    "telecom_connectivity": {
+        "name": "Telecom & Connectivity",
+        "description": "Telecommunications sector. Covers MTN, Glo, Airtel, 9mobile, NCC (Nigerian Communications Commission), 5G rollout, network quality, and dropped calls.",
+        "keywords": [
+            "MTN Nigeria",
+            "Glo network",
+            "Airtel Nigeria",
+            "9mobile",
+            "NCC",
+            "Nigerian Communications Commission",
+            "5G network",
+            "telecom service",
+            "poor network",
+            "call drop",
+            "Starlink nigeria"
+        ],
+        "category": "communications"
+    },
+    "internet_digital_access": {
+        "name": "Internet & Digital Access",
+        "description": "Internet penetration and broadband. Covers broadband plan, right of way for fibre optics, cost of data, and ISP services.",
+        "keywords": [
+            "internet access",
+            "broadband penetration",
+            "fibre optic",
+            "cost of data",
+            "data price",
+            "ISP",
+            "internet speed"
+        ],
+        "category": "communications"
+    },
+    "digital_id_platforms": {
+        "name": "Digital ID & National Platforms",
+        "description": "Identity management. Covers NIMC (National Identity Management Commission), NIN (National Identification Number), NIN-SIM linkage, and national database.",
+        "keywords": [
+            "NIMC",
+            "NIN",
+            "National Identification Number",
+            "NIN-SIM linkage",
+            "national identity card",
+            "digital ID"
+        ],
+        "category": "communications"
+    },
+    "cybersecurity_trust": {
+        "name": "Cybersecurity & Digital Trust",
+        "description": "Online safety and security. Covers cyber threats, phishing, awareness campaigns, and building trust in digital platforms.",
+        "keywords": [
+            "cybersecurity awareness",
+            "online safety",
+            "digital trust",
+            "cyber threat",
+            "hacking alert"
+        ],
+        "category": "communications"
+    },
+    "data_protection_regulation": {
+        "name": "Data Protection & Regulation",
+        "description": "Privacy laws and enforcement. Covers NDPC (Nigeria Data Protection Commission), GDPR compliance, and data breaches.",
+        "keywords": [
+            "NDPC",
+            "Data Protection Commission",
+            "data privacy",
+            "data breach",
+            "privacy violation",
+            "data regulation"
+        ],
+        "category": "communications"
+    },
+    "digital_economy_innovation": {
+        "name": "Digital Economy & Innovation",
+        "description": "Growth of the tech ecosystem. Includes startups, tech hubs, 3MTT (3 Million Technical Talent) program, and digital skills training.",
+        "keywords": [
+            "3MTT",
+            "tech talent",
+            "digital skills",
+            "Nigerian startup",
+            "tech ecosystem",
+            "digital economy growth",
+            "innovation hub"
+        ],
+        "category": "communications"
+    },
+    "egovernance_services": {
+        "name": "E-Governance & Digital Public Services",
+        "description": "Digitization of government services. Includes digital public infrastructure (DPI), e-government portals, and galaxy backbone.",
+        "keywords": [
+            "e-governance",
+            "digital public infrastructure",
+            "DPI",
+            "Galaxy Backbone",
+            "government portal",
+            "paperless government"
+        ],
+        "category": "communications"
+    },
+    "comms_fintech_payments": {
+        "name": "Fintech & Digital Payments",
+        "description": "Intersection of tech and finance from a digital economy perspective. Covers payment gateways, tech regulation for fintechs.",
+        "keywords": [
+            "fintech regulation",
+            "digital payment",
+            "tech startup finance",
+            "payment gateway"
+        ],
+        "category": "communications"
+    },
+    "cybersecurity_infrastructure_crisis": {
+        "name": "Cybersecurity Infrastructure & Crisis",
+        "description": "Major cyber incidents and infrastructure defense. Covers NITDA's role in crisis response and protection of critical digital assets.",
+        "keywords": [
+            "NITDA",
+            "cyber attack government",
+            "critical information infrastructure",
+            "CERRT"
+        ],
+        "category": "communications"
+    },
+    "digital_sovereignty": {
+        "name": "Digital Sovereignty & Future Infrastructure",
+        "description": "Control over national digital assets. Includes data localization, cloud sovereignty, and subsea cables.",
+        "keywords": [
+            "data localization",
+            "hosted in nigeria",
+            "subsea cable",
+            "mainone cable",
+            "digital sovereignty"
+        ],
+        "category": "communications"
+    },
+    "ai_future_policy": {
+        "name": "AI & Future Policy",
+        "description": "Artificial Intelligence strategies. Includes National AI Strategy, robotics, and emerging tech regulation.",
+        "keywords": [
+            "National AI Strategy",
+            "Artificial Intelligence Nigeria",
+            "AI regulation",
+            "emerging technology"
+        ],
+        "category": "communications"
+    },
+    "internet_governance_rights": {
+        "name": "Internet Governance & Digital Rights",
+        "description": "Rights of internet users. Includes freedom of expression online, internet shutdowns, and social media regulation bills.",
+        "keywords": [
+            "digital rights",
+            "internet freedom",
+            "social media bill",
+            "internet shutdown",
+            "online hate speech bill"
+        ],
+        "category": "communications"
+    },
+    "comms_misinformation": {
+        "name": "Misinformation & Information Integrity",
+        "description": "Combating fake news. Includes fact-checking initiatives and government response to viral falsehoods.",
+        "keywords": [
+            "fake news",
+            "misinformation",
+            "disinformation",
+            "fact check",
+            "information integrity"
+        ],
+        "category": "communications"
+    },
+    "comms_media_stakeholders": {
+        "name": "Media & Stakeholders",
+        "description": "Relationship with tech media and stakeholders. Includes interactions with ALTON (Association of Licensed Telecom Operators of Nigeria) and ATCON.",
+        "keywords": [
+            "ALTON",
+            "ATCON",
+            "telecom union",
+            "tech news",
+            "industry stakeholder communication"
+        ],
+        "category": "communications"
+    },
+    "comms_public_sentiment": {
+        "name": "Public Sentiment & Policy Perception",
+        "description": "General public view of digital policies. Includes reaction to NIN-SIM blocking and data prices.",
+        "keywords": [
+            "NIN blocked",
+            "SIM blocked",
+            "data expensive",
+            "comms policy complaint"
+        ],
+        "category": "communications"
+    },
+    "comms_economic_impact": {
+        "name": "Economic Impact",
+        "description": "Contribution of ICT to GDP. Includes telecom sector revenue and digital job creation.",
+        "keywords": [
+            "ICT contribution to GDP",
+            "telecom revenue",
+            "digital job creation",
+            "tech sector growth"
+        ],
+        "category": "communications"
+    },
+    "comms_regional_local": {
+        "name": "Regional & Local Signals",
+        "description": "Digital access in rural vs urban areas.",
+        "keywords": [
+            "rural telephony",
+            "underserved area internet",
+            "digital divide nigeria"
+        ],
+        "category": "communications"
+    }
+}
