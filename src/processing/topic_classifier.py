@@ -28,6 +28,14 @@ from api.models import Topic, OwnerConfig
 # Local imports - utils
 from utils.similarity import cosine_similarity
 
+# Optional Aho-Corasick matcher for O(n) topic matching
+try:
+    from .topic_matcher_aho import TopicMatcherAho
+    _AHO_AVAILABLE = True
+except ImportError:
+    TopicMatcherAho = None
+    _AHO_AVAILABLE = False
+
 # Module-level setup - use services.analysis_worker logger so logs appear together
 logger = get_logger('services.analysis_worker')
 
@@ -63,7 +71,8 @@ class TopicClassifier:
                  keyword_weight: float = 0.4,
                  embedding_weight: float = 0.6,
                  min_score_threshold: Optional[float] = None,
-                 max_topics: int = 5):
+                 max_topics: int = 5,
+                 use_spacy: Optional[bool] = None):
         """
         Initialize topic classifier.
         
@@ -75,7 +84,12 @@ class TopicClassifier:
             embedding_weight: Weight for embedding similarity (0.0-1.0)
             min_score_threshold: Minimum combined score to include topic. If None, loads from config.
             max_topics: Maximum number of topics to return
+            use_spacy: If False, never load spaCy (fast, for backfill/workers). If True, use if available.
+                      If None, use module default (ENABLE_SPACY env).
         """
+        import time as _t
+        _t0 = _t.time()
+        logger.info(f"TopicClassifier.__init__: start (use_spacy={use_spacy})")
         # Validate weights
         if abs(keyword_weight + embedding_weight - 1.0) > 0.01:
             logger.warning(f"Weights don't sum to 1.0: {keyword_weight} + {embedding_weight} = {keyword_weight + embedding_weight}")
@@ -109,7 +123,7 @@ class TopicClassifier:
                 self.keyword_score_threshold = 0.3
                 self.embedding_score_threshold = 0.5
                 self.confidence_threshold = 0.85
-        
+        logger.info(f"TopicClassifier.__init__: config/thresholds done ({_t.time() - _t0:.1f}s)")
         self.max_topics = max_topics
         self.db = db_session
         
@@ -120,25 +134,32 @@ class TopicClassifier:
             path_manager = PathManager()
             topic_embeddings_path = str(path_manager.config_topic_embeddings)
         self.topic_embeddings_path = topic_embeddings_path
+        logger.info(f"TopicClassifier.__init__: embeddings path set ({_t.time() - _t0:.1f}s)")
         
         # Load master topics from database
+        logger.info("TopicClassifier.__init__: loading topics from DB...")
         self.master_topics = self._load_topics_from_database()
+        logger.info(f"TopicClassifier.__init__: loaded {len(self.master_topics)} topics from DB ({_t.time() - _t0:.1f}s)")
         
         # Load topic embeddings
+        logger.info("TopicClassifier.__init__: loading topic embeddings from file...")
         self.topic_embeddings = self._load_topic_embeddings()
+        logger.info(f"TopicClassifier.__init__: loaded {len(self.topic_embeddings)} embeddings ({_t.time() - _t0:.1f}s)")
         
         # Initialize spaCy for enhanced NLP matching (Week 2 Enhancement)
+        # use_spacy=False forces fast path (no spaCy load); same as analysis worker / backfill.
         self.nlp = None
         self.use_spacy = False
-        if SPACY_AVAILABLE:
+        if use_spacy is False:
+            # Explicitly disabled (e.g. backfill, batch) - never load spaCy, use basic keyword matching
+            logger.info(f"TopicClassifier.__init__: spaCy disabled by caller ({_t.time() - _t0:.1f}s)")
+        elif SPACY_AVAILABLE and (use_spacy is True or use_spacy is None):
             try:
-                # Try to load English model (prefer small for speed)
                 try:
                     self.nlp = spacy.load("en_core_web_sm")
                     self.use_spacy = True
                     logger.info("spaCy NLP model loaded - using enhanced keyword matching")
                 except OSError:
-                    # Model not installed, try medium or large
                     try:
                         self.nlp = spacy.load("en_core_web_md")
                         self.use_spacy = True
@@ -152,10 +173,22 @@ class TopicClassifier:
         
         # spaCy is not thread-safe; serialize classify() when multiple workers share this instance
         self._classify_lock = threading.Lock() if self.use_spacy else None
+
+        # Aho-Corasick matcher for O(n) topic matching (fallback to loop if unavailable)
+        self._aho_matcher = None
+        if _AHO_AVAILABLE and TopicMatcherAho and self.master_topics:
+            try:
+                self._aho_matcher = TopicMatcherAho(self.master_topics)
+                logger.info("TopicClassifier.__init__: Aho-Corasick matcher enabled")
+            except Exception as e:
+                logger.warning(f"TopicClassifier.__init__: Aho-Corasick matcher failed, using fallback: {e}")
+                self._aho_matcher = None
+
         logger.info(
-            f"TopicClassifier initialized with {len(self.master_topics)} topics, "
-            f"{len(self.topic_embeddings)} embeddings loaded"
-            f"{', spaCy enabled (thread-safe lock)' if self.use_spacy else ''}"
+            f"TopicClassifier.__init__: done in {_t.time() - _t0:.1f}s — {len(self.master_topics)} topics, "
+            f"{len(self.topic_embeddings)} embeddings"
+            f"{', spaCy on' if self.use_spacy else ''}"
+            f"{', AC matcher on' if self._aho_matcher else ''}"
         )
     
     def _get_db_session(self) -> Session:  # type: ignore[no-any-return]
@@ -171,8 +204,10 @@ class TopicClassifier:
     
     def _load_topics_from_database(self) -> Dict[str, Dict]:
         """Load all active topics from the database."""
+        logger.info("TopicClassifier._load_topics_from_database: getting DB session...")
         session = self._get_db_session()
         try:
+            logger.info("TopicClassifier._load_topics_from_database: querying Topic table...")
             topics = session.query(Topic).filter(Topic.is_active == True).all()
             
             topics_dict = {}
@@ -206,7 +241,7 @@ class TopicClassifier:
                     "category": topic.category
                 }
             
-            logger.debug(f"Loaded {len(topics_dict)} topics from database")
+            logger.info(f"TopicClassifier._load_topics_from_database: got {len(topics_dict)} topics")
             return topics_dict
         
         except Exception as e:
@@ -253,7 +288,7 @@ class TopicClassifier:
         """Load pre-computed topic embeddings from JSON file."""
         try:
             embeddings_file = Path(self.topic_embeddings_path)
-            
+            logger.info(f"TopicClassifier._load_topic_embeddings: reading {embeddings_file}...")
             if not embeddings_file.exists():
                 logger.warning(f"Topic embeddings file not found: {self.topic_embeddings_path}")
                 logger.info("Run topic_embedding_generator.py to generate embeddings")
@@ -262,14 +297,12 @@ class TopicClassifier:
             with open(embeddings_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 embeddings_dict = data.get('embeddings', {})
-                
                 # Convert lists to numpy arrays
                 result = {}
                 for topic_key, embedding in embeddings_dict.items():
                     if isinstance(embedding, list) and len(embedding) > 0:
                         result[topic_key] = np.array(embedding, dtype=np.float64)
-                
-                logger.debug(f"Loaded {len(result)} topic embeddings from file")
+                logger.info(f"TopicClassifier._load_topic_embeddings: loaded {len(result)} embeddings")
                 return result
         
         except Exception as e:
@@ -335,6 +368,8 @@ class TopicClassifier:
     
     def _classify_impl(self, text: str, text_embedding: Optional[List[float]] = None) -> List[Dict[str, Any]]:
         """Internal classify implementation (called with lock held when spaCy is enabled)."""
+        if getattr(self, '_aho_matcher', None):
+            return self._aho_matcher.match(text, topic_keys_filter=None, max_topics=self.max_topics)
         import time as _time
         start_time = _time.time()
         num_topics = len(self.master_topics)
@@ -353,7 +388,7 @@ class TopicClassifier:
                 elapsed = _time.time() - start_time
                 logger.info(f"TopicClassifier._classify_impl: checked {topics_checked}/{num_topics} topics ({elapsed:.1f}s elapsed)")
             
-            # Keyword matching with AND/OR support
+            # Keyword matching: comma=OR, space=AND (embedding disabled for simplicity)
             keyword_groups = topic_data.get('keyword_groups')
             keywords = topic_data.get('keywords', [])
             keyword_score = self._keyword_match(
@@ -361,35 +396,13 @@ class TopicClassifier:
                 keywords=keywords if not keyword_groups else None,
                 keyword_groups=keyword_groups
             )
-            
-            # Embedding similarity
-            embedding_score = 0.0
-            if topic_key in self.topic_embeddings:
-                topic_emb = self.topic_embeddings[topic_key]
-                similarity = cosine_similarity(text_embedding_array, topic_emb)
-                # Normalize similarity to 0-1 range (cosine similarity is typically -1 to 1)
-                embedding_score = max(0.0, float(similarity))
-            else:
-                logger.debug(f"No embedding found for topic: {topic_key}")
-            
-            # Combined score with improved precision
-            # Require at least some keyword OR embedding match
-            if keyword_score == 0.0 and embedding_score < 0.25:
-                continue  # Skip if no keywords and very low embedding
-            
-            combined_score = (
-                self.keyword_weight * keyword_score +
-                self.embedding_weight * embedding_score
-            )
-            
-            # Boost if both keyword and embedding agree (stronger signal)
-            if keyword_score > 0.15 and embedding_score > 0.25:
-                combined_score = min(combined_score * 1.15, 1.0)
-            
-            # Additional boost for high confidence matches
-            if keyword_score > self.keyword_score_threshold or embedding_score > self.embedding_score_threshold:
-                combined_score = min(combined_score * 1.05, 1.0)
-            
+
+            if keyword_score == 0.0:
+                continue
+
+            embedding_score = 0.0  # Embedding similarity disabled
+            combined_score = keyword_score
+
             if combined_score >= self.min_score_threshold:
                 topic_scores.append({
                     "topic": topic_key,
@@ -405,27 +418,171 @@ class TopicClassifier:
         elapsed = _time.time() - start_time
         logger.info(f"TopicClassifier._classify_impl: DONE ({num_topics} topics -> {len(result)} results in {elapsed:.2f}s)")
         return result
-    
+
+    def classify_for_topic_keys(
+        self,
+        text: str,
+        text_embedding: Optional[List[float]] = None,
+        topic_keys: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Classify text only for the given topic keys (e.g. new topics for backfill).
+        Uses the same keyword + embedding scoring as classify() but only iterates
+        over the specified topics. Returns matches that pass the threshold.
+
+        Args:
+            text: Text content to classify.
+            text_embedding: Pre-computed embedding (1536 dims) or None for keyword-only.
+            topic_keys: List of topic_key to score against. Only these are checked.
+
+        Returns:
+            List of topic dicts (topic, topic_name, confidence, keyword_score, embedding_score).
+        """
+        if not text or not text.strip():
+            return []
+        if not topic_keys:
+            return []
+
+        # Restrict to topics we have data for
+        keys_to_check = [
+            k for k in topic_keys
+            if k in self.master_topics
+        ]
+        if not keys_to_check:
+            return []
+
+        if getattr(self, '_aho_matcher', None):
+            return self._aho_matcher.match(text, topic_keys_filter=keys_to_check, max_topics=999999)
+
+        text_lower = text.lower()
+        text_embedding_array = None
+        if text_embedding and len(text_embedding) == 1536:
+            text_embedding_array = np.array(text_embedding, dtype=np.float64)
+
+        topic_scores = []
+        for topic_key in keys_to_check:
+            topic_data = self.master_topics[topic_key]
+            keyword_groups = topic_data.get('keyword_groups')
+            keywords = topic_data.get('keywords', [])
+            keyword_score = self._keyword_match(
+                text_lower,
+                keywords=keywords if not keyword_groups else None,
+                keyword_groups=keyword_groups,
+            )
+
+            if keyword_score == 0.0:
+                continue
+
+            embedding_score = 0.0  # Embedding disabled
+            combined_score = keyword_score
+
+            if combined_score >= self.min_score_threshold:
+                topic_scores.append({
+                    "topic": topic_key,
+                    "topic_name": topic_data.get('name', topic_key),
+                    "confidence": round(combined_score, 3),
+                    "keyword_score": round(keyword_score, 3),
+                    "embedding_score": round(embedding_score, 3),
+                })
+        return topic_scores
+
     def _keyword_match(self, text_lower: str, keywords: Optional[List[str]] = None, keyword_groups: Optional[Dict[Any, Any]] = None) -> float:
         """
-        Calculate keyword matching score with AND/OR logic support.
+        Calculate keyword matching score using simple AND/OR logic.
+        
+        Logic: comma = OR, space = AND.
+        - "fuel nigeria, price iran" → (fuel AND nigeria) OR (price AND iran)
+        - Array elements are OR'd: ["fuel nigeria", "petrol"] → (fuel AND nigeria) OR (petrol)
         
         Args:
             text_lower: Lowercase text to search
-            keywords: Simple keyword list (backward compatibility)
-            keyword_groups: JSONB structure with AND/OR groups
+            keywords: List of keyword strings (supports comma/space syntax)
+            keyword_groups: JSONB structure — converted to same logic for consistency
         
         Returns:
-            Normalized score (0.0-1.0) based on keyword matches.
+            1.0 if any phrase matches, 0.0 otherwise.
         """
-        # Use keyword_groups if available, otherwise fall back to keywords
         if keyword_groups:
-            return self._match_keyword_groups(text_lower, keyword_groups)
+            return self._match_keyword_groups_simple(text_lower, keyword_groups)
         elif keywords:
-            return self._match_simple_keywords(text_lower, keywords)
+            return self._match_simple_and_or_keywords(text_lower, keywords)
         else:
             return 0.0
-    
+
+    def _match_simple_and_or_keywords(self, text_lower: str, keywords: List[str]) -> float:
+        """
+        Match using comma=OR, space=AND logic.
+        
+        Each keyword string: "fuel nigeria, price iran" = (fuel AND nigeria) OR (price AND iran)
+        Array elements are OR'd together.
+        
+        Returns:
+            1.0 if any phrase matches, 0.0 otherwise.
+        """
+        if not keywords:
+            return 0.0
+
+        def _phrase_matches(terms: List[str]) -> bool:
+            if not terms:
+                return False
+            return all(term.strip().lower() in text_lower for term in terms if term.strip())
+
+        for kw in keywords:
+            if not kw or not isinstance(kw, str):
+                continue
+            # Comma = OR: split into alternative phrase groups
+            or_branches = [p.strip() for p in str(kw).split(",") if p.strip()]
+            for phrase in or_branches:
+                # Space = AND: all terms in phrase must appear
+                terms = [t.strip() for t in phrase.split() if t.strip()]
+                if _phrase_matches(terms):
+                    return 1.0
+        return 0.0
+
+    def _match_keyword_groups_simple(self, text_lower: str, keyword_groups: Dict) -> float:
+        """
+        Convert keyword_groups to (AND phrase) OR (AND phrase) and match.
+        "and" group [a,b] → phrase "a b". "or" group [a,b] → phrases "a", "b".
+        require_all_groups: need at least one phrase match from each group.
+        """
+        if not keyword_groups or "groups" not in keyword_groups:
+            return 0.0
+
+        groups = keyword_groups["groups"]
+        require_all_groups = keyword_groups.get("require_all_groups", False)
+
+        def _phrase_matches(terms: List[str]) -> bool:
+            if not terms:
+                return False
+            return all(term.strip().lower() in text_lower for term in terms if term.strip())
+
+        group_phrases = []  # list of list of (list of terms)
+        for group in groups:
+            group_type = (group.get("type") or "or").lower()
+            kws = group.get("keywords") or []
+            if not kws:
+                continue
+            if group_type == "and":
+                group_phrases.append([[t.strip().lower() for t in kws if t and str(t).strip()]])
+            else:
+                group_phrases.append([[str(t).strip().lower()] for t in kws if t and str(t).strip()])
+
+        if not group_phrases:
+            return 0.0
+
+        if require_all_groups:
+            for phrase_set in group_phrases:
+                if not phrase_set:
+                    return 0.0
+                if not any(_phrase_matches(terms) for terms in phrase_set):
+                    return 0.0
+            return 1.0
+        else:
+            for phrase_set in group_phrases:
+                if any(_phrase_matches(terms) for terms in phrase_set):
+                    return 1.0
+            return 0.0
+
     def _match_simple_keywords(self, text_lower: str, keywords: List[str]) -> float:
         """
         Original simple OR matching (backward compatibility).
@@ -663,6 +820,8 @@ class TopicClassifier:
     
     def _classify_keyword_only(self, text: str) -> List[Dict[str, Any]]:
         """Fallback classification using only keywords."""
+        if getattr(self, '_aho_matcher', None):
+            return self._aho_matcher.match(text, topic_keys_filter=None, max_topics=self.max_topics)
         text_lower = text.lower()
         topic_scores = []
         

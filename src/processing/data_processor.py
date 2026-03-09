@@ -379,6 +379,44 @@ class DataProcessor:
             logger.error(f"Error detecting issues for topic {topic_key}: {e}", exc_info=True)
             return []
     
+    def detect_issues_globally(self, limit: Optional[int] = None) -> tuple:
+        """
+        Detect issues globally (no user/topic scope). Single call, no per-topic iteration.
+        Used when use_global_clustering is True.
+        Returns (issues, stats) where stats has: expired_clusters, merged_clusters,
+        batches_processed, magnet_attached, clusters_persisted, issues_created_updated.
+        """
+        if not self.issue_detection_engine:
+            logger.warning("IssueDetectionEngine not initialized. Skipping issue detection.")
+            return [], {}
+        try:
+            logger.info("Detecting issues globally (single pass)")
+            result = self.issue_detection_engine.detect_issues(limit=limit)
+            if isinstance(result, tuple) and len(result) == 2:
+                issues, stats = result
+            else:
+                issues, stats = (result if result else []), {}
+            logger.info(f"Detected {len(issues)} issues globally")
+            return issues, stats
+        except Exception as e:
+            logger.error(f"Error detecting issues globally: {e}", exc_info=True)
+            return [], {}
+
+    def run_cluster_maintenance(self) -> Dict[str, Any]:
+        """
+        Run cluster lifecycle maintenance (expire, merge, promote, crisis evaluation).
+        Used when use_incremental_clustering and use_global_clustering are enabled.
+        Delegates to IssueDetectionEngine.
+        """
+        if not self.issue_detection_engine:
+            logger.warning("IssueDetectionEngine not initialized. Skipping cluster maintenance.")
+            return {}
+        try:
+            return self.issue_detection_engine.run_cluster_maintenance()
+        except Exception as e:
+            logger.error(f"Error in run_cluster_maintenance: {e}", exc_info=True)
+            return {}
+
     def detect_issues_for_all_topics(self, limit_per_topic: Optional[int] = None, max_workers: int = 5) -> Dict[str, List[Dict[str, Any]]]:
         """
         Detect issues for all topics that have mentions (Week 4: Issue Detection System).
@@ -439,7 +477,7 @@ class DataProcessor:
         finally:
             session.close()
 
-    def promote_issues_for_all_topics(self, max_active_issues: int = 30, top_n: int = 3, max_workers: int = 5) -> int:
+    def promote_issues_for_all_topics(self, max_active_issues: int = 500, top_n: int = 3, max_workers: int = 5) -> int:
         """
         Promote clusters to issues for all topics in parallel.
         

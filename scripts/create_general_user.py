@@ -80,6 +80,7 @@ def create_general_user(email: str, username: str = None, name: str = None, pass
             password_hash=password_hash,
             role='general',
             ministry=None,  # General users don't have a ministry
+            owner_key=f"user_{user_id.replace('-', '_')}",
             is_admin=False,
             created_at=datetime.now(),
             api_calls_count=0,

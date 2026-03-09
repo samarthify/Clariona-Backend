@@ -76,6 +76,7 @@ def create_system_admin(email: str, username: str = None, name: str = None, pass
             password_hash=password_hash,
             role='system-admin',
             ministry=None,  # System admin doesn't have a ministry
+            owner_key=f"user_{str(user_id).replace('-', '_')}",
             is_admin=True,  # System admin is an admin
             created_at=datetime.now(),
             api_calls_count=0,

@@ -24,14 +24,18 @@ logger = logging.getLogger('ShowUsersAndOwnerConfigs')
 
 
 def get_owner_key_from_user(user: User) -> str:
-    """Get owner_key from user information."""
+    """Get owner_key from user information (must match create_owner_key in sync_users_to_owner_configs)."""
     if user.role and user.role.lower() == 'president':
         return 'president'
-    elif user.ministry:
+    if user.role and user.role.lower() == 'agency':
+        if user.ministry:
+            agency_key = user.ministry.lower().replace(' ', '_').replace('-', '_')
+            return f'agency_{agency_key}'
+        return f'agency_{str(user.id).replace("-", "_")}'
+    if user.ministry:
         ministry_key = user.ministry.lower().replace(' ', '_').replace('-', '_')
         return f'minister_{ministry_key}'
-    else:
-        return f'user_{str(user.id).replace("-", "_")}'
+    return f'user_{str(user.id).replace("-", "_")}'
 
 
 def show_all_users_and_configs():

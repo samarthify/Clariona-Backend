@@ -42,12 +42,18 @@ except Exception as e:
     pool_recycle = 3600
     pool_timeout = 60
 
+# Application name for pg_stat_activity (PostgreSQL only). Override via PG_APPLICATION_NAME.
+_connect_args = {}
+if DATABASE_URL and 'postgresql' in DATABASE_URL.lower():
+    _connect_args['options'] = f"-c application_name={os.getenv('PG_APPLICATION_NAME', 'clariona_backend')}"
+
 # Configure the engine with optimized connection pool for 32 vCPU instance
 # Total workers: 12 (collectors) + 18 (sentiment) + 10 (location) = 40 workers max
 # Pool size should accommodate this + overhead for API requests
 try:
     engine = create_engine(
         DATABASE_URL,
+        connect_args=_connect_args if _connect_args else {},
         pool_pre_ping=True,      # Check connections before use
         pool_recycle=pool_recycle,       # Recycle connections (configurable)
         pool_size=pool_size,            # Base connection pool (configurable)

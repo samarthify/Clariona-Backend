@@ -1,0 +1,27 @@
+{
+    "owner": "minister_industry_trade_investment",
+    "owner_name": "Federal Ministry of Industry, Trade and Investment",
+    "owner_type": "minister",
+    "topics": [
+        "fmiti_leadership_governance",
+        "industrial_policy_development",
+        "trade_policy_regulation",
+        "investment_promotion_framework",
+        "export_promotion_and_diversification",
+        "afcfta_and_multilateral_trade",
+        "ease_of_doing_business_and_business_reforms",
+        "smes_manufacturing_industrial_growth",
+        "investment_incentives_and_special_economic_zones",
+        "fmiti_public_communications_and_regulatory_announcements"
+    ],
+    "priority_topics": [
+        "fmiti_leadership_governance",
+        "industrial_policy_development",
+        "trade_policy_regulation",
+        "ease_of_doing_business_and_business_reforms",
+        "smes_manufacturing_industrial_growth"
+    ],
+    "is_active": true,
+    "created_at": "2026-03-05",
+    "updated_at": "2026-03-05"
+}

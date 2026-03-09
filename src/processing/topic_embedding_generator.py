@@ -221,6 +221,74 @@ class TopicEmbeddingGenerator:
         
         return embeddings
 
+    def generate_embeddings_for_topic_keys(
+        self, topic_keys: List[str], output_path: Optional[str] = None
+    ) -> int:
+        """
+        Generate embeddings only for the given topic keys and merge into existing file.
+        Used when new topics are added so we don't regenerate all embeddings.
+
+        Args:
+            topic_keys: List of topic_key to generate embeddings for.
+            output_path: Optional path to embeddings JSON. If None, uses default.
+
+        Returns:
+            Number of new embeddings added.
+        """
+        if not topic_keys:
+            return 0
+        if not self.openai_client:
+            logger.error("OpenAI client not available")
+            return 0
+
+        if output_path is None:
+            path_manager = PathManager()
+            output_path = str(path_manager.config_topic_embeddings)
+
+        # Load existing embeddings from file
+        existing: Dict[str, List[float]] = {}
+        output_file = Path(output_path)
+        if output_file.exists():
+            try:
+                with open(output_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    existing = data.get("embeddings", {})
+            except Exception as e:
+                logger.warning(f"Could not load existing embeddings from {output_path}: {e}")
+
+        # Load all topics from DB
+        all_topics = self.load_topics_from_database()
+        to_generate = [k for k in topic_keys if k in all_topics and k not in existing]
+        if not to_generate:
+            logger.info(f"All {len(topic_keys)} topic(s) already have embeddings or not in DB")
+            return 0
+
+        added = 0
+        for topic_key in to_generate:
+            topic_data = all_topics[topic_key]
+            emb = self.generate_embedding_for_topic(topic_key, topic_data)
+            if emb:
+                existing[topic_key] = emb
+                added += 1
+                logger.info(f"Generated and merged embedding for new topic: {topic_key}")
+
+        if added > 0:
+            output_data = {
+                "version": "1.0",
+                "model": self._get_embedding_model(),
+                "embeddings": existing,
+                "last_generated": datetime.now(timezone.utc).isoformat(),
+                "topic_count": len(existing),
+            }
+            try:
+                output_file.parent.mkdir(parents=True, exist_ok=True)
+                with open(output_file, "w", encoding="utf-8") as f:
+                    json.dump(output_data, f, indent=2)
+                logger.info(f"Merged {added} new topic embeddings into {output_path}")
+            except Exception as e:
+                logger.error(f"Error saving embeddings file: {e}")
+        return added
+
 
 # CLI script to generate embeddings
 if __name__ == "__main__":

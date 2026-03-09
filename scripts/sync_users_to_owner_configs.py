@@ -125,6 +125,18 @@ MINISTRY_TO_TOPICS = {
         'economic_policy',
         'commerce'
     ],
+    'industry_trade_investment': [
+        'fmiti_leadership_governance',
+        'industrial_policy_development',
+        'trade_policy_regulation',
+        'investment_promotion_framework',
+        'export_promotion_and_diversification',
+        'afcfta_and_multilateral_trade',
+        'ease_of_doing_business_and_business_reforms',
+        'smes_manufacturing_industrial_growth',
+        'investment_incentives_and_special_economic_zones',
+        'fmiti_public_communications_and_regulatory_announcements'
+    ],
     'petroleum': [
         'fuel_pricing',
         'petroleum_resources',
@@ -270,21 +282,24 @@ def get_topics_for_ministry(ministry: Optional[str]) -> List[str]:
 def create_owner_key(user: User) -> str:
     """
     Create owner_key from user information.
-    
+
     Format:
     - president: "president"
+    - agency: "agency_{ministry}" or "agency_{user_id}" if no ministry
     - ministers: "minister_{ministry}" (e.g., "minister_health")
     - others: "user_{user_id}"
     """
     if user.role and user.role.lower() == 'president':
         return 'president'
-    elif user.ministry:
-        # Normalize ministry name for key
+    if user.role and user.role.lower() == 'agency':
+        if user.ministry:
+            agency_key = user.ministry.lower().replace(' ', '_').replace('-', '_')
+            return f'agency_{agency_key}'
+        return f'agency_{str(user.id).replace("-", "_")}'
+    if user.ministry:
         ministry_key = user.ministry.lower().replace(' ', '_').replace('-', '_')
         return f'minister_{ministry_key}'
-    else:
-        # Fallback to user ID
-        return f'user_{str(user.id).replace("-", "_")}'
+    return f'user_{str(user.id).replace("-", "_")}'
 
 
 def sync_user_to_owner_config(user: User, db) -> Optional[OwnerConfig]:
@@ -299,13 +314,28 @@ def sync_user_to_owner_config(user: User, db) -> Optional[OwnerConfig]:
         Created/updated OwnerConfig or None
     """
     owner_key = create_owner_key(user)
-    
-    # Determine topics based on role
+
+    # Keep users.owner_key in sync for CrisisActionDispatcher fan-out
+    if hasattr(user, "owner_key") and user.owner_key != owner_key:
+        user.owner_key = owner_key
+
+    # Determine topics and owner_type based on role
     if user.role and user.role.lower() == 'president':
         topics = PRESIDENT_TOPICS
         priority_topics = PRESIDENT_PRIORITY_TOPICS
         owner_type = 'president'
         owner_name = 'President'
+    elif user.role and user.role.lower() == 'agency':
+        # Agency topics are set via JSON/populate or manually; don't overwrite existing
+        existing_config = db.query(OwnerConfig).filter_by(owner_key=owner_key).first()
+        if existing_config and existing_config.topics:
+            topics = list(existing_config.topics)
+            priority_topics = list(existing_config.priority_topics or []) or topics[:3]
+        else:
+            topics = []
+            priority_topics = []
+        owner_type = 'agency'
+        owner_name = user.name or (f"Agency ({user.ministry})" if user.ministry else f"User {user.email}")
     elif user.ministry:
         topics = get_topics_for_ministry(user.ministry)
         priority_topics = topics[:3] if len(topics) > 3 else topics  # Top 3 as priority

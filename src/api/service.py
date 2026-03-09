@@ -37,6 +37,7 @@ from src.agent.core import SentimentAnalysisAgent
 # Local imports - API modules
 from . import models, database, admin
 from .database import SessionLocal, engine, get_db
+from . import x_feeds
 from .middlewares import UsageTrackingMiddleware
 from .presidential_service import add_presidential_endpoints
 from .auth import get_current_user_id
@@ -107,6 +108,8 @@ async def health_check():
 
 # Include the admin router
 app.include_router(admin.router)
+# X Intelligence feeds (Live, Rising, Trending, Top Today)
+app.include_router(x_feeds.router)
 
 # Add presidential analysis endpoints
 add_presidential_endpoints(app)
@@ -395,6 +398,7 @@ async def startup_event():
                 admin_user = models.User(
                     id=admin_id,
                     email=admin_email,
+                    owner_key=f"user_{str(admin_id).replace('-', '_')}",
                     is_admin=True
                 )
                 logger.info("Creating initial admin user")

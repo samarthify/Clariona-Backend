@@ -5,6 +5,8 @@
 USER_ID="6440da7fe6304b2f884ea8721cc9a9c0"  # getrajaram user
 INTERVAL_MINUTES=30  # Wait X minutes AFTER cycle completes
 LOG_FILE="logs/automatic_scheduling.log"
+# In Docker, set API_BASE_URL to backend service (e.g. http://backend:8000)
+API_BASE_URL="${API_BASE_URL:-http://localhost:8000}"
 
 echo "======================================"
 echo "Smart Sequential Cycle Runner"
@@ -69,7 +71,7 @@ while true; do
     echo "[$CYCLE_START] Starting new cycle..."
     
     # Trigger the cycle
-    RESPONSE=$(curl -s -X POST "http://localhost:8000/agent/test-cycle-no-auth?test_user_id=$USER_ID&skip_collection_only=true" \
+    RESPONSE=$(curl -s -X POST "${API_BASE_URL}/agent/test-cycle-no-auth?test_user_id=$USER_ID&skip_collection_only=true" \
                     -H "Content-Type: application/json")
     
     STATUS=$(echo "$RESPONSE" | grep -o '"status":"[^"]*"' | cut -d'"' -f4)

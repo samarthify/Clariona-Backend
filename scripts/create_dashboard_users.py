@@ -62,6 +62,8 @@ def create_dashboard_user(
     user_id = str(uuid.uuid4())
     password_hash = hash_password(password) if password else None
 
+    ministry_key = ministry.lower().replace(" ", "_").replace("-", "_")
+    owner_key = f"minister_{ministry_key}"
     user = User(
         id=user_id,
         email=email,
@@ -70,6 +72,7 @@ def create_dashboard_user(
         password_hash=password_hash,
         role='minister',
         ministry=ministry,
+        owner_key=owner_key,
         is_admin=False,
         created_at=datetime.now(),
         api_calls_count=0,
@@ -78,8 +81,6 @@ def create_dashboard_user(
     db.add(user)
     db.commit()
     db.refresh(user)
-
-    owner_key = f"minister_{ministry}"
     print(f"✅ Created user: {email} → owner_key={owner_key}")
     return True
 

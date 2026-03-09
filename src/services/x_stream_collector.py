@@ -1,17 +1,16 @@
 """
 XStreamCollector - Connects to X API Filtered Stream and ingests posts.
 
-Parses NDJSON stream, transforms X API payloads to SentimentData shape,
-and forwards to DataIngestor. Handles reconnect on disconnect.
+Parses NDJSON stream, writes to tweets table (Layer 1), optionally to SentimentData via DataIngestor.
+Uses same rules as x_stream_rules (matching_rules in payload -> rule_id).
 """
 
 import asyncio
 import json
 import logging
 import os
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -24,12 +23,30 @@ try:
               Path(__file__).resolve().parent.parent.parent / ".env"]:
         if p.exists():
             load_dotenv(p, override=False)
+
+    from src.api.database import SessionLocal
+    from src.services.data_ingestor import DataIngestor
 except ImportError:
     pass
 
 logger = logging.getLogger("services.x_stream_collector")
 
 STREAM_URL = "https://api.x.com/2/tweets/search/stream"
+
+# Optional dual-write to SentimentData (existing analysis pipeline)
+X_STREAM_ALSO_INGEST_SENTIMENT = os.getenv("X_STREAM_ALSO_INGEST_SENTIMENT", "true").lower() == "true"
+
+
+def _resolve_rule_id_from_matching_rules(session, matching_rules: List[Dict[str, Any]]) -> Optional[int]:
+    """Map X API matching_rules (x_rule_id) to our x_stream_rules.id."""
+    if not matching_rules or not session:
+        return None
+    from src.api.models import XStreamRule
+    x_rule_id = matching_rules[0].get("id") if matching_rules else None
+    if not x_rule_id:
+        return None
+    row = session.query(XStreamRule.id).filter(XStreamRule.x_rule_id == str(x_rule_id)).first()
+    return row[0] if row else None
 
 
 def _flatten_x_api_post(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -124,34 +141,47 @@ class XStreamCollector:
         """Main loop: connect, stream, reconnect on disconnect."""
         self._running = True
         delay = self.reconnect_delay
+        logger.info("XStreamCollector started (X API Filtered Stream); connecting...")
 
         while self._running:
             if not self.bearer_token:
-                logger.warning("X_BEARER_TOKEN not set - XStreamCollector idle")
+                logger.warning("X_BEARER_TOKEN not set - XStreamCollector idle (will retry in 60s)")
                 await asyncio.sleep(60)
                 continue
 
             try:
-                await self._run_stream()
+                logger.info("XStreamCollector connecting to %s ...", STREAM_URL)
+                # Offload the blocking stream processing to a separate thread
+                await asyncio.to_thread(self._run_stream_sync)
+                if self._running:
+                    logger.warning("XStreamCollector stream connection closed (will reconnect)")
             except asyncio.CancelledError:
+                logger.info("XStreamCollector cancelled (shutting down)")
                 break
             except Exception as e:
-                logger.error(f"XStreamCollector error: {e}", exc_info=True)
+                logger.error("XStreamCollector error: %s", e, exc_info=True)
 
             if not self._running:
                 break
 
-            logger.info(f"XStreamCollector reconnecting in {delay}s...")
+            logger.info("XStreamCollector reconnecting in %.1fs (backoff max %.1fs)...", delay, self.backoff_max)
             await asyncio.sleep(delay)
             delay = min(delay * 1.5, self.backoff_max)
 
         logger.info("XStreamCollector stopped.")
 
-    async def _run_stream(self):
-        """Connect to stream and process posts. Runs in executor to avoid blocking."""
-        loop = asyncio.get_event_loop()
+    def _run_stream_sync(self):
+        """
+        Connect to stream and process posts synchronously in a separate thread.
+        Manages its own DB session to be thread-safe.
+        """
+        # Create a dedicated session for this stream connection
+        with SessionLocal() as session:
+            from src.api.models import XStreamRule
+            active_rules = session.query(XStreamRule).filter(XStreamRule.is_active == True).count()
+            # Create a dedicated ingestor for this thread
+            thread_ingestor = DataIngestor(session, user_id=self.ingestor.user_id)
 
-        def _sync_stream():
             resp = requests.get(
                 STREAM_URL,
                 headers=self._headers(),
@@ -159,41 +189,63 @@ class XStreamCollector:
                 stream=True,
                 timeout=90,
             )
+
             if resp.status_code != 200:
                 raise RuntimeError(f"Stream HTTP {resp.status_code}: {resp.text[:500]}")
-            return resp
 
-        resp = await loop.run_in_executor(None, _sync_stream)
-        count = 0
+            logger.info(
+                "XStreamCollector connected (HTTP 200), %d active rules; streaming tweets (batch progress every 10).",
+                active_rules,
+            )
+            count = 0
+            
+            try:
+                for line in resp.iter_lines():
+                    if not self._running:
+                        break
+                    if not line:
+                        continue
+                    try:
+                        payload = json.loads(line.decode("utf-8"))
+                    except json.JSONDecodeError:
+                        continue
 
-        try:
-            for line in resp.iter_lines():
-                if not self._running:
-                    break
-                if not line:
-                    continue
-                try:
-                    payload = json.loads(line.decode("utf-8"))
-                except json.JSONDecodeError:
-                    continue
+                    if "errors" in payload:
+                        logger.warning(f"X stream error: {payload.get('errors')}")
+                        continue
 
-                if "errors" in payload:
-                    logger.warning(f"X stream error: {payload.get('errors')}")
-                    continue
+                    matching_rules = payload.get("matching_rules") or []
+                    # Use the thread-local session
+                    rule_id = _resolve_rule_id_from_matching_rules(session, matching_rules)
 
-                record = _flatten_x_api_post(payload)
-                if not record.get("url"):
-                    continue
+                    # Layer 1: always upsert into tweets table
+                    try:
+                        from src.services.x_tweets_store import (
+                            parse_x_stream_payload_to_row,
+                            upsert_tweet,
+                            SOURCE_STREAM,
+                        )
+                        row = parse_x_stream_payload_to_row(payload, rule_id, first_seen_source=SOURCE_STREAM)
+                        if row:
+                            # Use thread-local session
+                            upsert_tweet(session, row)
+                            count += 1
+                            if count % 10 == 0:
+                                logger.info("XStreamCollector: tweets stored %d posts (this connection)", count)
+                    except Exception as e:
+                        logger.error(f"XStreamCollector tweets upsert error: {e}")
 
-                try:
-                    status = self.ingestor.insert_record(record, commit=True, log_stored=False)
-                    count += 1
-                    if count % 10 == 0:
-                        logger.info(f"XStreamCollector: ingested {count} posts")
-                except Exception as e:
-                    logger.error(f"XStreamCollector ingest error: {e}")
-        finally:
-            resp.close()
+                    # Optional: also ingest into SentimentData for existing analysis pipeline
+                    if X_STREAM_ALSO_INGEST_SENTIMENT:
+                        record = _flatten_x_api_post(payload)
+                        if record.get("url"):
+                            try:
+                                # Use thread-local ingestor
+                                thread_ingestor.insert_record(record, commit=True, log_stored=False)
+                            except Exception as e:
+                                logger.error(f"XStreamCollector ingest error: {e}")
+            finally:
+                resp.close()
 
     def stop(self):
         """Stop the collector."""

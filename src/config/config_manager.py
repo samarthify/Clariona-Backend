@@ -207,8 +207,9 @@ class ConfigManager:
                     "promotion": {
                         "enabled": True,
                         "top_n": 5,
+                        "top_n_backlog": 50,  # Higher limit to clear backlog (500+ clusters)
                         "min_density_threshold": 0.0,
-                        "max_active_issues": 30  # Hard limit on total active issues
+                        "max_active_issues": 500  # Hard limit on total active issues
                     },
                     "creation": {
                         "min_sentiment_magnitude": 0.0,
@@ -226,12 +227,10 @@ class ConfigManager:
                 },
                 "prompts": {
                     "presidential_sentiment": {
-                        "system_message": "You advise {president_name} on media impact.",
-                        "user_template": """Classify this text for {president_name}'s agenda impact.
+                        "system_message": "You advise {president_name} on media impact. Respond only with valid JSON, no markdown.",
+                        "user_template": """Classify this text for {president_name}'s agenda impact. Return JSON only:
 
-Sentiment: [positive/negative/neutral]
-Sentiment Score: [-1.0 to 1.0]
-Justification: [<=25 words]
+{{"sentiment": "positive"|"negative"|"neutral", "sentiment_score": -1.0 to 1.0, "justification": "brief reason <=25 words", "recommended_action": "one-line strategic action for President", "emotion_distribution": {{"anger": 0-1, "fear": 0-1, "trust": 0-1, "sadness": 0-1, "joy": 0-1, "disgust": 0-1}}}}
 
 Text: "{text}"
 """,
@@ -302,6 +301,11 @@ Return JSON:
                     "president_name": "Bola Ahmed Tinubu",
                     "country": "Nigeria"
                 }
+            },
+            "clustering": {
+                "use_incremental_clustering": True,
+                "use_global_clustering": True,
+                "crisis_detector_enabled": False,
             },
             "deduplication": {
                 "similarity_threshold": 0.85,
@@ -761,7 +765,53 @@ Return JSON:
         except (ValueError, TypeError):
             logger.warning(f"Config key '{key}' is not a boolean, using default {default}")
             return default
-    
+
+    def use_incremental_clustering(self, db_session: Optional["Session"] = None) -> bool:
+        """Incremental clustering enabled? Config only, no DB read. Default True."""
+        return self.get_bool("clustering.use_incremental_clustering", True)
+
+    def use_global_clustering(self, db_session: Optional["Session"] = None) -> bool:
+        """
+        Check if global (user_id-only) clustering is enabled vs per-topic.
+        When True: Pinecone filter by user_id + status only.
+        When False: Pinecone filter by topic_key + user_id + status (legacy).
+        Default False - DB/system_configurations must explicitly enable global mode.
+        """
+        session = db_session
+        own_session = False
+        if session is None:
+            try:
+                from src.api.database import SessionLocal
+                session = SessionLocal()
+                own_session = True
+            except Exception as e:
+                logger.warning(f"Could not create session for use_global_clustering: {e}")
+        if session is not None:
+            try:
+                from src.api.models import SystemConfiguration
+                row = session.query(SystemConfiguration).filter(
+                    SystemConfiguration.category == "clustering",
+                    SystemConfiguration.config_key == "use_global_clustering",
+                    SystemConfiguration.is_active == True,
+                ).first()
+                if row and row.config_value is not None:
+                    v = row.config_value
+                    if isinstance(v, bool):
+                        return v
+                    if isinstance(v, str):
+                        return v.lower() in ("true", "yes", "on", "1")
+                    return bool(v)
+            except Exception as e:
+                logger.warning(f"Could not read global clustering flag from DB: {e}")
+            finally:
+                if own_session and session:
+                    session.close()
+        return self.get_bool("clustering.use_global_clustering", False)
+
+    def crisis_detector_enabled(self) -> bool:
+        """Whether crisis evaluator/dispatcher is enabled (promotion becomes no-op)."""
+        return self.get_bool("clustering.crisis_detector_enabled", False)
+
     def get_list(self, key: str, default: List[Any]) -> List[Any]:
         """Get configuration value as list."""
         value = self.get(key, default)

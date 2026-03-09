@@ -541,5 +541,5 @@ def main(target_and_variations: List[str], user_id: Optional[str] = None):
 
 if __name__ == "__main__":
     # Test the collector
-    test_queries = ["Bola Ahmed Tinubu", "Bola Tinubu", "President Tinubu", "Tinubu", "Nigeria President", "Nigerian President", "Nigeria"]
+    test_queries = ["Sheikh Tamim", "Qatar", "Emir", "Doha", "Gulf", "Middle East"]
     main(test_queries)

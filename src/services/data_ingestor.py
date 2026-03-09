@@ -8,17 +8,19 @@ This module provides the `DataIngestor` class which handles:
 
 import json
 import logging
+import os
 from datetime import datetime
 from typing import Any, Dict, Optional, List
 
-from sqlalchemy import func
+from sqlalchemy import event, func
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.sql import text
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql.elements import ColumnElement
 
-from src.api.models import SentimentData
+from src.api.models import AnalysisQueue, SentimentData
 from src.utils.common import safe_float, safe_int, parse_datetime
 
 # Optional imports for data processing
@@ -94,6 +96,50 @@ class DataIngestor:
         self.user_id = user_id
         self._batch_buffer: List[Dict[str, Any]] = []
         self._batch_size = 50
+        # Track urls for enqueue when commit=False (before_commit hook enqueues in same transaction)
+        if 'pending_enqueue_urls' not in session.info:
+            session.info['pending_enqueue_urls'] = set()
+        # Register once per session: enqueue before commit so queue never misses records
+        if not session.info.get('_enqueue_hook_registered'):
+            event.listen(session, 'before_commit', self._flush_and_enqueue_pending)
+            session.info['_enqueue_hook_registered'] = True
+
+    def _flush_and_enqueue_pending(self, session: Session) -> None:
+        """Before-commit hook: enqueue pending urls in same transaction (queue never misses)."""
+        urls = session.info.pop('pending_enqueue_urls', set())
+        if not urls:
+            return
+        try:
+            session.flush()
+            rows = session.query(SentimentData.entry_id).filter(SentimentData.url.in_(urls)).all()
+            entry_ids = [r[0] for r in rows]
+            if entry_ids:
+                self._enqueue_for_analysis(entry_ids, commit=False)
+        except Exception as e:
+            logger.warning("Before-commit enqueue failed (non-fatal): %s", e)
+            session.info.setdefault('pending_enqueue_urls', set()).update(urls)
+
+    def _enqueue_for_analysis(self, entry_ids: List[int], commit: bool = True) -> None:
+        """Enqueue entry_ids to analysis_queue. When commit=False, adds to current transaction (caller commits)."""
+        if not entry_ids:
+            return
+        try:
+            for eid in entry_ids:
+                stmt = pg_insert(AnalysisQueue).values(entry_id=eid, status='pending')
+                stmt = stmt.on_conflict_do_nothing(index_elements=['entry_id'])
+                self.session.execute(stmt)
+            use_notify = os.getenv("ANALYSIS_USE_NOTIFY", "true").lower() in ("true", "yes", "on", "1")
+            if use_notify:
+                self.session.execute(text("NOTIFY analysis_pending"))
+            if commit:
+                self.session.commit()
+        except Exception as e:
+            logger.warning("Enqueue for analysis failed (non-fatal): %s", e)
+            if commit:
+                try:
+                    self.session.rollback()
+                except Exception:
+                    pass
 
     def _extract_twitter_id(self, url_or_id: str) -> Optional[str]:
         """
@@ -960,8 +1006,12 @@ class DataIngestor:
             log_url_after_commit = log_stored and url
             
             if commit:
+                # Enqueue in same transaction before commit so queue never misses
+                self.session.flush()
+                row = self.session.query(SentimentData.entry_id).filter(SentimentData.url == url).first()
+                if row:
+                    self._enqueue_for_analysis([row[0]], commit=False)
                 self.session.commit()
-                
                 # Log what was actually stored in DB (for debugging coverage gaps)
                 # Only log if explicitly requested (e.g., first record of batch)
                 if log_url_after_commit:
@@ -1011,10 +1061,16 @@ class DataIngestor:
                     f"(source={record.get('_date_source_field')})"
                 )
 
+            if not commit:
+                # Track for before_commit hook (collectors that batch with commit=False)
+                self.session.info.setdefault('pending_enqueue_urls', set()).add(url)
+            
             # Determine if it was insert or update
             if exists:
+                logger.info(f"Ingestor: insert_record updated | platform={record.get('platform')} | url={str(url)[:70]}")
                 return 'updated'
             else:
+                logger.info(f"Ingestor: insert_record inserted | platform={record.get('platform')} | url={str(url)[:70]}")
                 return 'inserted'
             
         except SQLAlchemyError as e:
@@ -1139,8 +1195,13 @@ class DataIngestor:
             )
             
             self.session.execute(stmt)
+            # Enqueue in same transaction before commit so queue never misses
+            self.session.flush()
+            urls = [r.get('url') for r in filtered_records if r.get('url')]
+            if urls:
+                entry_ids = [r[0] for r in self.session.query(SentimentData.entry_id).filter(SentimentData.url.in_(urls)).all()]
+                self._enqueue_for_analysis(entry_ids, commit=False)
             self.session.commit()
-            
             success_count = len(filtered_records)
             logger.info(f"Batch inserted {success_count} records.")
             

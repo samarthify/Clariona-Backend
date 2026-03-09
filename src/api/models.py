@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, MetaData, Index, Text, Boolean, ForeignKey, UniqueConstraint, JSON, UUID, CheckConstraint
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, MetaData, Index, Text, Boolean, ForeignKey, UniqueConstraint, JSON, UUID, CheckConstraint, Numeric, SmallInteger
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
@@ -61,6 +61,7 @@ class User(Base):
     password_hash = Column(String(STRING_LENGTHS['password_hash']), nullable=True)
     role = Column(String(STRING_LENGTHS['short']), nullable=True)
     ministry = Column(String(STRING_LENGTHS['short']), nullable=True)
+    owner_key = Column(String(100), index=True, nullable=True)  # For CrisisActionDispatcher fan-out
     name = Column(String(STRING_LENGTHS['long']), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True), nullable=True)
@@ -135,6 +136,9 @@ class SentimentData(Base):
     # Processing status fields (for safe concurrent processing)
     processing_status = Column(String(20), nullable=True, default='pending', index=True)  # pending, processing, completed, failed
     processing_completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Incremental clustering: link to processing_cluster (set by incremental assigner)
+    cluster_id = Column(UUID(as_uuid=True), ForeignKey('processing_clusters.id', ondelete='SET NULL'), nullable=True, index=True)
     
     # Enhanced location classification fields
     location_label = Column(String, nullable=True)
@@ -310,6 +314,7 @@ class TopicIssue(Base):
     
     # Topic relationship
     topic_key = Column(String(STRING_LENGTHS['medium']), ForeignKey('topics.topic_key', ondelete='CASCADE'), nullable=False)
+    topic_keys = Column(ARRAY(Text), nullable=True)  # Union of topics (for fan-out: owner_configs.topics &&)
     primary_topic_key = Column(String(STRING_LENGTHS['medium']), ForeignKey('topics.topic_key'), nullable=True)
     
     # Lifecycle
@@ -417,7 +422,7 @@ class MentionTopic(Base):
     )
 
 class XStreamRule(Base):
-    """X API Filtered Stream rules - stored in DB, synced to X API."""
+    """X API Filtered Stream rules - stored in DB, synced to X API. Same rules for stream + Recent Search layers."""
     __tablename__ = 'x_stream_rules'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -425,8 +430,52 @@ class XStreamRule(Base):
     tag = Column(String(255), nullable=True)  # Optional label for matching Posts
     is_active = Column(Boolean, nullable=False, default=True)
     x_rule_id = Column(String(50), nullable=True)  # X API rule ID (for delete)
+    priority_level = Column(SmallInteger, nullable=True)  # For future priority scheduling
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    tweets = relationship("Tweet", back_populates="rule")
+    run_states = relationship("XRuleRunState", back_populates="rule", cascade="all, delete-orphan")
+
+
+class Tweet(Base):
+    """X posts from Filtered Stream + Recent Search layers (rising, stable, safety). PK = tweet_id."""
+    __tablename__ = 'tweets'
+
+    tweet_id = Column(String(32), primary_key=True)
+    rule_id = Column(Integer, ForeignKey('x_stream_rules.id', ondelete='SET NULL'), nullable=True, index=True)
+    text = Column(Text, nullable=True)
+    author_id = Column(String(32), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=True)
+    first_seen_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    last_seen_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    first_seen_source = Column(String(20), nullable=True)  # stream | rising | stable | safety
+    like_count = Column(Integer, nullable=True)
+    reply_count = Column(Integer, nullable=True)
+    retweet_count = Column(Integer, nullable=True)
+    view_count = Column(Integer, nullable=True)
+    engagement_score = Column(Numeric(20, 4), nullable=True)
+    engagement_velocity = Column(Numeric(20, 6), nullable=True)
+    engagement_rate = Column(Numeric(20, 8), nullable=True)
+    last_metrics_update_at = Column(DateTime(timezone=True), nullable=True)
+    seen_count = Column(Integer, nullable=False, default=1, server_default='1')
+
+    rule = relationship("XStreamRule", back_populates="tweets")
+
+
+class XRuleRunState(Base):
+    """Per-rule, per-layer throttling: skip next cycle if last run had < 2 new tweet_ids."""
+    __tablename__ = 'x_rule_run_state'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    rule_id = Column(Integer, ForeignKey('x_stream_rules.id', ondelete='CASCADE'), nullable=False)
+    layer = Column(String(20), nullable=False)  # rising | stable | safety
+    last_run_at = Column(DateTime(timezone=True), nullable=True)
+    last_new_unique_count = Column(Integer, nullable=True)
+    skip_until = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (UniqueConstraint('rule_id', 'layer', name='uq_x_rule_run_state_rule_layer'),)
+    rule = relationship("XStreamRule", back_populates="run_states")
 
 
 class OwnerConfig(Base):
@@ -579,12 +628,22 @@ class ProcessingCluster(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    # Incremental clustering: tenant isolation, centroid math, optimistic locking
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    sum_vec = Column(JSONB, nullable=True)  # Running sum of embeddings for centroid computation
+    version = Column(Integer, nullable=False, default=1)  # Optimistic locking
+
+    # Global clustering: union of topic_keys from member mentions (replaces topic_key as partition)
+    topic_keys = Column(ARRAY(Text), nullable=True)
+
     cluster_mentions = relationship("ClusterMention", back_populates="cluster", cascade="all, delete-orphan")
     issue_mentions = relationship("IssueMention", back_populates="cluster")
 
     __table_args__ = (
         Index('idx_processing_clusters_topic', 'topic_key'),
         Index('idx_processing_clusters_status', 'status'),
+        Index('idx_processing_clusters_topic_user_status', 'topic_key', 'user_id', 'status'),
+        Index('idx_processing_clusters_status_updated', 'status', 'updated_at'),
     )
 
 
@@ -606,6 +665,50 @@ class ClusterMention(Base):
         Index('idx_cluster_mentions_cluster', 'cluster_id'),
         Index('idx_cluster_mentions_mention', 'mention_id'),
     )
+
+
+class AnalysisQueue(Base):
+    """Queue for analysis worker: entry_id pending sentiment/embedding/topic processing."""
+    __tablename__ = 'analysis_queue'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    entry_id = Column(Integer, ForeignKey('sentiment_data.entry_id', ondelete='CASCADE'), nullable=False, unique=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    status = Column(String(20), nullable=False, default='pending')  # pending, processing, failed
+    retry_count = Column(Integer, nullable=False, default=0)
+
+
+class ClusterQueue(Base):
+    """Queue for incremental cluster assigner: embedding + topic pending cluster assignment."""
+    __tablename__ = 'cluster_queue'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    entry_id = Column(Integer, nullable=False)
+    topic_key = Column(String(STRING_LENGTHS['medium']), nullable=False)
+    topic_keys = Column(ARRAY(Text), nullable=True)  # All topic_keys for this mention (global clustering)
+    user_id = Column(UUID(as_uuid=True), nullable=True)
+    embedding = Column(JSONB, nullable=False)  # array of 1536 floats
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    status = Column(String(20), nullable=False, default='pending')  # pending, processing, failed
+    retry_count = Column(Integer, nullable=False, default=0)
+
+
+class AlertEvent(Base):
+    """Audit trail for crisis/alert events (CrisisEvaluator output)."""
+    __tablename__ = 'alert_events'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    cluster_id = Column(UUID(as_uuid=True), ForeignKey('processing_clusters.id', ondelete='SET NULL'), nullable=True)
+    topic_keys = Column(ARRAY(Text), nullable=True)
+    severity = Column(String(20), nullable=True)
+    burst_ratio = Column(Float, nullable=True)
+    count_1m = Column(Integer, nullable=True)
+    count_5m = Column(Integer, nullable=True)
+    count_15m = Column(Integer, nullable=True)
+    fired_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+    routed_to = Column(JSONB, nullable=True)
+    cooldown_key = Column(String(255), nullable=True)
 
 
 # ============================================

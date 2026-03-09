@@ -5,9 +5,9 @@ Week 4: Clustering-based issue detection and management.
 """
 
 # Standard library imports
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from uuid import UUID, uuid4
 import json
 import sys
 import os
@@ -43,6 +43,7 @@ from api.models import (
     TopicIssue, IssueMention, TopicIssueLink,
     ProcessingCluster, ClusterMention
 )
+from src.services.pinecone_client import upsert as pinecone_upsert, delete as pinecone_delete
 
 # Module-level setup
 logger = get_logger(__name__)
@@ -90,6 +91,7 @@ class IssueDetectionEngine:
             )
             self.promotion_enabled = config.get_bool('processing.issue.promotion.enabled', False)
             self.promotion_top_n = config.get_int('processing.issue.promotion.top_n', 5)
+            self.promotion_top_n_backlog = config.get_int('processing.issue.promotion.top_n_backlog', 50)
             self.promotion_min_density = config.get_float('processing.issue.promotion.min_density_threshold', 0.0)
             self.attach_similarity_threshold = config.get_float('processing.issue.incremental.attach_similarity_threshold', 0.70)
             self.cluster_expiry_hours = config.get_int('processing.issue.incremental.cluster_expiry_hours', 336)
@@ -187,81 +189,164 @@ class IssueDetectionEngine:
         """Close database session if we created it."""
         if not self.db and session:
             session.close()
-    
-    def detect_issues(self, topic_key: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+
+    def run_cluster_maintenance(self) -> Dict[str, Any]:
         """
-        Detect issues for a specific topic.
+        Orchestrate cluster lifecycle: expire, merge, promote, crisis evaluation.
+        Used when use_incremental_clustering=True. No clustering (IncrementalClusterAssigner handles that).
+        """
+        session = self._get_db_session()
+        config = ConfigManager()
+        stats: Dict[str, Any] = {
+            "expired": 0,
+            "merged": 0,
+            "promoted": 0,
+            "crisis_dispatched": 0,
+            "issues_archived": 0,
+            "issues_merged": 0,
+        }
+        try:
+            stats["expired"] = self._expire_clusters(session, topic_key=None)
+            if self.cluster_merge_enabled:
+                stats["merged"] = self._merge_clusters(session, topic_key=None)
+            session.commit()
+
+            if self.promotion_enabled:
+                stats["issues_archived"] = self._enforce_issue_limit(session)
+                session.commit()
+                stats["issues_merged"] = self._merge_similar_issues(session, topic_key=None)
+                if stats["issues_merged"] > 0:
+                    session.commit()
+
+                top_n_limit = getattr(self, "promotion_top_n_backlog", None) or self.promotion_top_n
+                results = self.promote_clusters(top_n=min(top_n_limit, 100))
+                stats["promoted"] = len(results)
+
+            if config.crisis_detector_enabled():
+                stats["crisis_dispatched"] = self._evaluate_crisis(session)
+                session.commit()
+
+            return stats
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error in run_cluster_maintenance: {e}", exc_info=True)
+            raise
+        finally:
+            self._close_db_session(session)
+
+    def _enforce_issue_limit(self, session: Session) -> int:
+        """Archive lowest-priority active issues if over limit. Returns count archived."""
+        config = ConfigManager()
+        max_active = config.get_int("processing.issue.promotion.max_active_issues", 500)
+        current = session.query(TopicIssue).filter(TopicIssue.is_active == True).count()
+        if current <= max_active:
+            return 0
+        excess = current - max_active
+        low_priority = (
+            session.query(TopicIssue)
+            .filter(TopicIssue.is_active == True)
+            .order_by(TopicIssue.priority_score.asc(), TopicIssue.mention_count.asc())
+            .limit(excess)
+            .all()
+        )
+        for issue in low_priority:
+            issue.is_active = False
+            issue.is_archived = True
+            issue.state = "archived"
+            logger.info(
+                f"Archived issue {issue.issue_slug} (priority={issue.priority_score:.1f}, mentions={issue.mention_count})"
+            )
+        return len(low_priority)
+
+    def detect_issues(
+        self,
+        topic_key: Optional[str] = None,
+        user_id: Optional[UUID] = None,
+        limit: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Detect issues for a topic (legacy), user (per-user), or globally (no scope).
+        
+        When use_global_clustering is True: call with limit only, no topic_key or user_id.
+        When user_id is provided (legacy per-user): operates per-user, ignores topic_key.
+        When topic_key is provided (legacy per-topic): operates per-topic.
+        At least one of topic_key, user_id, or use_global_clustering must apply.
         
         Process:
-        1. Get mentions for topic (without issues)
-        2. Cluster mentions
-        3. Match clusters to existing issues
-        4. Create new issues from unmatched clusters
-        5. Update existing issues with new mentions
-        
-        Args:
-            topic_key: Topic key to detect issues for
-            limit: Optional limit on number of mentions to process
+        1. Maintain clusters (expire, merge)
+        2. Get unprocessed mentions
+        3. Magnet attach, DBSCAN stragglers
+        4. Create/update issues
         
         Returns:
             List of created/updated issue dictionaries
         """
+        config = ConfigManager()
+        use_global_clustering = config.use_global_clustering()
+        if use_global_clustering and topic_key is None and user_id is None:
+            # Fully global path: operate on all active clusters
+            return self._detect_issues_globally(limit=limit)
+        if user_id is None and topic_key is None:
+            raise ValueError("detect_issues requires topic_key or user_id (or use_global_clustering with no scope)")
+        use_global = user_id is not None
+
         session = self._get_db_session()
-        
+        scope_label = f"user_id={user_id}" if use_global else f"topic_key={topic_key}"
+
         try:
-            logger.info(f"Detecting issues for topic: {topic_key}")
-            
+            logger.info(f"Detecting issues for {scope_label}")
+
             # Maintain clusters: expire old, merge similar
-            logger.debug(f"Maintaining clusters for topic: {topic_key}")
-            self._expire_clusters(session, topic_key)
+            self._expire_clusters(session, topic_key=topic_key)
             if self.cluster_merge_enabled:
-                self._merge_clusters(session, topic_key)
-            logger.debug(f"Cluster maintenance complete for topic: {topic_key}")
-            
-            # Start batch processing
-            BATCH_SIZE = 300  # Smaller batches: less lock time, predictable latency, better concurrency
+                self._merge_clusters(session, topic_key=topic_key)
+
+            BATCH_SIZE = int(os.getenv("ISSUE_DETECTION_BATCH_SIZE", "100"))
             total_created_issues = []
-            
-            last_entry_id = 0  # For keyset pagination
-        
+            updated_issue_ids = set()
+            existing_issues = self._get_existing_issues(session, topic_key=topic_key)
+            last_entry_id = 0
+
             while True:
-                logger.info(f"Fetching batch of unprocessed mentions for topic: {topic_key} (limit={BATCH_SIZE}, after_id={last_entry_id})")
-                mentions = self._get_unprocessed_mentions(session, topic_key, limit=BATCH_SIZE, after_entry_id=last_entry_id)
+                logger.info(f"Fetching batch of unprocessed mentions for {scope_label} (limit={BATCH_SIZE})")
+                mentions = self._get_unprocessed_mentions(
+                    session, topic_key=topic_key, limit=BATCH_SIZE, after_entry_id=last_entry_id
+                )
                 
                 if not mentions:
-                    logger.info(f"No more unprocessed mentions for topic: {topic_key}")
+                    logger.info(f"No more unprocessed mentions for {scope_label}")
                     break
-                
-                # Update last_entry_id for next batch
+
                 if mentions:
                     last_entry_id = max(m['entry_id'] for m in mentions)
-                
-                logger.info(f"Processing batch of {len(mentions)} unprocessed mentions for topic: {topic_key}")
-                
-                # Incremental attach to existing clusters (magnet) to reduce re-clustering
-                logger.info(f"Attaching mentions to existing clusters for topic: {topic_key}")
-                mentions = self._attach_mentions_to_clusters(session, mentions, topic_key)
+
+                logger.info(f"Processing batch of {len(mentions)} unprocessed mentions for {scope_label}")
+
+                # Incremental attach to existing clusters (magnet)
+                mentions = self._attach_mentions_to_clusters(
+                    session, mentions, topic_key=topic_key
+                )
                 logger.info(f"After magnet attachment: {len(mentions)} mentions remaining for clustering")
                 
                 if not mentions:
-                    logger.info(f"All mentions in batch attached to existing clusters/issues. Fetching next batch...")
-                    session.commit()  # Commit attachments
+                    logger.info(f"All mentions in batch attached. Fetching next batch...")
+                    session.commit()
                     continue
-                
-                # Cluster remaining mentions
-                logger.debug(f"Starting clustering for {len(mentions)} mentions, topic: {topic_key}")
-                clusters = self.clustering_service.cluster_mentions(mentions, topic_key)
-                logger.debug(f"Clustering complete for topic: {topic_key}")
-                
+
+                # Cluster remaining mentions (topic_key for labeling; use primary topic or placeholder)
+                cluster_topic = topic_key or (mentions[0].get('topic_key') if mentions else 'global')
+                logger.debug(f"Starting clustering for {len(mentions)} mentions, scope: {scope_label}")
+                clusters = self.clustering_service.cluster_mentions(mentions, cluster_topic)
+                logger.debug(f"Clustering complete for {scope_label}")
+
                 if not clusters:
                     logger.info(f"No valid clusters found for current batch, continuing...")
                     continue
+
+                logger.info(f"Found {len(clusters)} clusters for {scope_label}")
                 
-                logger.info(f"Found {len(clusters)} clusters for topic: {topic_key}")
-                
-                # Get existing issues for this topic
-                logger.debug(f"Fetching existing issues for topic: {topic_key}")
-                existing_issues = self._get_existing_issues(session, topic_key)
+                # Refresh existing issues for this scope (may have changed from magnet)
+                existing_issues = self._get_existing_issues(session, topic_key=topic_key)
                 
                 # Process each cluster
                 batch_created_issues = []
@@ -269,7 +354,7 @@ class IssueDetectionEngine:
                 logger.info(f"Processing {len(clusters)} clusters for topic: {topic_key}")
                 for i, cluster in enumerate(clusters):
                     logger.debug(f"Processing cluster {i+1}/{len(clusters)} for topic: {topic_key}")
-                    cluster_row = self._persist_cluster(session, cluster, topic_key)
+                    cluster_row = self._persist_cluster(session, cluster, cluster_topic)
                     if not cluster_row:
                          continue
                          
@@ -286,12 +371,13 @@ class IssueDetectionEngine:
                         continue
 
                     # Check if cluster matches existing issue
-                    matched_issue = self._find_similar_issue(session, cluster, existing_issues, topic_key)
+                    matched_issue = self._find_similar_issue(session, cluster, existing_issues, cluster_topic)
                     
                     if matched_issue:
                         # Update existing issue
                         logger.info(f"Updating existing issue: {matched_issue.issue_slug}")
-                        self._update_issue_with_mentions(session, matched_issue, cluster, topic_key, cluster_row)
+                        self._update_issue_with_mentions(session, matched_issue, cluster, cluster_topic, cluster_row)
+                        updated_issue_ids.add(matched_issue.id)
                         batch_created_issues.append({
                             'issue_id': str(matched_issue.id),
                             'issue_slug': matched_issue.issue_slug,
@@ -301,7 +387,7 @@ class IssueDetectionEngine:
                     else:
                         # Create new issue (if conditions met)
                         if self._check_issue_conditions(cluster):
-                            new_issue = self._create_issue_from_cluster(session, cluster, topic_key, cluster_row)
+                            new_issue = self._create_issue_from_cluster(session, cluster, cluster_topic, cluster_row)
                             if new_issue:
                                 batch_created_issues.append({
                                     'issue_id': str(new_issue.id),
@@ -356,6 +442,157 @@ class IssueDetectionEngine:
             raise
         finally:
             self._close_db_session(session)
+
+    def _detect_issues_globally(self, limit: Optional[int] = None) -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
+        """
+        Detect issues globally: no user_id or topic_key scope.
+        Operates on all active clusters and all unprocessed mentions.
+        Returns (issues, stats) where stats has: expired_clusters, merged_clusters,
+        batches_processed, magnet_attached, clusters_persisted, issues_created_updated.
+        """
+        session = self._get_db_session()
+        scope_label = "global"
+        stats = {
+            "expired_clusters": 0,
+            "merged_clusters": 0,
+            "batches_processed": 0,
+            "magnet_attached": 0,
+            "clusters_persisted": 0,
+            "issues_created_updated": 0,
+        }
+
+        try:
+            issue_logger = get_logger('services.issue_detection')
+            logger.info("Detecting issues globally (no user/topic scope)")
+
+            stats["expired_clusters"] = self._expire_clusters(session, topic_key=None)
+            if self.cluster_merge_enabled:
+                stats["merged_clusters"] = self._merge_clusters(session, topic_key=None)
+
+            issue_logger.info(
+                "Detection: expired=%s, merged=%s clusters",
+                stats["expired_clusters"],
+                stats["merged_clusters"],
+            )
+
+            config = ConfigManager()
+            use_incremental = config.use_incremental_clustering(db_session=session)
+
+            if use_incremental:
+                # Incremental mode: assigner handles mention→cluster via Pinecone. Skip fetch+magnet+DBSCAN.
+                issue_logger.info("Detection: incremental mode - skipping unprocessed mentions loop (assigner handles it)")
+                session.commit()
+                total_created_issues = []
+            else:
+                # Legacy DBSCAN path: fetch unprocessed mentions, magnet attach, cluster stragglers
+                BATCH_SIZE = int(os.getenv("ISSUE_DETECTION_BATCH_SIZE", "100"))
+                total_created_issues = []
+                updated_issue_ids = set()
+                existing_issues = self._get_existing_issues(session, topic_key=None)
+                last_entry_id = 0
+
+                while True:
+                    logger.info(f"Fetching batch of unprocessed mentions for {scope_label} (limit={BATCH_SIZE})")
+                    mentions = self._get_unprocessed_mentions(
+                        session, topic_key=None, limit=BATCH_SIZE, after_entry_id=last_entry_id
+                    )
+                    if not mentions:
+                        issue_logger.info(
+                            "Detection: no more mentions. Total: batches=%s, magnet=%s, clusters=%s",
+                            stats["batches_processed"], stats["magnet_attached"], stats["clusters_persisted"],
+                        )
+                        logger.info(f"No more unprocessed mentions for {scope_label}")
+                        break
+
+                    last_entry_id = max(m["entry_id"] for m in mentions)
+                    logger.info(f"Processing batch of {len(mentions)} unprocessed mentions for {scope_label}")
+
+                    before_magnet = len(mentions)
+                    mentions = self._attach_mentions_to_clusters(session, mentions, topic_key=None)
+                    magnet_this_batch = before_magnet - len(mentions)
+                    stats["magnet_attached"] += magnet_this_batch
+                    stats["batches_processed"] += 1
+                    n = stats["batches_processed"]
+                    issue_logger.info(
+                        "Batch %s: fetched=%s, magnet_attached=%s, remaining=%s | cumulative: magnet=%s",
+                        n, before_magnet, magnet_this_batch, len(mentions), stats["magnet_attached"],
+                    )
+                    logger.info(f"After magnet attachment: {len(mentions)} mentions remaining for clustering")
+
+                    if not mentions:
+                        session.commit()
+                        continue
+
+                    cluster_topic = mentions[0].get("topic_key", "global") if mentions else "global"
+                    clusters = self.clustering_service.cluster_mentions(mentions, cluster_topic)
+                    if not clusters:
+                        continue
+
+                    stats["clusters_persisted"] += len(clusters)
+                    issue_logger.info(
+                        "Batch %s: persisted %s clusters | cumulative: clusters=%s",
+                        n, len(clusters), stats["clusters_persisted"],
+                    )
+                    logger.info(f"Found {len(clusters)} clusters for {scope_label}")
+                    existing_issues = self._get_existing_issues(session, topic_key=None)
+                    batch_created_issues = []
+
+                    for i, cluster in enumerate(clusters):
+                        cluster_row = self._persist_cluster(session, cluster, cluster_topic)
+                        if not cluster_row:
+                            continue
+                        density_str = f"{cluster_row.density_score:.3f}" if cluster_row.density_score else "None"
+                        logger.info(
+                            f"Persisted cluster {cluster_row.id} (global): "
+                            f"size={len(cluster)}, density={density_str}"
+                        )
+
+                        if self.promotion_enabled:
+                            continue
+
+                        matched_issue = self._find_similar_issue(session, cluster, existing_issues, cluster_topic)
+                        if matched_issue:
+                            self._update_issue_with_mentions(session, matched_issue, cluster, cluster_topic, cluster_row)
+                            updated_issue_ids.add(matched_issue.id)
+                            batch_created_issues.append({
+                                "issue_id": str(matched_issue.id),
+                                "issue_slug": matched_issue.issue_slug,
+                                "action": "updated",
+                                "mentions_added": len(cluster),
+                            })
+                        elif self._check_issue_conditions(cluster):
+                            new_issue = self._create_issue_from_cluster(session, cluster, cluster_topic, cluster_row)
+                            if new_issue:
+                                batch_created_issues.append({
+                                    "issue_id": str(new_issue.id),
+                                    "issue_slug": new_issue.issue_slug,
+                                    "action": "created",
+                                    "mentions_count": len(cluster),
+                                })
+                                existing_issues.append(new_issue)
+
+                    total_created_issues.extend(batch_created_issues)
+                    stats["issues_created_updated"] = len(total_created_issues)
+                    session.commit()
+
+                    if limit and len(total_created_issues) >= limit:
+                        break
+
+                if not self.promotion_enabled:
+                    for existing_issue in existing_issues:
+                        if existing_issue.id not in updated_issue_ids:
+                            self._recalculate_issue_metrics(session, existing_issue)
+                    session.commit()
+
+            logger.info(f"Global issue detection complete: {len(total_created_issues)} issues created/updated")
+            return total_created_issues, stats
+
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error detecting issues globally: {e}", exc_info=True)
+            raise
+        finally:
+            self._close_db_session(session)
     
     def recalculate_all_issues(self, topic_key: Optional[str] = None) -> int:
         """
@@ -405,21 +642,19 @@ class IssueDetectionEngine:
         finally:
             self._close_db_session(session)
     
-    def _get_unprocessed_mentions(self, session: Session, topic_key: str, limit: Optional[int] = None, after_entry_id: int = 0) -> List[Dict[str, Any]]:
+    def _get_unprocessed_mentions(
+        self,
+        session: Session,
+        topic_key: Optional[str] = None,
+        limit: Optional[int] = None,
+        after_entry_id: int = 0,
+    ) -> List[Dict[str, Any]]:
         """
-        Get mentions for a topic that don't have issues yet.
-        Uses NOT EXISTS (correlated) and minimal column projection for performance.
-        
-        Args:
-            session: Database session
-            topic_key: Topic key
-            limit: Optional limit
-            after_entry_id: Fetch mentions with entry_id > this value (keyset pagination)
-        
-        Returns:
-            List of mention dictionaries with embeddings
+        Get mentions that don't have issues yet.
+        When topic_key is None (global): fetch all mentions with any MentionTopic.
+        When topic_key is set: filter by that topic.
         """
-        # Correlated NOT EXISTS: no issue row for this entry_id, no active cluster for this entry_id
+        # Correlated NOT EXISTS: no issue row, no active cluster
         subq_issue = select(1).select_from(IssueMention).where(
             IssueMention.mention_id == SentimentData.entry_id
         )
@@ -430,10 +665,17 @@ class IssueDetectionEngine:
             .join(ProcessingCluster, ClusterMention.cluster_id == ProcessingCluster.id)
             .where(
                 ClusterMention.mention_id == SentimentData.entry_id,
-                ProcessingCluster.status == 'active',
+                ProcessingCluster.status == "active",
             )
         )
         no_active_cluster = ~exists(subq_active_cluster)
+
+        # Only fetch mentions that have embeddings — those without can never be
+        # clustered and would otherwise cycle through every batch indefinitely.
+        subq_has_embedding = select(1).select_from(SentimentEmbedding).where(
+            SentimentEmbedding.entry_id == SentimentData.entry_id
+        )
+        has_embedding = exists(subq_has_embedding)
 
         stmt = (
             select(
@@ -447,16 +689,15 @@ class IssueDetectionEngine:
                 SentimentData.sentiment_score,
                 SentimentData.emotion_label,
                 SentimentData.source_type,
+                MentionTopic.topic_key,
                 MentionTopic.topic_confidence,
             )
             .select_from(SentimentData)
             .join(MentionTopic, SentimentData.entry_id == MentionTopic.mention_id)
-            .where(
-                MentionTopic.topic_key == topic_key,
-                no_issue,
-                no_active_cluster,
-            )
+            .where(no_issue, no_active_cluster, has_embedding)
         )
+        if topic_key is not None:
+            stmt = stmt.where(MentionTopic.topic_key == topic_key)
         if after_entry_id > 0:
             stmt = stmt.where(SentimentData.entry_id > after_entry_id)
         stmt = stmt.order_by(SentimentData.entry_id.asc())
@@ -465,11 +706,20 @@ class IssueDetectionEngine:
 
         result = session.execute(stmt)
         rows = result.all()
-
         if not rows:
             return []
 
-        # Batch load embeddings (entry_id, embedding only)
+        # Global mode: same entry_id can appear multiple times (one per MentionTopic). Dedupe by entry_id, keep highest confidence.
+        if topic_key is None and rows:
+            by_entry = {}
+            for row in rows:
+                eid = row[0]
+                conf = row[11] or 0.0
+                if eid not in by_entry or (by_entry[eid][11] or 0) < conf:
+                    by_entry[eid] = row
+            rows = list(by_entry.values())
+            rows.sort(key=lambda r: r[0])
+
         entry_ids = [row[0] for row in rows]
         emb_rows = session.execute(
             select(SentimentEmbedding.entry_id, SentimentEmbedding.embedding).where(
@@ -480,75 +730,78 @@ class IssueDetectionEngine:
 
         mentions = []
         for row in rows:
-            # Tuple access: 0=entry_id, 1=text, 2=content, 3=title, 4=run_timestamp, 5=created_at,
-            # 6=sentiment_label, 7=sentiment_score, 8=emotion_label, 9=source_type, 10=topic_confidence
-            text_val = row[1] or row[2] or row[3] or ''
+            text_val = row[1] or row[2] or row[3] or ""
             run_ts = row[4] or row[5]
+            row_topic_key = row[10] or "global"
             mention_dict = {
-                'entry_id': row[0],
-                'text': text_val,
-                'run_timestamp': run_ts,
-                'sentiment_label': row[6],
-                'sentiment_score': row[7],
-                'emotion_label': row[8],
-                'source_type': row[9],
-                'topic_key': topic_key,
-                'topic_confidence': row[10],
+                "entry_id": row[0],
+                "text": text_val,
+                "run_timestamp": run_ts,
+                "sentiment_label": row[6],
+                "sentiment_score": row[7],
+                "emotion_label": row[8],
+                "source_type": row[9],
+                "topic_key": row_topic_key,
+                "topic_confidence": row[11],
             }
             embedding = embeddings_map.get(row[0])
             if embedding:
                 if isinstance(embedding, str):
                     try:
-                        mention_dict['embedding'] = json.loads(embedding)
+                        mention_dict["embedding"] = json.loads(embedding)
                     except json.JSONDecodeError:
-                        logger.warning(f"Failed to decode embedding for mention {row[0]}, skipping embedding")
-                        mention_dict['embedding'] = None
+                        mention_dict["embedding"] = None
                 else:
-                    mention_dict['embedding'] = embedding
+                    mention_dict["embedding"] = embedding
             mentions.append(mention_dict)
-
         return mentions
     
-    def _get_existing_issues(self, session: Session, topic_key: str) -> List[TopicIssue]:
-        """Get existing active issues for a topic."""
-        return session.query(TopicIssue).filter(
-            TopicIssue.topic_key == topic_key,
+    def _get_existing_issues(self, session: Session, topic_key: Optional[str] = None) -> List[TopicIssue]:
+        """Get existing active issues. When topic_key is None, return all active issues (global)."""
+        q = session.query(TopicIssue).filter(
             TopicIssue.is_active == True,
-            TopicIssue.is_archived == False
-        ).all()
+            TopicIssue.is_archived == False,
+        )
+        if topic_key is not None:
+            q = q.filter(TopicIssue.topic_key == topic_key)
+        return q.all()
 
-    def _get_active_clusters(self, session: Session, topic_key: str) -> List[ProcessingCluster]:
-        """Get active clusters for a topic."""
-        return session.query(ProcessingCluster).filter(
-            ProcessingCluster.topic_key == topic_key,
-            ProcessingCluster.status == 'active'
-        ).all()
+    def _get_active_clusters(self, session: Session, topic_key: Optional[str] = None) -> List[ProcessingCluster]:
+        """Get active clusters. When topic_key is None, return all active clusters (global)."""
+        q = session.query(ProcessingCluster).filter(ProcessingCluster.status == "active")
+        if topic_key is not None:
+            q = q.filter(ProcessingCluster.topic_key == topic_key)
+        return q.all()
 
-    def _expire_clusters(self, session: Session, topic_key: str):
-        """Expire clusters older than configured expiry window."""
+    def _expire_clusters(self, session: Session, topic_key: Optional[str] = None) -> int:
+        """Expire clusters older than configured expiry window. Global when topic_key is None. Returns count expired."""
         if not self.cluster_expiry_hours or self.cluster_expiry_hours <= 0:
-            return
+            return 0
         cutoff = datetime.now() - timedelta(hours=self.cluster_expiry_hours)
-        expired = session.query(ProcessingCluster).filter(
-            ProcessingCluster.topic_key == topic_key,
-            ProcessingCluster.status == 'active',
-            ProcessingCluster.created_at < cutoff
-        ).all()
+        q = session.query(ProcessingCluster).filter(
+            ProcessingCluster.status == "active",
+            ProcessingCluster.created_at < cutoff,
+        )
+        if topic_key is not None:
+            q = q.filter(ProcessingCluster.topic_key == topic_key)
+        expired = q.all()
         for c in expired:
-            c.status = 'expired'
+            c.status = "expired"
         if expired:
-            logger.info(f"Expired {len(expired)} clusters for topic {topic_key} older than {self.cluster_expiry_hours}h")
+            scope = f"topic {topic_key}" if topic_key else "global"
+            logger.info(f"Expired {len(expired)} clusters for {scope} older than {self.cluster_expiry_hours}h")
+        return len(expired)
 
-    def _merge_clusters(self, session: Session, topic_key: str):
+    def _merge_clusters(self, session: Session, topic_key: Optional[str] = None) -> int:
         """
         Merge highly similar active clusters (centroid similarity).
-        Simple greedy merge: smaller into larger when sim >= cluster_merge_similarity.
-        Optimized: Only recomputes centroid/density at the end, not during merge.
+        Global when topic_key is None. Returns count of source clusters merged.
         """
         active = self._get_active_clusters(session, topic_key)
-        logger.debug(f"Merge check: Found {len(active)} active clusters for topic: {topic_key}")
+        scope = f"topic {topic_key}" if topic_key else "global"
+        logger.debug(f"Merge check: Found {len(active)} active clusters for {scope}")
         if len(active) < 2:
-            return
+            return 0
 
         # Limit merge checks to avoid O(n²) explosion on large datasets
         if len(active) > self.cluster_merge_max_clusters:
@@ -636,10 +889,68 @@ class IssueDetectionEngine:
                     source.status = 'merged'
                     merged_ids.add(source.id)
                     logger.info(f"Merged clusters {source.id} -> {target.id} (sim={sim:.3f}, target_size={target.size}, source_size={mention_count})")
-        
+
+                    # Sync Pinecone: upsert target's updated centroid, delete source vector
+                    config = ConfigManager()
+                    if config.use_incremental_clustering(db_session=session) and target.centroid:
+                        user_id_str = str(target.user_id) if target.user_id else "null"
+                        metadata = {
+                            "user_id": user_id_str,
+                            "status": "active",
+                            "size": target.size,
+                            "topic_keys": target.topic_keys or ([target.topic_key] if target.topic_key else []),
+                        }
+                        if not config.use_global_clustering(db_session=session):
+                            metadata["topic_key"] = target.topic_key or ""
+                        pinecone_upsert(vectors=[{"id": str(target.id), "values": target.centroid, "metadata": metadata}])
+                        pinecone_delete(ids=[str(source.id)])
+
         # Note: Density is not recomputed here (expensive). It will be recalculated lazily
         # when the cluster is used for promotion or matching, or can be recalculated in a background job.
+        return len(merged_ids)
 
+    def _evaluate_crisis(self, session: Session) -> int:
+        """
+        Evaluate active clusters for crisis-level conditions and dispatch notifications.
+        Returns count of dispatched notifications.
+        """
+        from src.services.velocity_tracker import VelocityTracker
+        from src.services.crisis_evaluator import CrisisEvaluator
+        from src.services.crisis_action_dispatcher import CrisisActionDispatcher
+
+        clusters = (
+            session.query(ProcessingCluster)
+            .filter(ProcessingCluster.status == "active")
+            .limit(100)
+            .all()
+        )
+        vt = VelocityTracker()
+        evaluator = CrisisEvaluator()
+        dispatcher = CrisisActionDispatcher()
+        dispatched = 0
+        for c in clusters:
+            snap = vt.get_snapshot(c.id)
+            topic_keys = list(c.topic_keys) if c.topic_keys else ([c.topic_key] if c.topic_key else [])
+            evt = evaluator.evaluate(
+                c.id, topic_keys, snap,
+                cluster_size=c.size or 0,
+                cluster_density=c.density_score or 0.0,
+            )
+            if evt:
+                r = dispatcher.dispatch(
+                    cluster_id=c.id,
+                    topic_keys=topic_keys,
+                    level=evt.level,
+                    burst_ratio=evt.burst_ratio,
+                    count_1m=evt.count_1m,
+                    count_5m=evt.count_5m,
+                    count_15m=evt.count_15m,
+                    cluster_size=evt.cluster_size,
+                    cluster_density=evt.cluster_density,
+                    db_session=session,
+                )
+                dispatched += len(r)
+        return dispatched
 
     def _persist_cluster(self, session: Session, cluster: List[Dict[str, Any]], topic_key: str,
                          status: str = 'active', cluster_type: str = 'dynamic') -> Optional[ProcessingCluster]:
@@ -741,22 +1052,20 @@ class IssueDetectionEngine:
 
         return cluster_row
 
-    def _attach_mentions_to_clusters(self, session: Session, mentions: List[Dict[str, Any]],
-                                     topic_key: str) -> List[Dict[str, Any]]:
+    def _attach_mentions_to_clusters(
+        self,
+        session: Session,
+        mentions: List[Dict[str, Any]],
+        topic_key: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Incremental magnet: try to attach mentions to active clusters AND active issues by centroid similarity.
-        Returns ALL mentions for clustering (mentions can belong to multiple clusters).
-        
-        Note: Mentions attached via magnet are still returned for clustering, allowing them
-        to be part of multiple clusters if they match different cluster patterns.
+        Returns ALL mentions for clustering. Global when topic_key is None.
         """
         if not mentions:
             return []
 
-        # Get active clusters
         active_clusters = self._get_active_clusters(session, topic_key)
-        
-        # Get active issues for direct attachment
         active_issues = self._get_existing_issues(session, topic_key)
         
         if not active_clusters and not active_issues:
@@ -945,7 +1254,23 @@ class IssueDetectionEngine:
 
         # Return ALL mentions for clustering (allows multi-cluster membership)
         return mentions
-    
+
+    def _get_issue_for_cluster(self, session: Session, cluster_row: ProcessingCluster) -> Optional[TopicIssue]:
+        """
+        Find an existing issue that was created from this cluster (direct cluster_id link).
+        If found, we MUST update that issue—do not create a duplicate or match to a different issue.
+        """
+        existing = (
+            session.query(TopicIssue)
+            .join(IssueMention, IssueMention.issue_id == TopicIssue.id)
+            .filter(
+                IssueMention.cluster_id == cluster_row.id,
+                TopicIssue.is_active == True,
+            )
+            .first()
+        )
+        return existing
+
     def _find_similar_issue(self,
                            session: Session,
                            cluster: List[Dict[str, Any]],
@@ -1071,19 +1396,157 @@ class IssueDetectionEngine:
             growth_rate = 1.0
         return {"recent": recent, "prev": prev, "growth_rate": growth_rate}
 
-    def promote_clusters_for_topic(self, topic_key: str, top_n: Optional[int] = None) -> List[Dict[str, Any]]:
+    def promote_clusters(self, top_n: Optional[int] = None) -> List[Dict[str, Any]]:
         """
-        Promote top N clusters for a topic into issues, using priority ranking.
+        Promote top N clusters globally (no topic/user scope).
+        Operates on all active clusters.
+        No-op when crisis_detector_enabled (crisis path handles creation).
         """
+        config = ConfigManager()
+        if config.crisis_detector_enabled():
+            return []
         session = self._get_db_session()
         results = []
         top_n_val = top_n or self.promotion_top_n
 
         try:
             clusters = session.query(ProcessingCluster).filter(
-                ProcessingCluster.topic_key == topic_key,
-                ProcessingCluster.status == 'active'
+                ProcessingCluster.status == "active",
             ).all()
+
+            logger.info(f"Promotion (global): Found {len(clusters)} active clusters")
+
+            if not clusters:
+                return []
+
+            eligible = [
+                c for c in clusters
+                if c.density_score is None or c.density_score >= self.promotion_min_density
+            ]
+            # Exclude clusters that already have an issue (via IssueMention.cluster_id)
+            # to focus on clusters that need new issues
+            need_promotion = []
+            for c in eligible:
+                if self._get_issue_for_cluster(session, c) is None:
+                    need_promotion.append(c)
+            if need_promotion:
+                logger.info(f"Promotion (global): {len(need_promotion)}/{len(eligible)} clusters need promotion (no issue yet)")
+                eligible = need_promotion
+            else:
+                logger.info(f"Promotion (global): All {len(eligible)} eligible clusters already have issues, skipping")
+                return []
+
+            def score(c: ProcessingCluster) -> float:
+                size = c.size or 0
+                density = c.density_score or 0.0
+                growth = 0.0
+                try:
+                    gm = self._cluster_growth_metrics(session, c)
+                    growth = gm.get("growth_rate", 0.0)
+                except Exception:
+                    growth = 0.0
+                return float(size * max(density, 0.0001) * (1.0 + growth))
+
+            ranked = sorted(eligible, key=score, reverse=True)[:top_n_val]
+            existing_issues = self._get_existing_issues(session, topic_key=None)
+
+            for cluster_row in ranked:
+                cluster_mentions = self._get_cluster_mentions(session, cluster_row)
+                if not cluster_mentions:
+                    continue
+                if not self._check_issue_conditions(cluster_mentions):
+                    continue
+
+                cluster_topic = (
+                    (cluster_row.topic_keys or [cluster_row.topic_key])[0]
+                    if (cluster_row.topic_keys or [cluster_row.topic_key])
+                    else cluster_row.topic_key or "global"
+                )
+
+                # 1. Direct cluster_id match: issue was created from this cluster—MUST update it
+                matched_issue = self._get_issue_for_cluster(session, cluster_row)
+                # 2. No direct match: for small clusters only, try similarity match
+                if matched_issue is None and len(cluster_mentions) < 100:
+                    matched_issue = self._find_similar_issue(
+                        session, cluster_mentions, existing_issues, cluster_topic
+                    )
+                # 3. No match: create new issue (else branch below)
+
+                if matched_issue:
+                    self._update_issue_with_mentions(
+                        session, matched_issue, cluster_mentions, cluster_topic, cluster_row
+                    )
+                    cluster_row.status = "promoted"
+                    try:
+                        priority_result = self.priority_calculator.calculate_priority(matched_issue, session)
+                        matched_issue.priority_score = priority_result["priority_score"]
+                        matched_issue.priority_band = priority_result["priority_band"]
+                        lifecycle_state = self.lifecycle_manager.update_lifecycle(str(matched_issue.id))
+                        if lifecycle_state:
+                            matched_issue.state = lifecycle_state
+                    except Exception as e:
+                        logger.warning(f"Error updating priority/lifecycle: {e}")
+                    results.append({
+                        "cluster_id": str(cluster_row.id),
+                        "issue_id": str(matched_issue.id),
+                        "issue_slug": matched_issue.issue_slug,
+                        "action": "updated",
+                        "mentions_count": len(cluster_mentions),
+                    })
+                    if matched_issue not in existing_issues:
+                        existing_issues.append(matched_issue)
+                else:
+                    issue = self._create_issue_from_cluster(
+                        session, cluster_mentions, cluster_topic, cluster_row
+                    )
+                    if issue:
+                        cluster_row.status = "promoted"
+                        results.append({
+                            "cluster_id": str(cluster_row.id),
+                            "issue_id": str(issue.id),
+                            "issue_slug": issue.issue_slug,
+                            "action": "promoted",
+                            "mentions_count": len(cluster_mentions),
+                        })
+                        existing_issues.append(issue)
+
+            session.commit()
+            if results:
+                merged_count = self._merge_similar_issues(session, topic_key=None)
+                if merged_count > 0:
+                    session.commit()
+            logger.info(f"Promotion (global) complete: {len(results)} clusters promoted")
+            return results
+
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error promoting clusters globally: {e}", exc_info=True)
+            return []
+        finally:
+            self._close_db_session(session)
+
+    def promote_clusters_for_topic(
+        self, topic_key: str, top_n: Optional[int] = None, user_id: Optional[UUID] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Promote top N clusters for a topic into issues, using priority ranking.
+        No-op when crisis_detector_enabled.
+        """
+        config = ConfigManager()
+        if config.crisis_detector_enabled():
+            return []
+        session = self._get_db_session()
+        results = []
+        top_n_val = top_n or self.promotion_top_n
+
+        try:
+            q = session.query(ProcessingCluster).filter(
+                ProcessingCluster.topic_key == topic_key,
+                ProcessingCluster.status == 'active',
+            )
+            if user_id is not None:
+                q = q.filter(ProcessingCluster.user_id == user_id)
+            clusters = q.all()
 
             logger.info(f"Promotion check: Found {len(clusters)} active clusters for topic: {topic_key}")
             
@@ -1101,6 +1564,15 @@ class IssueDetectionEngine:
             
             if not eligible:
                 logger.info(f"No clusters meet density threshold for topic: {topic_key} (min={self.promotion_min_density})")
+                return []
+
+            # Exclude clusters that already have an issue (focus on clusters needing new issues)
+            need_promotion = [c for c in eligible if self._get_issue_for_cluster(session, c) is None]
+            if need_promotion:
+                eligible = need_promotion
+                logger.info(f"Promotion: {len(eligible)} clusters need promotion (no issue yet) for topic: {topic_key}")
+            else:
+                logger.info(f"Promotion: All eligible clusters already have issues for topic: {topic_key}")
                 return []
 
             def score(c: ProcessingCluster) -> float:
@@ -1136,11 +1608,12 @@ class IssueDetectionEngine:
                     logger.warning(f"Promotion: Cluster {cluster_row.id} (size={len(cluster_mentions)}) does not meet issue conditions, skipping")
                     continue
                 
-                # Check if cluster matches an existing issue
-                # Only match if cluster is small relative to existing issue (to allow large distinct clusters to become new issues)
-                matched_issue = None
-                if len(cluster_mentions) < 100:  # Only try matching smaller clusters
+                # 1. Direct cluster_id match: issue already created from this cluster—MUST update it
+                matched_issue = self._get_issue_for_cluster(session, cluster_row)
+                # 2. No direct match: for small clusters only, try similarity match
+                if matched_issue is None and len(cluster_mentions) < 100:
                     matched_issue = self._find_similar_issue(session, cluster_mentions, existing_issues, topic_key)
+                # 3. No match: create new issue (else branch below)
                 
                 if matched_issue:
                     # Update existing issue instead of creating new one
@@ -1213,19 +1686,17 @@ class IssueDetectionEngine:
         finally:
             self._close_db_session(session)
     
-    def _merge_similar_issues(self, session: Session, topic_key: str) -> int:
+    def _merge_similar_issues(self, session: Session, topic_key: Optional[str] = None) -> int:
         """
         Merge highly similar active issues (centroid similarity).
-        Merges smaller issue into larger issue when similarity >= issue_similarity_threshold.
-        
-        Returns:
-            Number of issue pairs merged
+        Global when topic_key is None.
+        Returns: Number of issue pairs merged
         """
         issues = self._get_existing_issues(session, topic_key)
         if len(issues) < 2:
             return 0
-        
-        logger.debug(f"Issue merge check: Found {len(issues)} active issues for topic: {topic_key}")
+        scope = f"topic {topic_key}" if topic_key else "global"
+        logger.debug(f"Issue merge check: Found {len(issues)} active issues for {scope}")
         
         merged_ids = set()
         merge_count = 0
@@ -1447,24 +1918,31 @@ class IssueDetectionEngine:
             logger.debug(f"Condition check: Cluster size {len(cluster)} < min {self.clustering_service.min_cluster_size}")
             return False
         
-        # Condition 2: Temporal proximity
+        # Condition 2: Recency (last activity) — reject stale clusters, not long-lived ones.
+        # Old logic rejected clusters by total span (max - min), which penalized important
+        # long-running issues. Now we check: has this cluster seen activity recently?
         timestamps = [
-            self.clustering_service._get_timestamp(m) 
+            self.clustering_service._get_timestamp(m)
             for m in cluster
         ]
-        
         if timestamps:
-            time_span = max(timestamps) - min(timestamps)
-            # Use configured max_time_span_hours or default to 2x time_window_hours
-            max_time_span_hours = (
-                self.max_time_span_hours 
-                if self.max_time_span_hours is not None 
-                else (self.clustering_service.time_window_hours * 2)
-            )
-            max_time_span = timedelta(hours=max_time_span_hours)
-            if time_span > max_time_span:
-                logger.warning(f"Condition check FAILED: Cluster time span {time_span} exceeds max {max_time_span}")
+            last_active_at = max(timestamps)
+            now = datetime.now(timezone.utc)
+            # Make last_active_at timezone-aware if needed for comparison
+            if last_active_at.tzinfo is None:
+                last_active_at = last_active_at.replace(tzinfo=timezone.utc)
+            staleness_threshold = timedelta(hours=self.clustering_service.time_window_hours)
+            hours_since_last = (now - last_active_at).total_seconds() / 3600.0
+            if (now - last_active_at) >= staleness_threshold:
+                logger.warning(
+                    f"Condition check FAILED: Cluster is stale (last activity {hours_since_last:.1f}h ago, "
+                    f"threshold={self.clustering_service.time_window_hours}h). Size={len(cluster)}"
+                )
                 return False
+            logger.debug(
+                f"Cluster passed recency check. Last mention was {hours_since_last:.1f}h ago "
+                f"(threshold={self.clustering_service.time_window_hours}h). Size={len(cluster)}"
+            )
         
         # Condition 3: Sentiment magnitude check
         sentiment_scores = [
@@ -1583,7 +2061,7 @@ class IssueDetectionEngine:
         # Check global issue limit
         from config.config_manager import ConfigManager
         config = ConfigManager()
-        MAX_ACTIVE_ISSUES = config.get_int('processing.issue.promotion.max_active_issues', 30)
+        MAX_ACTIVE_ISSUES = config.get_int('processing.issue.promotion.max_active_issues', 500)
         current_active = session.query(TopicIssue).filter(
             TopicIssue.is_active == True
         ).count()
@@ -1611,6 +2089,13 @@ class IssueDetectionEngine:
         timestamps = [self.clustering_service._get_timestamp(m) for m in cluster]
         start_time = min(timestamps) if timestamps else datetime.now()
         
+        # topic_keys from cluster for fan-out (owner_configs.topics &&)
+        topic_keys_list = None
+        if cluster_row and hasattr(cluster_row, "topic_keys") and cluster_row.topic_keys:
+            topic_keys_list = list(cluster_row.topic_keys)
+        elif topic_key:
+            topic_keys_list = [topic_key]
+
         # Create issue
         issue = TopicIssue(
             id=uuid4(),
@@ -1618,6 +2103,7 @@ class IssueDetectionEngine:
             issue_label=issue_label,
             issue_summary=issue_summary,
             topic_key=topic_key,
+            topic_keys=topic_keys_list,
             primary_topic_key=topic_key,
             state='emerging',
             start_time=start_time,
@@ -1975,20 +2461,38 @@ class IssueDetectionEngine:
             current_window_count = 0
             previous_window_count = 0
             
+            # Track timestamp source statistics for validation
+            timestamp_sources = {
+                'published_at': 0,
+                'published_date': 0,
+                'date': 0,
+                'created_at': 0,
+                'missing': 0
+            }
+            
             for mention in mentions:
                 # Use published_at, published_date, date, or created_at (in order of preference)
                 mention_time = None
+                timestamp_source = None
+                
                 if mention.published_at:
                     mention_time = mention.published_at
+                    timestamp_source = 'published_at'
                 elif mention.published_date:
                     mention_time = mention.published_date
+                    timestamp_source = 'published_date'
                 elif mention.date:
                     mention_time = mention.date
+                    timestamp_source = 'date'
                 elif mention.created_at:
                     mention_time = mention.created_at
+                    timestamp_source = 'created_at'
                 
                 if not mention_time:
+                    timestamp_sources['missing'] += 1
                     continue
+                
+                timestamp_sources[timestamp_source] += 1
                 
                 # Ensure timezone-aware comparison
                 if mention_time.tzinfo is None:
@@ -2042,6 +2546,31 @@ class IssueDetectionEngine:
             
             issue.velocity_score = velocity_score
             
+            # Timestamp consistency validation
+            total_with_timestamps = sum(timestamp_sources[k] for k in ['published_at', 'published_date', 'date', 'created_at'])
+            if total_with_timestamps > 0:
+                primary_source_ratio = timestamp_sources['published_at'] / total_with_timestamps
+                fallback_ratio = (timestamp_sources['published_date'] + timestamp_sources['date'] + timestamp_sources['created_at']) / total_with_timestamps
+                
+                # Warn if using mixed timestamp sources (>20% fallback)
+                if fallback_ratio > 0.2:
+                    logger.warning(
+                        f"Issue {issue.issue_slug}: Mixed timestamp sources detected. "
+                        f"published_at={timestamp_sources['published_at']}, "
+                        f"published_date={timestamp_sources['published_date']}, "
+                        f"date={timestamp_sources['date']}, "
+                        f"created_at={timestamp_sources['created_at']}, "
+                        f"missing={timestamp_sources['missing']}. "
+                        f"This may affect velocity accuracy."
+                    )
+                
+                # Warn if any timestamps are missing
+                if timestamp_sources['missing'] > 0:
+                    logger.warning(
+                        f"Issue {issue.issue_slug}: {timestamp_sources['missing']} mentions have no timestamp. "
+                        f"These are excluded from velocity calculation."
+                    )
+            
             logger.debug(
                 f"Issue {issue.issue_slug}: volume_current={current_window_count}, "
                 f"volume_previous={previous_window_count}, velocity={velocity_percent:.1f}%, "
@@ -2050,11 +2579,13 @@ class IssueDetectionEngine:
             
         except Exception as e:
             logger.warning(f"Error calculating volume/velocity for issue {issue.id}: {e}")
-            # Set defaults on error
+            # Set defaults on error - use neutral scores, not zero
             issue.volume_current_window = issue.volume_current_window or 0
             issue.volume_previous_window = issue.volume_previous_window or 0
             issue.velocity_percent = issue.velocity_percent or 0.0
-            issue.velocity_score = issue.velocity_score or 0.0
+            # Fixed: Use neutral score (50.0) for zero velocity, not 0.0
+            # This matches the formula: 0% velocity → 50.0 score (neutral)
+            issue.velocity_score = issue.velocity_score or 50.0
     
     def _update_issue_metadata(self, session: Session, issue: TopicIssue):
         """

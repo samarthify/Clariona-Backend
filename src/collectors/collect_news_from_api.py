@@ -23,9 +23,16 @@ logger = logging.getLogger(__name__)
 
 class NewsAPICollector:
     def __init__(self, user_id: Optional[str] = None):
-        # Load .env from collectors folder
-        env_path = Path(__file__).parent / '.env'
-        load_dotenv(env_path)
+        # Load .env from collectors folder and config folder
+        env_path_collectors = Path(__file__).parent / '.env'
+        env_path_config = Path(__file__).parent.parent.parent / 'config' / '.env'
+        
+        # Try both locations
+        if env_path_collectors.exists():
+            load_dotenv(env_path_collectors)
+        if env_path_config.exists():
+            load_dotenv(env_path_config, override=False)  # Don't override values from collectors/.env
+        
         from src.config.path_manager import PathManager
         self.path_manager = PathManager()
         self.base_path = self.path_manager.base_path
@@ -97,22 +104,36 @@ class NewsAPICollector:
             logger.info(f"Using default keywords from ConfigManager: {default_keywords}")
             return default_keywords
         
-        # Priority 3: Legacy - target_config keywords (backward compatibility)
+        # Priority 3: Environment variables (TARGET_INDIVIDUAL + QUERY_VARIATIONS)
+        target_individual = os.getenv('TARGET_INDIVIDUAL')
+        query_variations_str = os.getenv('QUERY_VARIATIONS')
+        
+        if target_individual and query_variations_str:
+            try:
+                import json
+                target_individual = target_individual.strip('"').strip("'")
+                query_variations = json.loads(query_variations_str)
+                env_keywords = [target_individual] + query_variations
+                logger.info(f"Using keywords from environment variables: {env_keywords}")
+                return env_keywords
+            except json.JSONDecodeError:
+                logger.warning("Failed to parse QUERY_VARIATIONS from environment")
+        
+        # Priority 4: Legacy - target_config keywords (backward compatibility)
         if self.target_config and hasattr(self.target_config, 'keywords') and self.target_config.keywords:
             logger.info(f"Using keywords from target_config: {self.target_config.keywords}")
             return self.target_config.keywords
         
-        # Priority 4: Hardcoded defaults (last resort)
-        logger.warning("Using hardcoded default keywords - consider configuring in ConfigManager/DB")
+        # Priority 5: Hardcoded defaults (last resort)
+        logger.warning("Using hardcoded default keywords - consider configuring TARGET_INDIVIDUAL and QUERY_VARIATIONS in .env")
         return [
-            'Asiwaju Bola Ahmed Adekunle Tinubu',
-            'President of the Federal Republic of Nigeria',
-            'Bola Tinubu',
             'Bola Ahmed Tinubu',
             'President of Nigeria',
+            'Bola Tinubu',
+            'President Tinubu',
             'Tinubu',
-            'Bola',
-            'nigeria'
+            'Nigeria',
+            'Nigerian President'
         ]
 
     def _get_target_countries(self) -> List[str]:  # type: ignore[no-any-return]
@@ -488,6 +509,20 @@ if __name__ == "__main__":
         print("Running News API collector directly (without args)... Use run_collectors.py for proper execution.")
         # Get user_id from environment or use None (collector will handle it)
         user_id = os.getenv('COLLECTOR_USER_ID') or os.getenv('STREAMING_USER_ID')
-        main(["Modi", "India", "BJP", "Election", "Politics"], user_id=user_id)
+        
+        # Try to load queries from environment variables
+        target_individual = os.getenv('TARGET_INDIVIDUAL', 'Bola Ahmed Tinubu')
+        query_variations_str = os.getenv('QUERY_VARIATIONS', '[]')
+        
+        try:
+            target_individual = target_individual.strip('"').strip("'")
+            query_variations = json.loads(query_variations_str)
+            queries_list = [target_individual] + query_variations
+        except json.JSONDecodeError:
+            # Fallback to Tinubu queries
+            queries_list = ["Bola Ahmed Tinubu", "Bola Tinubu", "President Tinubu", "Tinubu", "Nigeria"]
+        
+        print(f"[News API] Using queries from environment: {queries_list}")
+        main(queries_list, user_id=user_id)
 
     

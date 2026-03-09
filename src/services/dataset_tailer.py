@@ -10,11 +10,14 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional, Set, Deque
+from typing import Dict, Any, Optional, Set, Deque, List
 from collections import deque
 
 from apify_client import ApifyClientAsync
 from dotenv import load_dotenv
+
+from src.api.database import SessionLocal
+from src.services.data_ingestor import DataIngestor
 
 # Load environment variables from multiple locations
 ENV_PATHS = [
@@ -305,7 +308,8 @@ class DatasetTailerService:
                     # Insert items via ingestor efficiently using batch upsert
                     # This reduces DB round trips from N to 1
                     try:
-                        success_count = self.ingestor.insert_batch(items)
+                        # Database I/O is blocking, so run in a separate thread
+                        success_count = await asyncio.to_thread(self._insert_batch_thread_safe, items)
                         
                         # Log stored values for first record (to debug coverage gaps)
                         if offset == 0 and items:  # First item of first batch
@@ -329,7 +333,7 @@ class DatasetTailerService:
             if result.items:
                 logger.info(f"Run {run_id}: Final catch-up, {len(result.items)} items")
                 try:
-                    final_success = self.ingestor.insert_batch(result.items)
+                    final_success = await asyncio.to_thread(self._insert_batch_thread_safe, result.items)
                     
                     # Log stored values for first record of final batch
                     if result.items:
@@ -350,6 +354,22 @@ class DatasetTailerService:
             logger.info(f"Tailing task for run {run_id} was cancelled.")
         except Exception as e:
             logger.error(f"Error tailing run {run_id}: {e}", exc_info=True)
+
+    def _insert_batch_thread_safe(self, items: List[Dict[str, Any]]) -> int:
+        """
+        Run insert_batch in a separate thread with its own DB session.
+        This prevents blocking the main asyncio loop during heavy DB operations.
+        """
+        try:
+            # Create a new session for this thread
+            with SessionLocal() as session:
+                # Create a new ingestor with this session
+                # Make sure to pass the user_id from the main ingestor
+                thread_ingestor = DataIngestor(session, user_id=self.ingestor.user_id)
+                return thread_ingestor.insert_batch(items)
+        except Exception as e:
+            logger.error(f"Error in threaded insert_batch: {e}", exc_info=True)
+            return 0
     
     async def _cleanup_finished_tasks(self):
         """

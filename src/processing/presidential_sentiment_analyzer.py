@@ -67,16 +67,13 @@ class PresidentialSentimentAnalyzer:
         else:
             logger.warning(f"Config .env file not found at {config_env_path}")
         
-        # Week 3: Initialize emotion analyzer and weight calculator
+        # Weight calculator (emotion now from LLM, no separate EmotionAnalyzer)
         try:
-            from processing.emotion_analyzer import EmotionAnalyzer
             from processing.sentiment_weight_calculator import SentimentWeightCalculator
-            self.emotion_analyzer = EmotionAnalyzer()
             self.weight_calculator = SentimentWeightCalculator()
-            logger.debug("Week 3: Emotion analyzer and weight calculator initialized")
+            logger.debug("Sentiment weight calculator initialized")
         except Exception as e:
-            logger.warning(f"Failed to initialize Week 3 components: {e}. Emotion detection and weights will be skipped.")
-            self.emotion_analyzer = None
+            logger.warning(f"Failed to initialize weight calculator: {e}. Weights will use fallback.")
             self.weight_calculator = None
         
         # Presidential sentiment categories (using traditional labels with strategic reasoning)
@@ -145,6 +142,26 @@ class PresidentialSentimentAnalyzer:
         """Get negative sentiment threshold."""
         return self.negative_threshold
 
+    _SENTIMENT_JSON_SCHEMA = {
+        "type": "object",
+        "properties": {
+            "sentiment": {"type": "string", "enum": ["positive", "negative", "neutral"]},
+            "sentiment_score": {"type": "number"},
+            "justification": {"type": "string"},
+            "recommended_action": {"type": "string"},
+            "emotion_distribution": {
+                "type": "object",
+                "properties": {
+                    "anger": {"type": "number"}, "fear": {"type": "number"}, "trust": {"type": "number"},
+                    "sadness": {"type": "number"}, "joy": {"type": "number"}, "disgust": {"type": "number"},
+                },
+                "additionalProperties": False,
+            },
+        },
+        "required": ["sentiment", "sentiment_score", "justification", "recommended_action", "emotion_distribution"],
+        "additionalProperties": False,
+    }
+
     def _get_presidential_prompt(self, text: str) -> Tuple[str, str]:
         """
         Get system message and user prompt from config, with fallback to defaults.
@@ -156,12 +173,10 @@ class PresidentialSentimentAnalyzer:
             
             # Get prompt templates from config
             prompt_config = config.get("processing.prompts.presidential_sentiment", {})
-            system_message_template = prompt_config.get("system_message", "You advise {president_name} on media impact.")
-            user_template = prompt_config.get("user_template", """Classify this text for {president_name}'s agenda impact.
+            system_message_template = prompt_config.get("system_message", "You advise {president_name} on media impact. Respond only with valid JSON, no markdown.")
+            user_template = prompt_config.get("user_template", """Classify this text for {president_name}'s agenda impact. Return JSON only:
 
-Sentiment: [positive/negative/neutral]
-Sentiment Score: [-1.0 to 1.0]
-Justification: [<=25 words]
+{"sentiment": "positive"|"negative"|"neutral", "sentiment_score": -1.0 to 1.0, "justification": "brief reason <=25 words", "recommended_action": "one-line strategic action for President", "emotion_distribution": {"anger": 0-1, "fear": 0-1, "trust": 0-1, "sadness": 0-1, "joy": 0-1, "disgust": 0-1}}
 
 Text: "{text}"
 """)
@@ -179,32 +194,23 @@ Text: "{text}"
             logger.warning(f"Could not load prompt templates from ConfigManager, using defaults: {e}")
             # Fallback to hardcoded defaults
             truncated_text = text[:800] if len(text) > 800 else text
-            system_message = f"You are a strategic advisor to {self.president_name} analyzing media impact."
-            user_prompt = f"""Analyze media from {self.president_name}'s perspective. Evaluate: Does this help or hurt the President's power/reputation/governance?
-
-Categories:
-- POSITIVE: Strengthens image/agenda, builds political capital
-- NEGATIVE: Threatens image/agenda, creates problems
-- NEUTRAL: No material impact
-
-Response format:
-Sentiment: [POSITIVE/NEGATIVE/NEUTRAL]
-Sentiment Score: [-1.0 to 1.0] (POSITIVE: 0.2-1.0, NEGATIVE: -1.0 to -0.2, NEUTRAL: -0.2 to 0.2)
-Justification: [Brief strategic reasoning]
-Topics: [comma-separated topics]
+            system_message = f"You are a strategic advisor to {self.president_name} analyzing media impact. Respond only with valid JSON."
+            user_prompt = f"""Analyze media from {self.president_name}'s perspective. Return JSON only:
+{{"sentiment": "positive"|"negative"|"neutral", "sentiment_score": -1.0 to 1.0, "justification": "brief reason", "recommended_action": "one-line strategic action for President", "emotion_distribution": {{"anger": 0-1, "fear": 0-1, "trust": 0-1, "sadness": 0-1, "joy": 0-1, "disgust": 0-1}}}}
 
 Text: "{truncated_text}"
 """
             return system_message, user_prompt
 
-    def _call_openai_for_presidential_sentiment(self, text: str) -> Tuple[str, float, str, List[str]]:
+    def _call_openai_for_presidential_sentiment(self, text: str) -> Tuple[str, float, str, str, Dict[str, float]]:
         """
         Analyze text from the President's strategic perspective using OpenAI.
-        Returns: (sentiment_label, sentiment_score, justification, relevant_topics)
+        Returns: (sentiment_label, sentiment_score, justification, recommended_action, emotion_distribution)
         """
+        empty_emotion = {'anger': 0.0, 'fear': 0.0, 'trust': 0.0, 'sadness': 0.0, 'joy': 0.0, 'disgust': 0.0}
         if not self.openai_client:
             logger.warning("OpenAI client not available. Cannot perform presidential analysis.")
-            return "neutral", 0.5, "OpenAI client not available", []
+            return "neutral", 0.5, "OpenAI client not available", "", empty_emotion
         
         # Get prompts from config
         system_message, user_prompt = self._get_presidential_prompt(text)
@@ -224,41 +230,19 @@ Text: "{truncated_text}"
                             {"role": "system", "content": system_message},
                             {"role": "user", "content": user_prompt}
                         ],
-                        store=False
+                        store=False,
+                        text={"format": {"type": "json_object"}}
                     )
                     
                     content = response.output_text.strip()
                     logger.debug(f"OpenAI response: {content}")
                     
-                    # Parse the response
-                    sentiment = "neutral"  # Default to neutral instead of irrelevant
-                    confidence = 0.0  # Default to neutral (0.0) instead of 0.5
-                    justification = "Analysis failed"
-                    topics = []
-                    
-                    lines = content.split('\n')
-                    for line in lines:
-                        line = line.strip()
-                        if line.lower().startswith("sentiment:"):
-                            sentiment_value = line.split(":", 1)[1].strip().lower()
-                            if sentiment_value in ["positive", "negative", "neutral"]:
-                                sentiment = sentiment_value
-                        elif line.lower().startswith("sentiment score:"):
-                            try:
-                                confidence = float(line.split(":", 1)[1].strip())
-                                # Ensure confidence is between -1.0 and 1.0
-                                confidence = max(-1.0, min(1.0, confidence))
-                            except:
-                                confidence = 0.0  # Default to neutral (0.0) instead of 0.5
-                        elif line.lower().startswith("justification:"):
-                            justification = line.split(":", 1)[1].strip()
-                        elif line.lower().startswith("topics:"):
-                            topics_str = line.split(":", 1)[1].strip()
-                            topics = [t.strip() for t in topics_str.split(",") if t.strip()]
+                    # Parse JSON response
+                    sentiment, confidence, justification, recommended_action, emotion_distribution = self._parse_sentiment_json(content)
                     
                     # Reset retry count on success
                     multi_model_limiter.reset_retry_count(self.model, request_id)
-                    return sentiment, confidence, justification, topics
+                    return sentiment, confidence, justification, recommended_action, emotion_distribution
                     
             except openai.RateLimitError as e:
                 # Handle rate limit error
@@ -285,7 +269,7 @@ Text: "{truncated_text}"
                         details={"model": self.model, "request_id": request_id, "attempt": attempt + 1}
                     )
                     logger.error(str(rate_limit_error))
-                    return "neutral", 0.0, f"Rate limit error: {str(e)}", []
+                    return "neutral", 0.0, f"Rate limit error: {str(e)}", "", empty_emotion
                 continue
                 
             except openai.APIError as e:
@@ -296,7 +280,7 @@ Text: "{truncated_text}"
                 )
                 logger.error(str(openai_error), exc_info=True)
                 if attempt == max_retries - 1:
-                    return "neutral", 0.0, f"OpenAI API error: {str(e)}", []
+                    return "neutral", 0.0, f"OpenAI API error: {str(e)}", "", empty_emotion
                 time.sleep(1.0)
                 continue
                 
@@ -308,11 +292,44 @@ Text: "{truncated_text}"
                 )
                 logger.error(str(analysis_error), exc_info=True)
                 if attempt == max_retries - 1:
-                    return "neutral", 0.0, f"Analysis failed: {str(e)}", []
+                    return "neutral", 0.0, f"Analysis failed: {str(e)}", "", empty_emotion
                 time.sleep(1.0)
                 continue
         
-        return "neutral", 0.0, "Analysis failed after retries", []
+        return "neutral", 0.0, "Analysis failed after retries", "", empty_emotion
+
+    def _parse_sentiment_json(self, content: str) -> Tuple[str, float, str, str, Dict[str, float]]:
+        """Parse JSON response from LLM. Returns (sentiment, score, justification, recommended_action, emotion_distribution)."""
+        empty_emotion = {'anger': 0.0, 'fear': 0.0, 'trust': 0.0, 'sadness': 0.0, 'joy': 0.0, 'disgust': 0.0}
+        try:
+            raw = content.strip()
+            if "```json" in raw:
+                start = raw.find("```json") + 7
+                end = raw.find("```", start)
+                raw = raw[start:end].strip() if end > 0 else raw
+            elif "```" in raw:
+                start = raw.find("```") + 3
+                end = raw.find("```", start)
+                raw = raw[start:end].strip() if end > 0 else raw
+            data = json.loads(raw)
+            sentiment = str(data.get("sentiment", "neutral")).strip().lower()
+            if sentiment not in ("positive", "negative", "neutral"):
+                sentiment = "neutral"
+            score = float(data.get("sentiment_score", 0.0))
+            score = max(-1.0, min(1.0, score))
+            justification = str(data.get("justification", "")).strip() or "No justification provided"
+            recommended_action = str(data.get("recommended_action", "")).strip()
+            em = data.get("emotion_distribution") or {}
+            emotion_distribution = {}
+            for k in empty_emotion:
+                try:
+                    emotion_distribution[k] = max(0.0, min(1.0, float(em.get(k, 0))))
+                except (ValueError, TypeError):
+                    emotion_distribution[k] = 0.0
+            return sentiment, score, justification, recommended_action, emotion_distribution
+        except (json.JSONDecodeError, TypeError, ValueError) as e:
+            logger.warning(f"Failed to parse sentiment JSON: {e} | content preview: {content[:200]!r}")
+            return "neutral", 0.0, "Analysis failed", "", empty_emotion
 
     def _identify_relevant_topics(self, text: str) -> List[str]:
         """Identify which presidential priorities are mentioned in the text."""
@@ -369,42 +386,53 @@ Text: "{truncated_text}"
                 'embedding': [0.0] * 1536  # Zero vector for empty content
             }
         
-        # Get presidential sentiment analysis
-        sentiment, confidence, justification, topics = self._call_openai_for_presidential_sentiment(str(text))
+        # Get presidential sentiment analysis (LLM returns sentiment + emotion_distribution + recommended_action)
+        sentiment, confidence, justification, recommended_action, emotion_distribution = self._call_openai_for_presidential_sentiment(str(text))
+        
+        # Topics from local keyword matching (no LLM)
+        topics = self._identify_relevant_topics(str(text))
+        
+        # Use LLM recommended_action or fallback to rule-based if empty
+        if not recommended_action:
+            recommended_action = self._generate_recommended_action(sentiment, topics, confidence)
+        
+        # Derive emotion_label and emotion_score from emotion_distribution
+        if emotion_distribution:
+            primary = max(emotion_distribution.items(), key=lambda x: x[1])
+            emotion_label = primary[0]
+            emotion_score = round(primary[1], 3)
+            if emotion_score < 0.2:
+                emotion_label = 'neutral'
+                emotion_score = 0.5
+        else:
+            emotion_label = 'neutral'
+            emotion_score = 0.5
+            emotion_distribution = {'anger': 0.0, 'fear': 0.0, 'trust': 0.0, 'sadness': 0.0, 'joy': 0.0, 'disgust': 0.0}
         
         # Generate issue mapping fields (fallback only; governance analyzer provides actual labels)
         issue_label = 'General Issue'
         issue_slug = self._normalize_to_slug(issue_label)
-        issue_keywords = self._extract_keywords(text, [])
+        issue_keywords = self._extract_keywords(text, topics)
         issue_confidence = self._calculate_issue_confidence(text, sentiment, confidence)
         ministry_hint = self._infer_ministry(text, topics)
         
-        # Generate recommended action
-        recommended_action = self._generate_recommended_action(sentiment, topics, confidence)
-        
-        # Combine justification and recommended action for the existing sentiment_justification field
+        # Combine justification and recommended action (LLM-generated or fallback) for sentiment_justification
         full_justification = f"{justification}\n\nRecommended Action: {recommended_action}"
         
-        # Week 3: Get actual embedding (fixes Week 2 issue)
+        # Get embedding
         embedding = self._get_embedding(text)
         
-        # Week 3: Analyze emotions
-        emotion_result = self._analyze_emotion(text)
-        
-        # Week 3: Calculate influence weight
+        # Calculate influence and confidence weights
         influence_weight = self._calculate_influence_weight(source_type, user_verified, reach)
-        
-        # Week 3: Calculate confidence weight
-        confidence_weight = self._calculate_confidence_weight(confidence, emotion_result.get('emotion_score'))
+        confidence_weight = self._calculate_confidence_weight(confidence, emotion_score)
         
         return {
-            'sentiment_label': sentiment,  # Use existing field
-            'sentiment_score': confidence,  # Use existing field
-            'sentiment_justification': full_justification,  # Use existing field with combined content
-            # Week 3: Emotion detection
-            'emotion_label': emotion_result.get('emotion_label', 'neutral'),
-            'emotion_score': emotion_result.get('emotion_score', 0.5),
-            'emotion_distribution': emotion_result.get('emotion_distribution', {}),
+            'sentiment_label': sentiment,
+            'sentiment_score': confidence,
+            'sentiment_justification': full_justification,
+            'emotion_label': emotion_label,
+            'emotion_score': emotion_score,
+            'emotion_distribution': {k: round(v, 3) for k, v in emotion_distribution.items()},
             # Week 3: Weight calculation
             'influence_weight': influence_weight,
             'confidence_weight': confidence_weight,
@@ -590,36 +618,6 @@ Text: "{truncated_text}"
             logger.error(f"Error generating batch embeddings: {e}")
             return [[0.0] * 1536 for _ in texts]
 
-    def _analyze_emotion(self, text: str) -> Dict[str, Any]:
-        """
-        Analyze emotions in text (Week 3).
-        
-        Args:
-            text: Text to analyze
-        
-        Returns:
-            Emotion analysis result
-        """
-        if self.emotion_analyzer:
-            try:
-                return self.emotion_analyzer.analyze_emotion(text)
-            except Exception as e:
-                logger.warning(f"Emotion analysis failed: {e}")
-        
-        # Fallback: return neutral
-        return {
-            'emotion_label': 'neutral',
-            'emotion_score': 0.5,
-            'emotion_distribution': {
-                'anger': 0.0,
-                'fear': 0.0,
-                'trust': 0.0,
-                'sadness': 0.0,
-                'joy': 0.0,
-                'disgust': 0.0
-            }
-        }
-    
     def _calculate_influence_weight(self, source_type: Optional[str], user_verified: bool, reach: int) -> float:
         """
         Calculate influence weight (Week 3).
